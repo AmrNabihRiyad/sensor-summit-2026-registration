@@ -699,7 +699,37 @@ function validateFiles() {
   return true;
 }
 
-$("registrationForm").addEventListener("submit", event => {
+
+const API_URL = "https://script.google.com/macros/s/AKfycbw_Emn4j9U2d_DJHxqp7TT1vMHXdQDFEVBoRNAAdW4OWrTEIVL3OedkwV-DauFb23tFQQ/exec";
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.substring(result.indexOf(",") + 1));
+    };
+
+    reader.onerror = () => reject(new Error("Could not read an uploaded file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function prepareFile(inputId) {
+  const input = $(inputId);
+  if (!input || !input.files.length) return null;
+
+  const file = input.files[0];
+
+  return {
+    name: file.name,
+    mimeType: file.type,
+    base64: await readFileAsBase64(file)
+  };
+}
+
+$("registrationForm").addEventListener("submit", async event => {
   event.preventDefault();
 
   if (!$("day1").checked && !$("day2").checked) {
@@ -707,22 +737,113 @@ $("registrationForm").addEventListener("submit", event => {
     $("day1").focus();
     return;
   }
+
   $("attendanceError").hidden = true;
 
+  if (!validateFiles()) return;
+
   const nationalId = $("nationalId");
-  if (!$("nationalIdFields").classList.contains("hidden") &&
-      nationalId.value && !/^\d{14}$/.test(nationalId.value)) {
+
+  if (
+    !$("nationalIdFields").classList.contains("hidden") &&
+    !/^\d{14}$/.test(nationalId.value)
+  ) {
     alert("Please enter a valid 14-digit National ID number.");
     nationalId.focus();
     return;
   }
 
-  if (!validateFiles()) return;
+  const form = $("registrationForm");
+  const button = form.querySelector('button[type="submit"]');
+  const message = $("formMessage");
 
-  $("formMessage").textContent =
-    "The form interface is working, but online submission has not been connected yet. Your application and uploaded files have NOT been saved. Please do not use this version to collect real registrations.";
-  setVisible("formMessage", true);
-  $("formMessage").scrollIntoView({ behavior: "smooth", block: "center" });
+  if (button.disabled) return;
+
+  button.disabled = true;
+  button.textContent = "Submitting...";
+  message.classList.remove("hidden");
+  message.textContent = "Submitting your application. Please wait.";
+
+  try {
+    const formData = new FormData(form);
+    const data = {};
+
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) continue;
+
+      if (key === "attendance") {
+        if (!data.attendance) data.attendance = [];
+        data.attendance.push(value);
+      } else {
+        data[key] = value;
+      }
+    }
+
+    data.totalFee = $("totalFee").textContent.replace(" EGP", "");
+
+    data.files = {};
+
+    const paymentFile = await prepareFile("paymentProof");
+    if (paymentFile) data.files.paymentProof = paymentFile;
+
+    const nationalIdFile = await prepareFile("nationalIdFile");
+    if (nationalIdFile) data.files.nationalIdFile = nationalIdFile;
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error("The registration service returned an HTTP error.");
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || "Registration failed.");
+    }
+
+    message.textContent =
+      "Your application was submitted successfully. Registration ID: " +
+      result.registrationId +
+      ". Your application is pending review. Please save your registration ID.";
+
+    message.scrollIntoView({ behavior: "smooth", block: "center" });
+    form.reset();
+
+    setVisible("ieeeNumberField", false);
+    setVisible("nationalIdFields", false);
+    setVisible("studentFields", false);
+    setVisible("graduateFields", false);
+    setVisible("pickupField", false);
+    setVisible("refundInstaPay", false);
+    setVisible("refundWallet", false);
+    setVisible("mastersCurrent", false);
+    setVisible("mastersCompleted", false);
+    setVisible("phdCurrent", false);
+    setVisible("phdCompleted", false);
+
+    document.querySelectorAll(".other-input").forEach(input => {
+      input.classList.add("hidden");
+    });
+
+    $("attendanceError").hidden = true;
+    updateFees();
+  } catch (error) {
+    console.error("Registration submission error:", error);
+
+    message.textContent =
+      "We could not confirm your submission. Please do not submit repeatedly. Check the registration system before trying again.";
+
+    message.scrollIntoView({ behavior: "smooth", block: "center" });
+  } finally {
+    button.disabled = false;
+    button.textContent = "Submit Registration Application";
+  }
 });
 
 $("day1").addEventListener("change", () => {
