@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sensor Summit 2026 | Registration</title>
+<style>
+:root {
+  --blue: #00789f;
+  --green: #177f78;
+  --dark: #163342;
+  --light: #f3f8fa;
+  --border: #dce6eb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--dark);
+  background: var(--light);
+  line-height: 1.6;
+}
+.hero {
+  background: linear-gradient(135deg, #075b7a, #177f78);
+  color: white;
+  padding: 42px 20px;
+  text-align: center;
+}
+.hero .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.hero h1 { margin: 12px 0; font-size: clamp(27px, 5vw, 42px); }
+.hero p { margin: 7px auto; max-width: 700px; }
+.container { max-width: 850px; margin: 28px auto; padding: 0 15px 45px; }
+.notice {
+  background: #e7f3f6;
+  border-left: 4px solid var(--blue);
+  padding: 15px;
+  border-radius: 7px;
+  margin-bottom: 22px;
+}
+.section {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 12px #16334208;
+}
+.section h2 { font-size: 20px; margin: 0 0 5px; }
+.section .description { color: #647781; font-size: 14px; margin: 0 0 22px; }
+.field { margin-bottom: 18px; }
+label, .field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 7px; }
+.required { color: #c0392b; }
+input, select, textarea {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd8de;
+  border-radius: 7px;
+  font: inherit;
+  color: var(--dark);
+  background: white;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid #00789f40;
+  border-color: var(--blue);
+}
+input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--green); }
+.choice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 9px 0;
+  font-weight: normal;
+  cursor: pointer;
+}
+.choice input { margin-top: 5px; }
+.help { font-size: 12px; color: #647781; margin-top: 5px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.hidden { display: none !important; }
+.fee-box {
+  background: #f0f8f7;
+  border: 1px solid #cde5df;
+  border-radius: 10px;
+  padding: 18px;
+}
+.fee-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.total { border-top: 1px solid #bddbd3; margin-top: 8px; padding-top: 14px; font-size: 20px; font-weight: bold; }
+.warning {
+  background: #fff7e7;
+  border-left: 4px solid #d89b24;
+  border-radius: 7px;
+  padding: 14px;
+  font-size: 13px;
+  margin-top: 14px;
+}
+button {
+  width: 100%;
+  padding: 15px;
+  background: var(--blue);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+button:hover { background: #006582; }
+footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
+@media(max-width:600px) {
+  .grid { grid-template-columns: 1fr; }
+  .section { padding: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="eyebrow">IEEE Sensors Council Egypt Chapter</div>
+  <h1>Sensor Summit 2026</h1>
+  <p><strong>Digital Twins in Biosensors</strong></p>
+  <p>Registration Application</p>
+  <p>November 12 &amp; 14, 2026 | The British University in Egypt</p>
+</header>
+
+<main class="container">
+  <div class="notice">
+    <strong>Limited Seats Available</strong><br>
+    Registration applications will be reviewed by the organizing team.
+    Submitting this form does not guarantee acceptance. Day 2 is restricted
+    to eligible categories. You will receive an email with the final decision.
+  </div>
+
+  <form id="registrationForm">
+
+    <section class="section">
+      <h2>1. Personal Information</h2>
+      <p class="description">Please provide your personal and contact details.</p>
+
+      <div class="field">
+        <label for="fullName">Full Name <span class="required">*</span></label>
+        <input id="fullName" name="fullName" required autocomplete="name">
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="mobile">Mobile Number <span class="required">*</span></label>
+          <input id="mobile" name="mobile" type="tel" required autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="email">Email Address <span class="required">*</span></label>
+          <input id="email" name="email" type="email" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Gender <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="gender" value="Male" required> Male</label>
+        <label class="choice"><input type="radio" name="gender" value="Female"> Female</label>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Are you an IEEE Member? <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="ieeeMember" value="Yes" required> Yes</label>
+        <label class="choice"><input type="radio" name="ieeeMember" value="No"> No</label>
+      </div>
+
+      <div class="field hidden" id="ieeeNumberField">
+        <label for="ieeeNumber">IEEE Membership Number <span class="required">*</span></label>
+        <input id="ieeeNumber" name="ieeeNumber">
+      </div>
+
+      <div class="field">
+        <span class="field-label">Are you a BUE staff member or student? <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="bueMember" value="Yes" required> Yes</label>
+        <label class="choice"><input type="radio" name="bueMember" value="No"> No</label>
+      </div>
+
+      <div id="nationalIdFields" class="hidden">
+        <div class="field">
+          <label for="nationalId">National ID Number <span class="required">*</span></label>
+          <input id="nationalId" name="nationalId" inputmode="numeric" maxlength="14">
+          <div class="help">Enter your 14-digit Egyptian National ID number.</div>
+        </div>
+        <div class="field">
+          <label for="nationalIdFile">National ID Card (Front and Back) <span class="required">*</span></label>
+          <input id="nationalIdFile" name="nationalIdFile" type="file" accept=".pdf,.jpg,.jpeg,.png">
+          <div class="help">Upload one file containing both sides. PDF, JPG or PNG, maximum 5 MB.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>2. Education &amp; Professional Background</h2>
+      <p class="description">Select your current status to display the relevant questions.</p>
+
+      <div class="field">
+        <span class="field-label">Current Status <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="status" value="Student" required> Student</label>
+        <label class="choice"><input type="radio" name="status" value="Graduate"> Graduate</label>
+      </div>
+
+      <div id="studentFields" class="hidden">
+        <div class="field">
+          <label for="studentDepartment">Which department are you studying in? <span class="required">*</span></label>
+          <select id="studentDepartment" name="studentDepartment">
+            <option value="">Select department</option>
+            <option>Electrical Engineering</option>
+            <option>Electronics and Communications Engineering</option>
+            <option>Artificial Intelligence</option>
+            <option>Computer Science</option>
+            <option>Computer Engineering</option>
+            <option>Biomedical Engineering</option>
+            <option value="Other">Other (Please specify)</option>
+          </select>
+          <input class="hidden other-input" id="studentDepartmentOther" name="studentDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
+        </div>
+
+        <div class="field">
+          <label for="university">What is the name of your university? <span class="required">*</span></label>
+          <select id="university" name="university">
+            <option value="">Select university or institute</option>
+            <option>Ahram Canadian University</option>
+            <option>Ain Shams University</option>
+            <option>Al-Azhar University</option>
+            <option>Alexandria University</option>
+            <option>Arab Academy for Science, Technology and Maritime Transport</option>
+            <option>Arab Open University</option>
+            <option>Aswan University</option>
+            <option>Assiut University</option>
+            <option>Badr University in Cairo (BUC)</option>
+            <option>Benha National University</option>
+            <option>Benha University</option>
+            <option>Beni-Suef University</option>
+            <option>BFCAI (Faculty of Computers &amp; Artificial Intelligence)</option>
+            <option>Borg El Arab Technological University</option>
+            <option>The British University in Egypt (BUE)</option>
+            <option>Cairo University</option>
+            <option>Canadian International College (CIC)</option>
+            <option>Coventry University Egypt</option>
+            <option>Damanhour University</option>
+            <option>Damietta University</option>
+            <option>Delta Technological University</option>
+            <option>Delta University for Science and Technology</option>
+            <option>Deraya University</option>
+            <option>Egypt-Japan University of Science and Technology (E-JUST)</option>
+            <option>Egypt University of Informatics (EUI)</option>
+            <option>Egyptian Chinese University (ECU)</option>
+            <option>Egyptian E-Learning University (EELU)</option>
+            <option>Egyptian Russian University (ERU)</option>
+            <option>El Shorouk Academy</option>
+            <option>Fayoum University</option>
+            <option>Future High Institute of Engineering in Fayoum</option>
+            <option>Future University in Egypt (FUE)</option>
+            <option>German University in Cairo (GUC)</option>
+            <option>Giza Higher Institute of Engineering and Technology</option>
+            <option>Giza Higher Institute for Administrative Sciences</option>
+            <option>Heliopolis University</option>
+            <option>Helwan University</option>
+            <option>Higher Institute for Engineering and Technology</option>
+            <option>Higher Technological Institute (HTI), Beni Suef</option>
+            <option>Horus University</option>
+            <option>Institute of Aviation Engineering and Technology</option>
+            <option>Kafr El Sheikh University</option>
+            <option>Luxor University</option>
+            <option>Mansoura National University</option>
+            <option>Mansoura University</option>
+            <option>Matrouh University</option>
+            <option>May University in Cairo (MUC)</option>
+            <option>Menoufia University</option>
+            <option>Minia University</option>
+            <option>Minufiya National University</option>
+            <option>Misr International University (MIU)</option>
+            <option>Misr University for Science and Technology (MUST)</option>
+            <option>Modern Academy for Engineering and Technology</option>
+            <option>Modern University for Technology and Information</option>
+            <option>MSA University</option>
+            <option>Nahda University</option>
+            <option>New Assiut Technological University</option>
+            <option>New Cairo Academy</option>
+            <option>New Cairo Technological University</option>
+            <option>New Giza University (NGU)</option>
+            <option>New Ismailia National University</option>
+            <option>New Mansoura University</option>
+            <option>New Valley University</option>
+            <option>Nile University</option>
+            <option>October 6 University</option>
+            <option>Pharos University in Alexandria</option>
+            <option>Port Said University</option>
+            <option>Sadat Academy for Management Sciences</option>
+            <option>Sadat City University</option>
+            <option>Sohag University</option>
+            <option>South Valley University</option>
+            <option>Sphinx University</option>
+            <option>Suez Canal University</option>
+            <option>Suez University</option>
+            <option>Tanta University</option>
+            <option>The University of Hertfordshire Hosted by GAF</option>
+            <option>Tiba Academy</option>
+            <option>University of October 6</option>
+            <option>University of British Columbia / Canadian International College</option>
+            <option>Zagazig National University</option>
+            <option>Zagazig University</option>
+            <option value="Other">Other (Please specify)</option>
+          </select>
+          <input class="hidden other-input" id="universityOther" name="universityOther" placeholder="Specify your university" style="margin-top:10px">
+        </div>
+
+        <div class="field">
+          <label for="studyYear">Current Study Year <span class="required">*</span></label>
+          <select id="studyYear" name="studyYear">
+            <option value="">Select study year</option>
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+            <option>5th Year</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="graduateFields" class="hidden">
+        <div class="field">
+          <label for="graduateDepartment">Which department did you graduate from? <span class="required">*</span></label>
+          <select id="graduateDepartment" name="graduateDepartment">
+            <option value="">Select department</option>
+            <option>Electrical Engineering</option>
+            <option>Electronics and Communications Engineering</option>
+            <option>Artificial Intelligence</option>
+            <option>Computer Science</option>
+            <option>Computer Engineering</option>
+            <option>Biomedical Engineering</option>
+            <option value="Other">Other (Please specify)</option>
+          </select>
+          <input class="hidden other-input" id="graduateDepartmentOther" name="graduateDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
+        </div>
+
+        <div class="field">
+          <label for="graduationPeriod">When did you graduate? <span class="required">*</span></label>
+          <select id="graduationPeriod" name="graduationPeriod">
+            <option value="">Select graduation period</option>
+            <option>Before 2014</option>
+            <option>2014–2019</option>
+            <option>2020–2024</option>
+            <option value="Other">Other (Please specify year)</option>
+          </select>
+          <input class="hidden other-input" id="graduationYearOther" name="graduationYearOther" type="number" min="1950" max="2026" placeholder="Enter graduation year" style="margin-top:10px">
+        </div>
+
+        <div class="field">
+          <label for="mastersStatus">Master's Degree Status <span class="required">*</span></label>
+          <select id="mastersStatus" name="mastersStatus">
+            <option value="">Select status</option>
+            <option>Not Started</option>
+            <option>Currently Studying</option>
+            <option>Completed</option>
+          </select>
+        </div>
+        <div id="mastersCurrent" class="grid hidden">
+          <div class="field">
+            <label for="mastersStart">Master's Start Year <span class="required">*</span></label>
+            <input id="mastersStart" name="mastersStart" type="number" min="2000" max="2035">
+          </div>
+          <div class="field">
+            <label for="mastersExpected">Expected Completion Year <span class="required">*</span></label>
+            <input id="mastersExpected" name="mastersExpected" type="number" min="2000" max="2040">
+          </div>
+        </div>
+        <div id="mastersCompleted" class="field hidden">
+          <label for="mastersYear">Master's Completion Year <span class="required">*</span></label>
+          <input id="mastersYear" name="mastersYear" type="number" min="2000" max="2026">
+        </div>
+
+        <div class="field">
+          <label for="phdStatus">PhD Status <span class="required">*</span></label>
+          <select id="phdStatus" name="phdStatus">
+            <option value="">Select status</option>
+            <option>Not Started</option>
+            <option>Currently Studying</option>
+            <option>Completed</option>
+          </select>
+        </div>
+        <div id="phdCurrent" class="field hidden">
+          <label for="phdStart">PhD Start Year <span class="required">*</span></label>
+          <input id="phdStart" name="phdStart" type="number" min="2000" max="2040">
+        </div>
+        <div id="phdCompleted" class="field hidden">
+          <label for="phdYear">PhD Award Year <span class="required">*</span></label>
+          <input id="phdYear" name="phdYear" type="number" min="2000" max="2026">
+        </div>
+
+        <div class="field">
+          <label for="jobTitle">Current Job Title <span class="required">*</span></label>
+          <input id="jobTitle" name="jobTitle">
+        </div>
+        <div class="field">
+          <label for="organization">Organization <span class="required">*</span></label>
+          <input id="organization" name="organization">
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3. Attendance Selection</h2>
+      <p class="description">Select the day or days you wish to attend. The registration fee is the same whether you select one day or both days.</p>
+
+      <label class="choice">
+        <input type="checkbox" id="day1" name="attendance" value="Day 1">
+        <span><strong>Day 1 | Summit Talks &amp; Keynotes</strong><br>November 12, 2026</span>
+      </label>
+      <label class="choice">
+        <input type="checkbox" id="day2" name="attendance" value="Day 2">
+        <span><strong>Day 2 | Hands-on Workshop</strong><br>November 14, 2026</span>
+      </label>
+      <div class="help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
+      <p id="attendanceError" class="help" style="color:#b42318" hidden>Please select at least one attendance day.</p>
+    </section>
+
+    <section class="section">
+      <h2>4. Transportation Preferences</h2>
+      <p class="description">Transportation, if requested, costs an additional 100 EGP.</p>
+
+      <div class="field">
+        <span class="field-label">Do you require transportation? <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="transport" value="Ramses Square" required> Yes, from Ramses Square (+100 EGP)</label>
+        <label class="choice"><input type="radio" name="transport" value="Other location"> Yes, from another location (+100 EGP)</label>
+        <label class="choice"><input type="radio" name="transport" value="No transport"> No, I will arrange my own transportation (0 EGP)</label>
+      </div>
+
+      <div id="pickupField" class="field hidden">
+        <label for="pickupLocation">Preferred Pickup Location <span class="required">*</span></label>
+        <input id="pickupLocation" name="pickupLocation" placeholder="Enter your preferred pickup location">
+        <div class="help">Alternative pickup requests are subject to review and availability.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>5. Registration Fees</h2>
+      <p class="description">Review your registration fee before submitting payment details.</p>
+      <div class="fee-box">
+        <div class="fee-line"><span>Registration Fee</span><strong>200 EGP</strong></div>
+        <div class="fee-line"><span>Transportation</span><strong id="transportFee">0 EGP</strong></div>
+        <div class="fee-line total"><span>Total Amount</span><span id="totalFee">200 EGP</span></div>
+      </div>
+      <div class="help">The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.</div>
+    </section>
+
+    <section class="section">
+      <h2>6. Payment Details</h2>
+      <p class="description">Enter your payment information. Payment verification will be completed by the organizing team.</p>
+
+      <div class="field">
+        <span class="field-label">Payment Method <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="paymentMethod" value="InstaPay" required> InstaPay</label>
+        <label class="choice"><input type="radio" name="paymentMethod" value="Mobile Wallet"> Mobile Wallet</label>
+      </div>
+
+      <div class="grid">
+        <div class="field">
+          <label for="transactionRef">Transaction Reference Number <span class="required">*</span></label>
+          <input id="transactionRef" name="transactionRef" required>
+        </div>
+        <div class="field">
+          <label for="paymentDate">Payment Date <span class="required">*</span></label>
+          <input id="paymentDate" name="paymentDate" type="date" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="paymentTime">Payment Time <span class="required">*</span></label>
+        <input id="paymentTime" name="paymentTime" type="time" required>
+      </div>
+
+      <div class="field">
+        <label for="paymentProof">Upload Proof of Payment <span class="required">*</span></label>
+        <input id="paymentProof" name="paymentProof" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
+        <div class="help">Accepted formats: PDF, JPG, PNG. Maximum file size: 5 MB.</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>7. Refund Information</h2>
+      <p class="description">Provide accurate details so that an eligible refund can be processed.</p>
+
+      <div class="field">
+        <label for="recipientName">Recipient Full Name <span class="required">*</span></label>
+        <input id="recipientName" name="recipientName" required>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Preferred Refund Method <span class="required">*</span></span>
+        <label class="choice"><input type="radio" name="refundMethod" value="InstaPay" required> InstaPay</label>
+        <label class="choice"><input type="radio" name="refundMethod" value="Mobile Wallet"> Mobile Wallet</label>
+      </div>
+
+      <div id="refundInstaPay" class="hidden">
+        <div class="field">
+          <label for="instapayDetails">InstaPay Username, Receiving Link, or Registered Phone Number <span class="required">*</span></label>
+          <input id="instapayDetails" name="instapayDetails" placeholder="Enter your InstaPay receiving details">
+        </div>
+      </div>
+
+      <div id="refundWallet" class="hidden">
+        <div class="field">
+          <label for="walletNumber">Mobile Wallet Phone Number <span class="required">*</span></label>
+          <input id="walletNumber" name="walletNumber" type="tel" placeholder="Enter the wallet phone number">
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>Important Refund Notice</strong><br>
+        Please verify that your recipient name and refund details are accurate and complete. Incorrect or invalid information may prevent your refund from being processed. Contact the organizing team at
+        <a href="mailto:Amr_Nabih@ieee.org">Amr_Nabih@ieee.org</a>
+        if you need to correct your information or have payment-related questions.
+        <br><br>
+        <strong>Refund Policy:</strong>
+        Rejected applicants will receive a full refund of any payment made. Accepted participants are eligible for a refund if they attend all the days they registered and paid for. No refund will be issued if a participant misses any selected day. If you register for both days but attend only one, you will not be eligible for a refund.
+      </div>
+
+      <label class="choice" style="margin-top:18px">
+        <input type="checkbox" id="refundAcknowledgement" required>
+        <span>I have reviewed the refund notice and policy and confirm that the details I provided are accurate. <span class="required">*</span></span>
+      </label>
+    </section>
+
+    <section class="section">
+      <h2>8. Review &amp; Submit</h2>
+      <p class="description">Please review your information before submitting your application.</p>
+
+      <label class="choice">
+        <input type="checkbox" id="accuracyAcknowledgement" required>
+        <span>I confirm that the information provided is accurate and understand that submitting this form does not guarantee acceptance. <span class="required">*</span></span>
+      </label>
+
+      <button type="submit">Submit Registration Application</button>
+      <p class="help" style="text-align:center;margin-top:12px">
+        Your application is subject to review by the organizing team.
+      </p>
+      <div id="formMessage" class="notice hidden" role="status" style="margin-top:18px"></div>
+    </section>
+  </form>
+</main>
+
+<footer>
+  IEEE Sensors Council Egypt Chapter | Sensor Summit 2026<br>
+  Digital Twins in Biosensors
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function setVisible(id, visible) {
+  $(id).classList.toggle("hidden", !visible);
+}
+
+function setRequired(id, required) {
+  const el = $(id);
+  if (el) el.required = required;
+}
+
+function updateOther(selectId, inputId) {
+  const show = $(selectId).value === "Other";
+  setVisible(inputId, show);
+  setRequired(inputId, show);
+}
+
+document.querySelectorAll('input[name="ieeeMember"]').forEach(el => {
+  el.addEventListener("change", () => {
+    const show = el.checked && el.value === "Yes";
+    if (!el.checked) return;
+    setVisible("ieeeNumberField", show);
+    setRequired("ieeeNumber", show);
+  });
+});
+
+document.querySelectorAll('input[name="bueMember"]').forEach(el => {
+  el.addEventListener("change", () => {
+    if (!el.checked) return;
+    const show = el.value === "No";
+    setVisible("nationalIdFields", show);
+    setRequired("nationalId", show);
+    setRequired("nationalIdFile", show);
+  });
+});
+
+document.querySelectorAll('input[name="status"]').forEach(el => {
+  el.addEventListener("change", () => {
+    const student = el.value === "Student";
+    if (!el.checked) return;
+    setVisible("studentFields", student);
+    setVisible("graduateFields", !student);
+
+    ["studentDepartment", "university", "studyYear"].forEach(id => setRequired(id, student));
+    ["graduateDepartment", "graduationPeriod", "mastersStatus", "phdStatus", "jobTitle", "organization"]
+      .forEach(id => setRequired(id, !student));
+
+    if (student) {
+      setRequired("graduateDepartmentOther", false);
+      setRequired("graduationYearOther", false);
+      setRequired("mastersStart", false);
+      setRequired("mastersExpected", false);
+      setRequired("mastersYear", false);
+      setRequired("phdStart", false);
+      setRequired("phdYear", false);
+    } else {
+      setRequired("studentDepartmentOther", false);
+      setRequired("universityOther", false);
+    }
+  });
+});
+
+$("studentDepartment").addEventListener("change", () =>
+  updateOther("studentDepartment", "studentDepartmentOther"));
+$("graduateDepartment").addEventListener("change", () =>
+  updateOther("graduateDepartment", "graduateDepartmentOther"));
+$("university").addEventListener("change", () =>
+  updateOther("university", "universityOther"));
+$("graduationPeriod").addEventListener("change", () =>
+  updateOther("graduationPeriod", "graduationYearOther"));
+
+$("mastersStatus").addEventListener("change", () => {
+  const current = $("mastersStatus").value === "Currently Studying";
+  const completed = $("mastersStatus").value === "Completed";
+  setVisible("mastersCurrent", current);
+  setVisible("mastersCompleted", completed);
+  setRequired("mastersStart", current);
+  setRequired("mastersExpected", current);
+  setRequired("mastersYear", completed);
+});
+
+$("phdStatus").addEventListener("change", () => {
+  const current = $("phdStatus").value === "Currently Studying";
+  const completed = $("phdStatus").value === "Completed";
+  setVisible("phdCurrent", current);
+  setVisible("phdCompleted", completed);
+  setRequired("phdStart", current);
+  setRequired("phdYear", completed);
+});
+
+document.querySelectorAll('input[name="transport"]').forEach(el => {
+  el.addEventListener("change", () => {
+    if (!el.checked) return;
+    const other = el.value === "Other location";
+    setVisible("pickupField", other);
+    setRequired("pickupLocation", other);
+    updateFees();
+  });
+});
+
+function updateFees() {
+  const transport = document.querySelector('input[name="transport"]:checked');
+  const extra = transport && transport.value !== "No transport" ? 100 : 0;
+  $("transportFee").textContent = extra + " EGP";
+  $("totalFee").textContent = (200 + extra) + " EGP";
+}
+document.querySelectorAll('input[name="transport"]').forEach(el =>
+  el.addEventListener("change", updateFees));
+
+document.querySelectorAll('input[name="refundMethod"]').forEach(el => {
+  el.addEventListener("change", () => {
+    if (!el.checked) return;
+    const insta = el.value === "InstaPay";
+    setVisible("refundInstaPay", insta);
+    setVisible("refundWallet", !insta);
+    setRequired("instapayDetails", insta);
+    setRequired("walletNumber", !insta);
+  });
+});
+
+function validateFiles() {
+  const fileInputs = document.querySelectorAll('input[type="file"]');
+  for (const input of fileInputs) {
+    if (input.required && !input.files.length) {
+      input.reportValidity();
+      return false;
+    }
+    if (input.files.length) {
+      const file = input.files[0];
+      const allowed = /\.(pdf|jpe?g|png)$/i.test(file.name);
+      if (!allowed) {
+        alert("Please upload a PDF, JPG, or PNG file.");
+        input.value = "";
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Each file must be 5 MB or smaller.");
+        input.value = "";
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+$("registrationForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (!$("day1").checked && !$("day2").checked) {
+    $("attendanceError").hidden = false;
+    $("day1").focus();
+    return;
+  }
+  $("attendanceError").hidden = true;
+
+  const nationalId = $("nationalId");
+  if (!$("nationalIdFields").classList.contains("hidden") &&
+      nationalId.value && !/^\d{14}$/.test(nationalId.value)) {
+    alert("Please enter a valid 14-digit National ID number.");
+    nationalId.focus();
+    return;
+  }
+
+  if (!validateFiles()) return;
+
+  $("formMessage").textContent =
+    "The form interface is working, but online submission has not been connected yet. Your application and uploaded files have NOT been saved. Please do not use this version to collect real registrations.";
+  setVisible("formMessage", true);
+  $("formMessage").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+$("day1").addEventListener("change", () => {
+  if ($("day1").checked || $("day2").checked) $("attendanceError").hidden = true;
+});
+$("day2").addEventListener("change", () => {
+  if ($("day1").checked || $("day2").checked) $("attendanceError").hidden = true;
+});
+</script>
+</body>
+</html>
