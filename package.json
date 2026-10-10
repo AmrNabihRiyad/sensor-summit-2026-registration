@@ -1,0 +1,17 @@
+{
+  "name": "ieee-sensors-summit-2026",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "libphonenumber-js": "^1.11.20",
+    "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

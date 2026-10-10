@@ -3,142 +3,378 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sensor Summit 2026 | Registration</title>
+<meta name="description" content="Join IEEE Sensors Summit 2026 at The British University in Egypt for Digital Twins in Biosensors, sensing technologies, research, and collaboration.">
+<meta name="theme-color" content="#050810">
+<title>IEEE Sensors Summit 2026 | Sensing the Future</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --blue: #00789f;
-  --green: #177f78;
-  --dark: #163342;
-  --light: #f3f8fa;
-  --border: #dce6eb;
+  color-scheme: dark;
+  --ink: #f4f7f4;
+  --muted: #a0aaa8;
+  --panel: rgba(15, 22, 29, .82);
+  --panel-solid: #0e151d;
+  --line: rgba(211, 229, 221, .14);
+  --lime: #c6ff00;
+  --emerald: #51d49a;
+  --blue: #c6ff00;
+  --green: #51d49a;
+  --dark: #f4f7f4;
+  --light: #050810;
+  --border: var(--line);
+  --display: "Space Grotesk", sans-serif;
+  --mono: "DM Mono", monospace;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 100px; }
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  color: var(--dark);
+  font-family: var(--display);
+  color: var(--ink);
   background: var(--light);
   line-height: 1.6;
 }
-.hero {
-  background: linear-gradient(135deg, #075b7a, #177f78);
-  color: white;
-  padding: 42px 20px;
-  text-align: center;
+button, input, select, textarea { font: inherit; }
+a { color: inherit; }
+.site-nav {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 72px;
+  padding: 10px max(24px, calc((100vw - 1240px) / 2));
+  border-bottom: 1px solid var(--line);
+  background: rgba(5, 8, 16, .78);
+  backdrop-filter: blur(18px);
 }
-.hero .eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 2px;
+.brand-lockup { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  aspect-ratio: 1;
+  border: 1px solid var(--lime);
+  border-radius: 50%;
+  color: var(--lime);
+  font: 500 15px var(--mono);
+  box-shadow: 0 0 24px #c6ff0026;
+}
+.brand-name { font-size: 12px; font-weight: 700; line-height: 1.25; }
+.brand-name span { display: block; color: var(--muted); font: 10px var(--mono); margin-top: 3px; }
+.nav-links { display: flex; align-items: center; gap: clamp(12px, 2.5vw, 34px); }
+.nav-links a { color: #c1c9c5; font-size: 12px; text-decoration: none; transition: color .2s ease; }
+.nav-links a:hover, .nav-links a:focus-visible { color: var(--lime); }
+.nav-register, .button-primary, .button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 19px;
+  border: 1px solid var(--lime);
+  border-radius: 3px;
+  background: var(--lime);
+  color: #10150a;
+  font-weight: 700;
   font-size: 12px;
-  font-weight: bold;
+  text-decoration: none;
+  transition: transform .2s ease, background .2s ease;
 }
-.hero h1 { margin: 12px 0; font-size: clamp(27px, 5vw, 42px); }
-.hero p { margin: 7px auto; max-width: 700px; }
-.container { max-width: 850px; margin: 28px auto; padding: 0 15px 45px; }
+.nav-register:hover, .button-primary:hover { transform: translateY(-2px); background: #d4ff42; }
+.menu-toggle { display: none; }
+.hero {
+  position: relative;
+  display: flex;
+  min-height: min(780px, calc(100svh - 72px));
+  align-items: center;
+  overflow: hidden;
+  padding: 110px max(24px, calc((100vw - 1160px) / 2)) 90px;
+  background:
+    radial-gradient(ellipse at 74% 46%, rgba(39, 110, 87, .18), transparent 34%),
+    radial-gradient(ellipse at 84% 28%, rgba(198, 255, 0, .06), transparent 28%),
+    linear-gradient(90deg, rgba(5, 8, 16, .98) 0%, rgba(5, 8, 16, .88) 48%, rgba(5, 8, 16, .5) 100%),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(170, 202, 190, .045) 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(170, 202, 190, .045) 48px),
+    #07110f;
+}
+.hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
+.hero::before {
+  width: min(62vw, 760px);
+  aspect-ratio: 1;
+  right: -7%;
+  top: 8%;
+  border: 1px solid rgba(198, 255, 0, .11);
+  border-radius: 50%;
+  box-shadow: inset 0 0 80px rgba(53, 196, 137, .035), 0 0 80px rgba(53, 196, 137, .04);
+}
+.hero::after {
+  right: 20%;
+  top: 30%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 24px 5px rgba(198, 255, 0, .24), 180px 135px 0 -2px var(--emerald), -90px 240px 0 -2px var(--emerald);
+  animation: beacon 4s ease-in-out infinite;
+}
+.hero-inner { position: relative; z-index: 1; max-width: 780px; animation: reveal .8s ease both; }
+.eyebrow, .section-kicker, .hero-meta-label { color: var(--lime); font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.eyebrow { display: flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ""; width: 24px; border-top: 1px solid var(--lime); }
+.hero h1 { margin: 24px 0 15px; font-size: clamp(52px, 8.5vw, 112px); line-height: .94; letter-spacing: 0; font-weight: 600; }
+.hero h1 span { color: var(--lime); }
+.hero-theme { margin: 24px 0 8px; color: #e4ebe5; font-size: 17px; font-weight: 600; }
+.hero-intro { max-width: 510px; margin: 0; color: #aab4b1; font-size: 15px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 31px; }
+.button-secondary { border-color: rgba(231, 241, 234, .3); background: rgba(9, 17, 20, .3); color: var(--ink); }
+.button-secondary:hover { border-color: var(--lime); color: var(--lime); }
+.hero-meta { display: flex; gap: clamp(25px, 6vw, 74px); margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); }
+.hero-meta-label { display: block; margin-bottom: 5px; color: #87948f; }
+.hero-meta strong { font-size: 13px; font-weight: 500; }
+.container { width: min(1120px, calc(100% - 48px)); max-width: none; margin: 0 auto; padding: 0 0 96px; }
+.intro-section { display: grid; grid-template-columns: .75fr 1.25fr; gap: 9%; padding: 110px 0 96px; border-bottom: 1px solid var(--line); }
+.intro-section h2, .section-heading h2 { margin: 14px 0 0; font-size: clamp(32px, 4vw, 48px); line-height: 1.04; letter-spacing: 0; }
+.intro-copy { padding-top: 15px; color: var(--muted); font-size: 16px; }
+.intro-copy p { max-width: 640px; margin: 0 0 15px; }
+.signal-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 25px; }
+.signal-row span { padding: 7px 10px; border: 1px solid var(--line); color: #d6dfda; font: 10px var(--mono); }
+.section-heading { max-width: 760px; margin-bottom: 34px; }
+.section-heading p { margin: 12px 0 0; color: var(--muted); }
+.rules-section, .faq-section, .partners-section { padding-top: 90px; scroll-margin-top: 92px; }
+.rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rule-item, .faq-item, .section {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .14);
+}
+.rule-item { padding: 22px; }
+.rule-item h3 { margin: 0 0 8px; font-size: 15px; }
+.rule-item p { margin: 0; color: var(--muted); font-size: 13px; }
 .notice {
-  background: #e7f3f6;
-  border-left: 4px solid var(--blue);
-  padding: 15px;
-  border-radius: 7px;
-  margin-bottom: 22px;
+  margin: 20px 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(198, 255, 0, .24);
+  border-left: 3px solid var(--lime);
+  border-radius: 3px;
+  background: rgba(198, 255, 0, .045);
+  color: #dce5dd;
+  font-size: 13px;
 }
 .section {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-  box-shadow: 0 3px 12px #16334208;
+  padding: clamp(20px, 4vw, 34px);
+  margin: 14px 0;
+  scroll-margin-top: 92px;
 }
-.section h2 { font-size: 20px; margin: 0 0 5px; }
-.section .description { color: #647781; font-size: 14px; margin: 0 0 22px; }
-.field { margin-bottom: 18px; }
-label, .field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 7px; }
-.required { color: #c0392b; }
+.section h2 { font-size: 19px; margin: 0 0 5px; }
+.section .description { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
+.field { margin-bottom: 18px; min-width: 0; }
+label, .field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+.required { color: var(--lime); }
 input, select, textarea {
   display: block;
   width: 100%;
-  padding: 12px;
-  border: 1px solid #cbd8de;
-  border-radius: 7px;
+  min-height: 47px;
+  padding: 11px 13px;
+  border: 1px solid rgba(221, 237, 227, .2);
+  border-radius: 3px;
   font: inherit;
-  color: var(--dark);
-  background: white;
+  color: var(--ink);
+  background: #090e16;
 }
 input:focus, select:focus, textarea:focus {
-  outline: 2px solid #00789f40;
-  border-color: var(--blue);
+  outline: 2px solid rgba(198, 255, 0, .45);
+  outline-offset: 2px;
+  border-color: var(--lime);
 }
-input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--green); }
+input[type="checkbox"], input[type="radio"] { width: 18px; min-height: 18px; accent-color: var(--lime); }
+input[type="file"] { padding: 8px; color: var(--muted); }
+input::file-selector-button { margin-right: 12px; padding: 7px 10px; border: 1px solid var(--line); background: #141d24; color: var(--ink); }
 .choice {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
   margin: 9px 0;
   font-weight: normal;
   cursor: pointer;
+  color: #d5ddd7;
+  font-size: 13px;
 }
-.choice input { margin-top: 5px; }
-.help { font-size: 12px; color: #647781; margin-top: 5px; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.choice input { flex: 0 0 auto; margin: 2px 0 0; }
+.help { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
 .hidden { display: none !important; }
 .fee-box {
-  background: #f0f8f7;
-  border: 1px solid #cde5df;
-  border-radius: 10px;
+  background: rgba(81, 212, 154, .045);
+  border: 1px solid rgba(81, 212, 154, .22);
+  border-radius: 3px;
   padding: 18px;
 }
-.fee-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
-.total { border-top: 1px solid #bddbd3; margin-top: 8px; padding-top: 14px; font-size: 20px; font-weight: bold; }
+.fee-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; color: var(--muted); }
+.fee-line strong { color: var(--ink); }
+.total { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 14px; font-size: 18px; font-weight: bold; color: var(--lime); }
 .warning {
-  background: #fff7e7;
-  border-left: 4px solid #d89b24;
-  border-radius: 7px;
+  background: rgba(255, 193, 84, .06);
+  border-left: 3px solid #e9ad4b;
+  border-radius: 3px;
   padding: 14px;
   font-size: 13px;
   margin-top: 14px;
+  color: #d6c9ad;
 }
 button {
   width: 100%;
   padding: 15px;
-  background: var(--blue);
-  color: white;
+  background: var(--lime);
+  color: #10150a;
   border: 0;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 3px;
+  font-size: 14px;
   font-weight: bold;
   cursor: pointer;
 }
-button:hover { background: #006582; }
-footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
-@media(max-width:600px) {
+button:hover { background: #d4ff42; }
+button:disabled { cursor: wait; opacity: .7; }
+.field-error { margin: 6px 0 0; color: #ff958f; font-size: 12px; }
+[aria-invalid="true"] { border-color: #ff817b; }
+.country-phone { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(0, 1.5fr); gap: 10px; }
+.faq-list { display: grid; gap: 8px; }
+.faq-item { overflow: hidden; }
+.faq-item summary { padding: 17px 20px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.faq-item summary::marker { color: var(--lime); }
+.faq-item p { margin: 0; padding: 0 20px 18px; color: var(--muted); font-size: 13px; }
+.partner-placeholder { padding: 28px; border: 1px dashed rgba(211, 229, 221, .22); color: var(--muted); text-align: center; font-size: 13px; }
+.partner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.partner-logo { display: grid; min-height: 110px; place-items: center; padding: 20px; background: white; }
+.partner-logo img { max-width: 100%; max-height: 74px; object-fit: contain; }
+.partner-logo.featured { grid-column: span 2; min-height: 150px; }
+.partner-logo.featured img { max-height: 110px; }
+.site-footer { padding: 36px 24px; border-top: 1px solid var(--line); background: #070b12; }
+.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: min(1120px, 100%); margin: auto; }
+.footer-note { color: var(--muted); font-size: 12px; }
+.footer-nav { display: flex; flex-wrap: wrap; gap: 17px; }
+.footer-nav a { color: var(--muted); font-size: 11px; text-decoration: none; }
+.footer-nav a:hover { color: var(--lime); }
+.form-status { margin: 16px 0 0; padding: 14px; border-left: 3px solid var(--emerald); background: rgba(81, 212, 154, .08); color: var(--ink); }
+.form-status.error { border-color: #ff817b; background: rgba(255, 129, 123, .08); }
+@keyframes reveal { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes beacon { 50% { opacity: .52; box-shadow: 0 0 30px 7px rgba(198, 255, 0, .2), 180px 135px 0 -2px var(--emerald), -90px 240px 0 -2px var(--emerald); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (max-width: 760px) {
+  .site-nav { min-height: 64px; padding: 9px 18px; }
+  .menu-toggle { display: inline-grid; place-content: center; gap: 5px; width: 42px; height: 42px; border: 1px solid var(--line); background: transparent; color: var(--ink); }
+  .menu-toggle span { width: 17px; border-top: 1px solid currentColor; }
+  .nav-links { display: none; position: absolute; top: calc(100% + 1px); left: 0; right: 0; padding: 18px; border-bottom: 1px solid var(--line); background: rgba(5, 8, 16, .98); }
+  .nav-links.open { display: grid; gap: 0; }
+  .nav-links a { padding: 13px 4px; border-bottom: 1px solid var(--line); }
+  .nav-register { margin-top: 13px; }
+  .hero { min-height: 690px; min-height: min(740px, calc(100svh - 64px)); padding: 82px 24px 56px; }
+  .hero::before { width: 110vw; right: -53%; top: 13%; }
+  .hero::after { right: 16%; top: 23%; }
+  .hero h1 { font-size: clamp(49px, 13vw, 82px); }
+  .hero-meta { gap: 22px; margin-top: 48px; }
+  .hero-meta strong { font-size: 11px; }
+  .container { width: min(100% - 36px, 600px); padding-bottom: 64px; }
+  .intro-section { grid-template-columns: 1fr; gap: 18px; padding: 70px 0; }
+  .intro-copy { padding-top: 0; }
+  .rules-section, .faq-section, .partners-section { padding-top: 65px; }
+  .rules-grid { grid-template-columns: 1fr; }
+  .footer-inner { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .brand-name { font-size: 11px; }
+  .brand-name span { font-size: 9px; }
+  .hero { padding-right: 18px; padding-left: 18px; }
+  .hero-meta { flex-direction: column; gap: 13px; }
+  .hero-actions > * { flex: 1 1 100%; }
+  .country-phone { grid-template-columns: 1fr; gap: 7px; }
   .grid { grid-template-columns: 1fr; }
-  .section { padding: 18px; }
+  .section { padding: 19px; }
+  .partner-logo.featured { grid-column: span 1; }
 }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="eyebrow">IEEE Sensors Council Egypt Chapter</div>
-  <h1>Sensor Summit 2026</h1>
-  <p><strong>Digital Twins in Biosensors</strong></p>
-  <p>Registration Application</p>
-  <p>November 12 &amp; 14, 2026 | The British University in Egypt</p>
+<nav class="site-nav" aria-label="Main navigation">
+  <a class="brand-lockup" href="#home" aria-label="IEEE Sensors Summit 2026 home">
+    <span class="brand-mark" aria-hidden="true">S</span>
+    <span class="brand-name">IEEE SENSORS SUMMIT<span>EGYPT CHAPTER · 2026</span></span>
+  </a>
+  <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNavigation"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
+  <div class="nav-links" id="primaryNavigation">
+    <a href="#home">Home</a>
+    <a href="#rules">Rules</a>
+    <a href="#registration">Registration</a>
+    <a href="#faq">FAQ</a>
+    <a href="#partners">Partner and sponsor</a>
+    <a class="nav-register" href="#registration">Register now</a>
+  </div>
+</nav>
+
+<header class="hero" id="home">
+  <div class="hero-inner">
+    <div class="eyebrow">IEEE Sensors Council Egypt Chapter</div>
+    <h1>SENSING<br><span>THE FUTURE.</span></h1>
+    <p class="hero-theme">Digital Twins in Biosensors</p>
+    <p class="hero-intro">A summit bringing together sensing technologies, research, innovation, and the people shaping what comes next.</p>
+    <div class="hero-actions">
+      <a class="button-primary" href="#registration">Register now <span aria-hidden="true">↗</span></a>
+      <a class="button-secondary" href="#rules">Explore the rules</a>
+    </div>
+    <div class="hero-meta">
+      <div><span class="hero-meta-label">WHEN</span><strong>November 12 &amp; 14, 2026</strong></div>
+      <div><span class="hero-meta-label">WHERE</span><strong>The British University in Egypt</strong></div>
+    </div>
+  </div>
 </header>
 
 <main class="container">
-  <div class="notice">
+  <section class="intro-section" aria-labelledby="summit-intro-title">
+    <div>
+      <div class="section-kicker">The Summit</div>
+      <h2 id="summit-intro-title">Ideas that sense what comes next.</h2>
+    </div>
+    <div class="intro-copy">
+      <p>IEEE Sensors Summit 2026 explores the evolving relationship between sensing technologies and digital twins in biosensors. The summit creates space for research, practical innovation, and collaboration across the sensing community.</p>
+      <p>Join conversations around the technologies and ideas connecting real-world signals with new ways to understand and respond to them.</p>
+      <div class="signal-row" aria-label="Summit themes"><span>SENSING</span><span>RESEARCH</span><span>INNOVATION</span><span>COLLABORATION</span></div>
+    </div>
+  </section>
+
+  <section class="rules-section" id="rules" aria-labelledby="rules-title">
+    <div class="section-heading">
+      <div class="section-kicker">Before you register</div>
+      <h2 id="rules-title">Participation rules</h2>
+      <p>Current registration information from the event application. Organizers should review this section against the final approved event rules before launch.</p>
+    </div>
+    <div class="rules-grid">
+      <article class="rule-item"><h3>Application review</h3><p>Applications are reviewed by the organizing team. Submitting an application does not guarantee acceptance; the final decision is sent by email.</p></article>
+      <article class="rule-item"><h3>Attendance</h3><p>Select one or both event days when applying. Day 1 is the Summit Talks &amp; Keynotes; Day 2 is the Hands-on Workshop.</p></article>
+      <article class="rule-item"><h3>Day 2 eligibility</h3><p>The workshop is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility is reviewed by organizers.</p></article>
+      <article class="rule-item"><h3>Fees and transport</h3><p>The existing application lists a 200 EGP registration fee and an additional 100 EGP for requested transportation.</p></article>
+      <article class="rule-item"><h3>Payment review</h3><p>Payment details and proof are reviewed by the organizing team. Providing a reference does not itself confirm payment.</p></article>
+      <article class="rule-item"><h3>Refund information</h3><p>The refund terms shown in the application are repeated in the Refund Information section below and require organizer approval before publication.</p></article>
+    </div>
+  </section>
+
+  <div class="notice" id="registration">
     <strong>Limited Seats Available</strong><br>
     Registration applications will be reviewed by the organizing team.
     Submitting this form does not guarantee acceptance. Day 2 is restricted
     to eligible categories. You will receive an email with the final decision.
   </div>
 
-  <form id="registrationForm">
+  <form id="registrationForm" novalidate>
 
     <section class="section">
       <h2>1. Personal Information</h2>
@@ -152,7 +388,11 @@ footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
       <div class="grid">
         <div class="field">
           <label for="mobile">Mobile Number <span class="required">*</span></label>
-          <input id="mobile" name="mobile" type="tel" required autocomplete="tel">
+          <div class="country-phone">
+            <select id="mobileCountry" aria-label="Mobile number country"></select>
+            <input id="mobile" name="mobile" type="tel" required autocomplete="tel" aria-describedby="mobileHelp">
+          </div>
+          <div class="help" id="mobileHelp">Numbers beginning with + are read as international and override the selected country.</div>
         </div>
         <div class="field">
           <label for="email">Email Address <span class="required">*</span></label>
@@ -420,7 +660,7 @@ footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
         <span><strong>Day 2 | Hands-on Workshop</strong><br>November 14, 2026</span>
       </label>
       <div class="help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
-      <p id="attendanceError" class="help" style="color:#b42318" hidden>Please select at least one attendance day.</p>
+      <p id="attendanceError" class="field-error" role="alert" hidden>Please select at least one attendance day.</p>
     </section>
 
     <section class="section">
@@ -510,7 +750,11 @@ footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
       <div id="refundWallet" class="hidden">
         <div class="field">
           <label for="walletNumber">Mobile Wallet Phone Number <span class="required">*</span></label>
-          <input id="walletNumber" name="walletNumber" type="tel" placeholder="Enter the wallet phone number">
+          <div class="country-phone">
+            <select id="walletCountry" aria-label="Wallet number country"></select>
+            <input id="walletNumber" name="walletNumber" type="tel" placeholder="Enter the wallet phone number" autocomplete="tel">
+          </div>
+          <div class="help">Numbers beginning with + are read as international and override the selected country.</div>
         </div>
       </div>
 
@@ -543,14 +787,35 @@ footer { text-align: center; color: #647781; font-size: 12px; padding: 20px; }
       <p class="help" style="text-align:center;margin-top:12px">
         Your application is subject to review by the organizing team.
       </p>
-      <div id="formMessage" class="notice hidden" role="status" style="margin-top:18px"></div>
+      <div id="formMessage" class="form-status hidden" role="status" aria-live="polite" aria-atomic="true" style="margin-top:18px"></div>
     </section>
   </form>
+
+  <section class="faq-section" id="faq" aria-labelledby="faq-title">
+    <div class="section-heading">
+      <div class="section-kicker">Quick answers</div>
+      <h2 id="faq-title">Frequently asked questions</h2>
+    </div>
+    <div class="faq-list" id="faqList"></div>
+  </section>
+
+  <section class="partners-section" id="partners" aria-labelledby="partners-title">
+    <div class="section-heading">
+      <div class="section-kicker">In good company</div>
+      <h2 id="partners-title">Partner and sponsor</h2>
+      <p>Official partner and sponsor identities will be published here once approved logo assets and mappings are supplied.</p>
+    </div>
+    <div class="partner-grid" id="partnerGrid"></div>
+  </section>
 </main>
 
-<footer>
-  IEEE Sensors Council Egypt Chapter | Sensor Summit 2026<br>
-  Digital Twins in Biosensors
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-note">IEEE Sensors Council Egypt Chapter · Sensor Summit 2026<br>Digital Twins in Biosensors</div>
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="#home">Home</a><a href="#rules">Rules</a><a href="#registration">Registration</a><a href="#faq">FAQ</a><a href="#partners">Partner and sponsor</a>
+    </nav>
+  </div>
 </footer>
 
 <script>
@@ -731,6 +996,7 @@ async function prepareFile(inputId) {
 
 $("registrationForm").addEventListener("submit", async event => {
   event.preventDefault();
+  return;
 
   if (!$("day1").checked && !$("day2").checked) {
     $("attendanceError").hidden = false;
@@ -853,5 +1119,6 @@ $("day2").addEventListener("change", () => {
   if ($("day1").checked || $("day2").checked) $("attendanceError").hidden = true;
 });
 </script>
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>
