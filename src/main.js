@@ -1,6 +1,17 @@
 import { COUNTRIES, normalizePhone, validateForm } from "./validation.js";
+import { API_CONFIG } from "./config.js";
+import { initNav } from "./components/nav.js";
+import { initPaymentInstructions } from "./components/paymentInstructions.js";
+import bueLogo from "./assets/logos/BUE-Logo.png";
+import womenInSensorsLogo from "./assets/logos/IEEE Women in Sensors Logo RGB.png";
+import daadLogo from "./assets/logos/DAAD-Logo.png";
+import asisLogo from "./assets/logos/ASIS-Logo.png";
+import elecLogo from "./assets/logos/ELEC_Logo.png";
+import fablabLogo from "./assets/logos/FABLAB-Logo.png";
+import egyptChapterLogo from "./assets/logos/Egypt Chapter Logo - Original.png";
+import ieeeSensorsCouncilLogo from "./assets/logos/IEEE Sensors Council Logo.png";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbw_Emn4j9U2d_DJHxqp7TT1vMHXdQDFEVBoRNAAdW4OWrTEIVL3OedkwV-DauFb23tFQQ/exec";
+const API_URL = API_CONFIG.endpointUrl;
 const form = document.querySelector("#registrationForm");
 const submitButton = form.querySelector('button[type="submit"]');
 const status = document.querySelector("#formMessage");
@@ -8,24 +19,142 @@ const touched = new WeakSet();
 let submitting = false;
 
 const FAQS = [
-  { question: "When is the summit?", answer: "The current application lists November 12 and 14, 2026." },
-  { question: "Where will the summit take place?", answer: "The current application lists The British University in Egypt." },
-  { question: "Who may attend the Day 2 workshop?", answer: "The workshop is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility is reviewed by organizers." },
-  { question: "Does submitting an application guarantee acceptance?", answer: "No. Applications are reviewed by the organizing team, which sends the final decision by email." }
+  {
+    question: "When and where will Sensors Summit 2026 take place?",
+    answer: 'The summit is scheduled for November 12 and November 14, 2026, at <a href="https://maps.app.goo.gl/BhbY8ptNSHnDszbR6" target="_blank" rel="noopener noreferrer" class="link-inline">The British University in Egypt (BUE)</a>.'
+  },
+  {
+    question: "What is the summit about?",
+    answer: "The summit focuses on Digital Twin in Biosensing Applications and the intersection of sensing technologies, digital representations, and biosensing research."
+  },
+  {
+    question: "Who can apply?",
+    answer: "The intended audience includes academics, researchers, and senior students interested in sensing technologies and related research areas."
+  },
+  {
+    question: "Is participation online or in person?",
+    answer: "Participation is in person."
+  },
+  {
+    question: "How much does registration cost?",
+    answer: "The participation fee is EGP 200. The total fee is EGP 300 if transportation is selected."
+  },
+  {
+    question: "Which payment methods are available?",
+    answer: "The available methods are InstaPay and mobile wallet."
+  },
+  {
+    question: "Does submitting the form guarantee acceptance?",
+    answer: "No. All applications are reviewed by the organizing committee. Participants will receive the outcome by email."
+  },
+  {
+    question: "What is the registration deadline?",
+    answer: "The closing date and time will be announced after approval by the organizing committee."
+  },
+  {
+    question: "How will I receive transportation details?",
+    answer: "Transportation details will be sent by email after registration confirmation."
+  },
+  {
+    question: "Who should I contact if I have a problem?",
+    answer: 'Contact Eng. Amr Nabih at <a href="mailto:Amr_Nabih@ieee.org" class="link-inline">Amr_Nabih@ieee.org</a> or <a href="tel:+201212551698" class="link-inline">+20 121 255 1698</a> for registration, payment, upload, or technical assistance.'
+  }
 ];
 
-const PARTNERS = [];
-const FEATURED_PARTNER = "";
+const PARTNERS = [
+  {
+    name: "FabLab Egypt",
+    role: "Partner",
+    logo: fablabLogo,
+    logoAlt: "FabLab Egypt Logo - Partner"
+  },
+  {
+    name: "ELEC",
+    role: "Partner",
+    logo: elecLogo,
+    logoAlt: "ELEC Logo - Partner"
+  },
+  {
+    name: "ASIS",
+    role: "Partner",
+    logo: asisLogo,
+    logoAlt: "ASIS Logo - Partner"
+  },
+  {
+    name: "DAAD Egypt",
+    role: "Partner",
+    logo: daadLogo,
+    logoAlt: "DAAD Egypt Logo - Partner"
+  },
+  {
+    name: "IEEE Sensors Council",
+    role: "Partner",
+    logo: ieeeSensorsCouncilLogo,
+    logoAlt: "IEEE Sensors Council Logo - Partner"
+  }
+];
+const FEATURED_PARTNER = "The British University in Egypt";
+
+// Target: November 12, 2026, 09:00:00 AM in Africa/Cairo (standard time UTC+2)
+const TARGET_SUMMIT_DATE_MS = new Date("2026-11-12T09:00:00+02:00").getTime();
+let countdownInterval = null;
+
+function initCountdown() {
+  const container = document.querySelector("#countdownTimer");
+  if (!container) return;
+
+  const daysEl = container.querySelector("#countdownDays");
+  const hoursEl = container.querySelector("#countdownHours");
+  const minutesEl = container.querySelector("#countdownMinutes");
+  const secondsEl = container.querySelector("#countdownSeconds");
+  const bannerEl = container.querySelector("#countdownBanner");
+  const gridEl = container.querySelector("#countdownGrid");
+
+  function update() {
+    const now = Date.now();
+    const remaining = TARGET_SUMMIT_DATE_MS - now;
+
+    if (remaining <= 0) {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+      if (gridEl) gridEl.classList.add("hidden");
+      if (bannerEl) {
+        bannerEl.textContent = "The Summit Has Started!";
+        bannerEl.classList.remove("hidden");
+      }
+      return;
+    }
+
+    const totalSeconds = Math.floor(remaining / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (daysEl) daysEl.textContent = String(days).padStart(2, "0");
+    if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+    if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, "0");
+    if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, "0");
+  }
+
+  update();
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = setInterval(update, 1000);
+}
 
 function renderFaqs() {
   const container = document.querySelector("#faqList");
+  if (!container) return;
+  container.innerHTML = "";
   for (const item of FAQS) {
     const details = document.createElement("details");
     details.className = "faq-item";
     const summary = document.createElement("summary");
     summary.textContent = item.question;
     const answer = document.createElement("p");
-    answer.textContent = item.answer;
+    answer.innerHTML = item.answer;
     details.append(summary, answer);
     container.append(details);
   }
@@ -33,13 +162,7 @@ function renderFaqs() {
 
 function renderPartners() {
   const container = document.querySelector("#partnerGrid");
-  if (!PARTNERS.length) {
-    const placeholder = document.createElement("div");
-    placeholder.className = "partner-placeholder";
-    placeholder.textContent = "Approved partner and sponsor logos will be published here.";
-    container.append(placeholder);
-    return;
-  }
+  if (!container || container.children.length > 0) return;
 
   for (const partner of PARTNERS) {
     const item = document.createElement("div");
@@ -63,26 +186,38 @@ function populateCountries(select) {
   }
 }
 
+function initScrollReveal() {
+  const elements = document.querySelectorAll(".reveal-on-scroll");
+  if (!elements.length) return;
+
+  if (typeof IntersectionObserver === "undefined") {
+    elements.forEach((el) => el.classList.add("is-revealed"));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-revealed");
+        obs.unobserve(entry.target);
+      }
+    }
+  }, {
+    rootMargin: "0px 0px -40px 0px",
+    threshold: 0.08
+  });
+
+  elements.forEach((el) => observer.observe(el));
+}
+
 populateCountries(document.querySelector("#mobileCountry"));
 populateCountries(document.querySelector("#walletCountry"));
 renderFaqs();
 renderPartners();
-
-const menuButton = document.querySelector(".menu-toggle");
-const navigation = document.querySelector("#primaryNavigation");
-menuButton.addEventListener("click", () => {
-  const expanded = menuButton.getAttribute("aria-expanded") === "true";
-  menuButton.setAttribute("aria-expanded", String(!expanded));
-  menuButton.setAttribute("aria-label", expanded ? "Open navigation menu" : "Close navigation menu");
-  navigation.classList.toggle("open", !expanded);
-});
-navigation.addEventListener("click", (event) => {
-  if (event.target.closest("a")) {
-    menuButton.setAttribute("aria-expanded", "false");
-    menuButton.setAttribute("aria-label", "Open navigation menu");
-    navigation.classList.remove("open");
-  }
-});
+initCountdown();
+initScrollReveal();
+initNav();
+initPaymentInstructions();
 
 function isVisible(field) {
   return !field.closest(".hidden") && !field.closest("[hidden]");
@@ -146,8 +281,17 @@ form.addEventListener("focusout", (event) => {
 
 form.addEventListener("input", (event) => {
   const field = event.target;
+  if (field.id === "transactionRef") touched.add(field);
   if (touched.has(field)) describeError(field, currentError(field));
 });
+
+const transactionRefInput = document.querySelector("#transactionRef");
+if (transactionRefInput) {
+  transactionRefInput.addEventListener("paste", () => {
+    touched.add(transactionRefInput);
+    queueMicrotask(() => describeError(transactionRefInput, currentError(transactionRefInput)));
+  });
+}
 
 form.addEventListener("change", () => {
   queueMicrotask(() => {
@@ -187,14 +331,15 @@ async function prepareFile(id) {
 
 function showStatus(message, isError = false) {
   status.textContent = message;
-  status.classList.remove("hidden", "error");
+  status.classList.remove("hidden", "error", "success");
   if (isError) status.classList.add("error");
+  else status.classList.add("success");
   status.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function resetConditionalPanels() {
   for (const id of [
-    "ieeeNumberField", "nationalIdFields", "studentFields", "graduateFields", "pickupField",
+    "ieeeNumberField", "nationalIdFields", "ambassadorCodeField", "studentFields", "graduateFields", "pickupField",
     "refundInstaPay", "refundWallet", "mastersCurrent", "mastersCompleted", "phdCurrent", "phdCompleted"
   ]) {
     document.querySelector(`#${id}`).classList.add("hidden");
@@ -209,12 +354,25 @@ async function buildPayload() {
   const data = {};
   for (const [key, value] of new FormData(form).entries()) {
     if (value instanceof File) continue;
-    if (key === "attendance") {
-      if (!data.attendance) data.attendance = [];
-      data.attendance.push(value);
+    if (key === "attendance" || key === "referralSources") {
+      if (!data[key]) data[key] = [];
+      data[key].push(value);
     } else {
       data[key] = typeof value === "string" ? value.trim() : value;
     }
+  }
+
+  if (!data.referralSources) {
+    data.referralSources = [];
+  }
+
+  const consentEl = document.querySelector("#registrationConsent");
+  data.registrationConsent = consentEl && consentEl.checked ? "Yes" : "No";
+
+  if (data.referralSources.includes("Through an Ambassador")) {
+    data.ambassadorCode = (data.ambassadorCode || "").trim();
+  } else {
+    delete data.ambassadorCode;
   }
 
   data.mobile = normalizePhone(data.mobile, document.querySelector("#mobileCountry").value);
@@ -270,7 +428,10 @@ async function submitRegistration(event) {
     const registrationId = typeof result.registrationId === "string" && result.registrationId.trim()
       ? ` Registration ID: ${result.registrationId.trim()}.`
       : "";
-    showStatus(`Your application was submitted successfully.${registrationId} Your application is pending review.`);
+    const emailNotice = result.emailSent === false
+      ? " Note: Your registration was saved, but confirmation email delivery could not be completed."
+      : "";
+    showStatus(`💚 Thank you for your interest in Sensors Summit 2026! We're excited to have you with us and look forward to seeing you at our upcoming activities. ✨${registrationId ? " " + registrationId : ""}${emailNotice ? " " + emailNotice : ""}`);
     form.reset();
     resetConditionalPanels();
     document.querySelector("#mobileCountry").value = "EG";
@@ -290,8 +451,8 @@ async function submitRegistration(event) {
     document.querySelector("#totalFee").textContent = "200 EGP";
   } catch (error) {
     const message = error.name === "TimeoutError"
-      ? "The request timed out, so we could not confirm your submission. Please check with the organizing team before trying again. Your entered information is still here."
-      : "We could not confirm your submission. Please check with the organizing team before trying again. Your entered information is still here.";
+      ? "The request timed out. We could not submit your application. Please try again. If the problem continues, contact the organizing team."
+      : "We could not submit your application. Please try again. If the problem continues, contact the organizing team.";
     showStatus(message, true);
   } finally {
     submitting = false;
@@ -301,3 +462,14 @@ async function submitRegistration(event) {
 }
 
 form.addEventListener("submit", submitRegistration, true);
+
+const reviewBtn = document.querySelector("#reviewInfoBtn");
+if (reviewBtn) {
+  reviewBtn.addEventListener("click", () => {
+    const target = document.querySelector("#fullName");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.focus();
+    }
+  });
+}

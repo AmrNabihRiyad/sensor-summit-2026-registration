@@ -6,7 +6,7 @@ export const VALIDATION_RULES = Object.freeze({
   email: { maxLength: 254 },
   organization: { minLength: 2, maxLength: 160 },
   file: { maxBytes: 5 * 1024 * 1024, mimeTypes: ["application/pdf", "image/jpeg", "image/png"] },
-  paymentReferenceDigits: { InstaPay: null, "Mobile Wallet": null }
+  paymentReferenceDigits: { InstaPay: 12, "Mobile Wallet": 12 }
 });
 
 export const COUNTRIES = getCountries()
@@ -89,14 +89,37 @@ export function validateEgyptianNationalId(value) {
     : "The national ID must contain exactly 14 digits and have a valid structure.";
 }
 
-export function validatePaymentReference(value, paymentMethod) {
-  const digits = VALIDATION_RULES.paymentReferenceDigits[paymentMethod];
-  if (digits === null || digits === undefined) {
-    return value.trim() ? "" : "Enter the payment reference required by the selected method.";
+export function validatePaymentReference(value, paymentMethod = "Payment") {
+  const digits = VALIDATION_RULES.paymentReferenceDigits[paymentMethod] ?? 12;
+  const str = typeof value === "string" ? value : String(value ?? "");
+
+  if (!str.trim()) {
+    return "The transaction reference must contain exactly 12 digits.";
   }
-  return new RegExp(`^\\d{${digits}}$`).test(value)
+
+  if (digits === null || digits === undefined) {
+    return "";
+  }
+
+  const pattern = new RegExp(`^[0-9]{${digits}}$`);
+  return pattern.test(str)
     ? ""
-    : `${paymentMethod} reference must contain exactly ${digits} digits.`;
+    : "The transaction reference must contain exactly 12 digits.";
+}
+
+export function validateAmbassadorCode(value) {
+  const code = typeof value === "string" ? value.trim() : "";
+  if (!code) {
+    return "Please enter your Ambassador Code.";
+  }
+  return "";
+}
+
+export function validateRegistrationConsent(value) {
+  if (value === true || value === "Yes" || value === "true") {
+    return "";
+  }
+  return "Consent to the processing of personal data is required.";
 }
 
 export function validateFile(file) {
@@ -127,15 +150,24 @@ function errorForField(field, form, options) {
       ? ""
       : "Choose an option to continue.";
   }
-  if (field.type === "checkbox") return field.checked ? "" : "This confirmation is required.";
+  if (field.type === "checkbox") {
+    if (field.id === "registrationConsent") {
+      return validateRegistrationConsent(field.checked);
+    }
+    if (field.name === "referralSources") {
+      return "";
+    }
+    return field.checked ? "" : "This confirmation is required.";
+  }
   if (field.type === "file") return field.required ? validateFile(field.files[0]) : "";
+  if (field.id === "transactionRef") return validatePaymentReference(value, options.paymentMethod());
+  if (field.id === "ambassadorCode") return validateAmbassadorCode(value);
   if (!value.trim()) return field.required ? "This field is required." : "";
 
   if (field.id === "fullName" || field.id === "recipientName") return validateName(value);
   if (field.id === "email") return validateEmail(value);
   if (field.id === "mobile" || field.id === "walletNumber") return validatePhone(value, options.countryFor(field));
   if (field.id === "nationalId") return validateEgyptianNationalId(value);
-  if (field.id === "transactionRef") return validatePaymentReference(value, options.paymentMethod());
   if (["universityOther", "studentDepartmentOther", "graduateDepartmentOther", "jobTitle", "organization", "pickupLocation", "ieeeNumber"].includes(field.id)) {
     const normalized = value.trim();
     if (normalized.length < 2) return "Enter at least 2 characters.";
