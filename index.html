@@ -3,818 +3,1341 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Join IEEE Sensors Summit 2026 at The British University in Egypt for Digital Twins in Biosensors, sensing technologies, research, and collaboration.">
-<meta name="theme-color" content="#050810">
-<title>IEEE Sensors Summit 2026 | Sensing the Future</title>
+<meta name="description" content="Sensors Summit 2026: Digital Twin in Biosensing Applications. Organized by IEEE Sensors Council Egypt Chapter at The British University in Egypt (BUE), November 12 & 14, 2026.">
+<meta name="theme-color" content="#050B14">
+<title>Sensors Summit 2026 | Digital Twin in Biosensing Applications</title>
+<link rel="icon" type="image/png" href="./src/assets/logos/Egypt Chapter Icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  color-scheme: dark;
-  --ink: #f4f7f4;
-  --muted: #a0aaa8;
-  --panel: rgba(15, 22, 29, .82);
-  --panel-solid: #0e151d;
-  --line: rgba(211, 229, 221, .14);
-  --lime: #c6ff00;
-  --emerald: #51d49a;
-  --blue: #c6ff00;
-  --green: #51d49a;
-  --dark: #f4f7f4;
-  --light: #050810;
-  --border: var(--line);
-  --display: "Space Grotesk", sans-serif;
-  --mono: "DM Mono", monospace;
-}
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 100px; }
-body {
-  margin: 0;
-  font-family: var(--display);
-  color: var(--ink);
-  background: var(--light);
-  line-height: 1.6;
-}
-button, input, select, textarea { font: inherit; }
-a { color: inherit; }
-.site-nav {
-  position: sticky;
-  z-index: 20;
-  top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 72px;
-  padding: 10px max(24px, calc((100vw - 1240px) / 2));
-  border-bottom: 1px solid var(--line);
-  background: rgba(5, 8, 16, .78);
-  backdrop-filter: blur(18px);
-}
-.brand-lockup { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  aspect-ratio: 1;
-  border: 1px solid var(--lime);
-  border-radius: 50%;
-  color: var(--lime);
-  font: 500 15px var(--mono);
-  box-shadow: 0 0 24px #c6ff0026;
-}
-.brand-name { font-size: 12px; font-weight: 700; line-height: 1.25; }
-.brand-name span { display: block; color: var(--muted); font: 10px var(--mono); margin-top: 3px; }
-.nav-links { display: flex; align-items: center; gap: clamp(12px, 2.5vw, 34px); }
-.nav-links a { color: #c1c9c5; font-size: 12px; text-decoration: none; transition: color .2s ease; }
-.nav-links a:hover, .nav-links a:focus-visible { color: var(--lime); }
-.nav-register, .button-primary, .button-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;
-  padding: 0 19px;
-  border: 1px solid var(--lime);
-  border-radius: 3px;
-  background: var(--lime);
-  color: #10150a;
-  font-weight: 700;
-  font-size: 12px;
-  text-decoration: none;
-  transition: transform .2s ease, background .2s ease;
-}
-.nav-register:hover, .button-primary:hover { transform: translateY(-2px); background: #d4ff42; }
-.menu-toggle { display: none; }
-.hero {
-  position: relative;
-  display: flex;
-  min-height: min(780px, calc(100svh - 72px));
-  align-items: center;
-  overflow: hidden;
-  padding: 110px max(24px, calc((100vw - 1160px) / 2)) 90px;
-  background:
-    radial-gradient(ellipse at 74% 46%, rgba(39, 110, 87, .18), transparent 34%),
-    radial-gradient(ellipse at 84% 28%, rgba(198, 255, 0, .06), transparent 28%),
-    linear-gradient(90deg, rgba(5, 8, 16, .98) 0%, rgba(5, 8, 16, .88) 48%, rgba(5, 8, 16, .5) 100%),
-    repeating-linear-gradient(0deg, transparent 0 47px, rgba(170, 202, 190, .045) 48px),
-    repeating-linear-gradient(90deg, transparent 0 47px, rgba(170, 202, 190, .045) 48px),
-    #07110f;
-}
-.hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
-.hero::before {
-  width: min(62vw, 760px);
-  aspect-ratio: 1;
-  right: -7%;
-  top: 8%;
-  border: 1px solid rgba(198, 255, 0, .11);
-  border-radius: 50%;
-  box-shadow: inset 0 0 80px rgba(53, 196, 137, .035), 0 0 80px rgba(53, 196, 137, .04);
-}
-.hero::after {
-  right: 20%;
-  top: 30%;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--lime);
-  box-shadow: 0 0 24px 5px rgba(198, 255, 0, .24), 180px 135px 0 -2px var(--emerald), -90px 240px 0 -2px var(--emerald);
-  animation: beacon 4s ease-in-out infinite;
-}
-.hero-inner { position: relative; z-index: 1; max-width: 780px; animation: reveal .8s ease both; }
-.eyebrow, .section-kicker, .hero-meta-label { color: var(--lime); font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
-.eyebrow { display: flex; align-items: center; gap: 10px; }
-.eyebrow::before { content: ""; width: 24px; border-top: 1px solid var(--lime); }
-.hero h1 { margin: 24px 0 15px; font-size: clamp(52px, 8.5vw, 112px); line-height: .94; letter-spacing: 0; font-weight: 600; }
-.hero h1 span { color: var(--lime); }
-.hero-theme { margin: 24px 0 8px; color: #e4ebe5; font-size: 17px; font-weight: 600; }
-.hero-intro { max-width: 510px; margin: 0; color: #aab4b1; font-size: 15px; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 31px; }
-.button-secondary { border-color: rgba(231, 241, 234, .3); background: rgba(9, 17, 20, .3); color: var(--ink); }
-.button-secondary:hover { border-color: var(--lime); color: var(--lime); }
-.hero-meta { display: flex; gap: clamp(25px, 6vw, 74px); margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); }
-.hero-meta-label { display: block; margin-bottom: 5px; color: #87948f; }
-.hero-meta strong { font-size: 13px; font-weight: 500; }
-.container { width: min(1120px, calc(100% - 48px)); max-width: none; margin: 0 auto; padding: 0 0 96px; }
-.intro-section { display: grid; grid-template-columns: .75fr 1.25fr; gap: 9%; padding: 110px 0 96px; border-bottom: 1px solid var(--line); }
-.intro-section h2, .section-heading h2 { margin: 14px 0 0; font-size: clamp(32px, 4vw, 48px); line-height: 1.04; letter-spacing: 0; }
-.intro-copy { padding-top: 15px; color: var(--muted); font-size: 16px; }
-.intro-copy p { max-width: 640px; margin: 0 0 15px; }
-.signal-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 25px; }
-.signal-row span { padding: 7px 10px; border: 1px solid var(--line); color: #d6dfda; font: 10px var(--mono); }
-.section-heading { max-width: 760px; margin-bottom: 34px; }
-.section-heading p { margin: 12px 0 0; color: var(--muted); }
-.rules-section, .faq-section, .partners-section { padding-top: 90px; scroll-margin-top: 92px; }
-.rules-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.rule-item, .faq-item, .section {
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--panel);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, .14);
-}
-.rule-item { padding: 22px; }
-.rule-item h3 { margin: 0 0 8px; font-size: 15px; }
-.rule-item p { margin: 0; color: var(--muted); font-size: 13px; }
-.notice {
-  margin: 20px 0;
-  padding: 16px 18px;
-  border: 1px solid rgba(198, 255, 0, .24);
-  border-left: 3px solid var(--lime);
-  border-radius: 3px;
-  background: rgba(198, 255, 0, .045);
-  color: #dce5dd;
-  font-size: 13px;
-}
-.section {
-  padding: clamp(20px, 4vw, 34px);
-  margin: 14px 0;
-  scroll-margin-top: 92px;
-}
-.section h2 { font-size: 19px; margin: 0 0 5px; }
-.section .description { color: var(--muted); font-size: 13px; margin: 0 0 22px; }
-.field { margin-bottom: 18px; min-width: 0; }
-label, .field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
-.required { color: var(--lime); }
-input, select, textarea {
-  display: block;
-  width: 100%;
-  min-height: 47px;
-  padding: 11px 13px;
-  border: 1px solid rgba(221, 237, 227, .2);
-  border-radius: 3px;
-  font: inherit;
-  color: var(--ink);
-  background: #090e16;
-}
-input:focus, select:focus, textarea:focus {
-  outline: 2px solid rgba(198, 255, 0, .45);
-  outline-offset: 2px;
-  border-color: var(--lime);
-}
-input[type="checkbox"], input[type="radio"] { width: 18px; min-height: 18px; accent-color: var(--lime); }
-input[type="file"] { padding: 8px; color: var(--muted); }
-input::file-selector-button { margin-right: 12px; padding: 7px 10px; border: 1px solid var(--line); background: #141d24; color: var(--ink); }
-.choice {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  margin: 9px 0;
-  font-weight: normal;
-  cursor: pointer;
-  color: #d5ddd7;
-  font-size: 13px;
-}
-.choice input { flex: 0 0 auto; margin: 2px 0 0; }
-.help { font-size: 12px; color: var(--muted); margin-top: 5px; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
-.hidden { display: none !important; }
-.fee-box {
-  background: rgba(81, 212, 154, .045);
-  border: 1px solid rgba(81, 212, 154, .22);
-  border-radius: 3px;
-  padding: 18px;
-}
-.fee-line { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; color: var(--muted); }
-.fee-line strong { color: var(--ink); }
-.total { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 14px; font-size: 18px; font-weight: bold; color: var(--lime); }
-.warning {
-  background: rgba(255, 193, 84, .06);
-  border-left: 3px solid #e9ad4b;
-  border-radius: 3px;
-  padding: 14px;
-  font-size: 13px;
-  margin-top: 14px;
-  color: #d6c9ad;
-}
-button {
-  width: 100%;
-  padding: 15px;
-  background: var(--lime);
-  color: #10150a;
-  border: 0;
-  border-radius: 3px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-}
-button:hover { background: #d4ff42; }
-button:disabled { cursor: wait; opacity: .7; }
-.field-error { margin: 6px 0 0; color: #ff958f; font-size: 12px; }
-[aria-invalid="true"] { border-color: #ff817b; }
-.country-phone { display: grid; grid-template-columns: minmax(180px, .8fr) minmax(0, 1.5fr); gap: 10px; }
-.faq-list { display: grid; gap: 8px; }
-.faq-item { overflow: hidden; }
-.faq-item summary { padding: 17px 20px; cursor: pointer; font-size: 14px; font-weight: 600; }
-.faq-item summary::marker { color: var(--lime); }
-.faq-item p { margin: 0; padding: 0 20px 18px; color: var(--muted); font-size: 13px; }
-.partner-placeholder { padding: 28px; border: 1px dashed rgba(211, 229, 221, .22); color: var(--muted); text-align: center; font-size: 13px; }
-.partner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.partner-logo { display: grid; min-height: 110px; place-items: center; padding: 20px; background: white; }
-.partner-logo img { max-width: 100%; max-height: 74px; object-fit: contain; }
-.partner-logo.featured { grid-column: span 2; min-height: 150px; }
-.partner-logo.featured img { max-height: 110px; }
-.site-footer { padding: 36px 24px; border-top: 1px solid var(--line); background: #070b12; }
-.footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: min(1120px, 100%); margin: auto; }
-.footer-note { color: var(--muted); font-size: 12px; }
-.footer-nav { display: flex; flex-wrap: wrap; gap: 17px; }
-.footer-nav a { color: var(--muted); font-size: 11px; text-decoration: none; }
-.footer-nav a:hover { color: var(--lime); }
-.form-status { margin: 16px 0 0; padding: 14px; border-left: 3px solid var(--emerald); background: rgba(81, 212, 154, .08); color: var(--ink); }
-.form-status.error { border-color: #ff817b; background: rgba(255, 129, 123, .08); }
-@keyframes reveal { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes beacon { 50% { opacity: .52; box-shadow: 0 0 30px 7px rgba(198, 255, 0, .2), 180px 135px 0 -2px var(--emerald), -90px 240px 0 -2px var(--emerald); } }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-}
-@media (max-width: 760px) {
-  .site-nav { min-height: 64px; padding: 9px 18px; }
-  .menu-toggle { display: inline-grid; place-content: center; gap: 5px; width: 42px; height: 42px; border: 1px solid var(--line); background: transparent; color: var(--ink); }
-  .menu-toggle span { width: 17px; border-top: 1px solid currentColor; }
-  .nav-links { display: none; position: absolute; top: calc(100% + 1px); left: 0; right: 0; padding: 18px; border-bottom: 1px solid var(--line); background: rgba(5, 8, 16, .98); }
-  .nav-links.open { display: grid; gap: 0; }
-  .nav-links a { padding: 13px 4px; border-bottom: 1px solid var(--line); }
-  .nav-register { margin-top: 13px; }
-  .hero { min-height: 690px; min-height: min(740px, calc(100svh - 64px)); padding: 82px 24px 56px; }
-  .hero::before { width: 110vw; right: -53%; top: 13%; }
-  .hero::after { right: 16%; top: 23%; }
-  .hero h1 { font-size: clamp(49px, 13vw, 82px); }
-  .hero-meta { gap: 22px; margin-top: 48px; }
-  .hero-meta strong { font-size: 11px; }
-  .container { width: min(100% - 36px, 600px); padding-bottom: 64px; }
-  .intro-section { grid-template-columns: 1fr; gap: 18px; padding: 70px 0; }
-  .intro-copy { padding-top: 0; }
-  .rules-section, .faq-section, .partners-section { padding-top: 65px; }
-  .rules-grid { grid-template-columns: 1fr; }
-  .footer-inner { align-items: flex-start; flex-direction: column; }
-}
-@media (max-width: 480px) {
-  .brand-name { font-size: 11px; }
-  .brand-name span { font-size: 9px; }
-  .hero { padding-right: 18px; padding-left: 18px; }
-  .hero-meta { flex-direction: column; gap: 13px; }
-  .hero-actions > * { flex: 1 1 100%; }
-  .country-phone { grid-template-columns: 1fr; gap: 7px; }
-  .grid { grid-template-columns: 1fr; }
-  .section { padding: 19px; }
-  .partner-logo.featured { grid-column: span 1; }
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./src/styles/tokens.css">
+<link rel="stylesheet" href="./src/styles/base.css">
+<link rel="stylesheet" href="./src/styles/components.css">
+<style>:root { color-scheme: dark; }</style>
 </head>
 <body>
 
+<!-- Navigation -->
 <nav class="site-nav" aria-label="Main navigation">
-  <a class="brand-lockup" href="#home" aria-label="IEEE Sensors Summit 2026 home">
-    <span class="brand-mark" aria-hidden="true">S</span>
-    <span class="brand-name">IEEE SENSORS SUMMIT<span>EGYPT CHAPTER · 2026</span></span>
-  </a>
-  <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNavigation"><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
-  <div class="nav-links" id="primaryNavigation">
-    <a href="#home">Home</a>
-    <a href="#rules">Rules</a>
-    <a href="#registration">Registration</a>
-    <a href="#faq">FAQ</a>
-    <a href="#partners">Partner and sponsor</a>
-    <a class="nav-register" href="#registration">Register now</a>
+  <div class="nav-container">
+    <a class="brand-lockup" href="#home" aria-label="Sensors Summit 2026 home">
+      <img class="brand-logo-summit" src="./src/assets/logos/sensors-summit.png" alt="Sensors Summit 2026">
+      <div class="brand-divider" aria-hidden="true"></div>
+      <img class="brand-logo-chapter" src="./src/assets/logos/Egypt Chapter Logo - White.png" alt="IEEE Sensors Council Egypt Chapter">
+    </a>
+    <ul class="nav-links" id="primaryNavigation">
+      <li><a href="#about">About</a></li>
+      <li><a href="#details">Details</a></li>
+      <li><a href="#partners">Partners</a></li>
+      <li><a href="#fees">Fees</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a class="nav-pill-cta" href="#registration">Register Now <span class="cta-arrow" aria-hidden="true">↗</span></a>
+      <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNavigation">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+    </div>
   </div>
 </nav>
 
+<!-- Section A: Hero Section (Strat Dark Aesthetic with Soft Spotlights and Hairline Glass Overview Panel) -->
 <header class="hero" id="home">
-  <div class="hero-inner">
-    <div class="eyebrow">IEEE Sensors Council Egypt Chapter</div>
-    <h1>SENSING<br><span>THE FUTURE.</span></h1>
-    <p class="hero-theme">Digital Twins in Biosensors</p>
-    <p class="hero-intro">A summit bringing together sensing technologies, research, innovation, and the people shaping what comes next.</p>
-    <div class="hero-actions">
-      <a class="button-primary" href="#registration">Register now <span aria-hidden="true">↗</span></a>
-      <a class="button-secondary" href="#rules">Explore the rules</a>
+  <!-- Soft Diagonal Spotlight Beams -->
+  <div class="spotlight-left" aria-hidden="true"></div>
+  <div class="spotlight-right" aria-hidden="true"></div>
+  <!-- Vertical Light Beam behind the Badge -->
+  <div class="vertical-light-beam" aria-hidden="true"></div>
+
+  <div class="hero-content">
+    <!-- Small Pill Badge with Sparkle / Sensor Icon -->
+    <div class="pill-badge">
+      <svg class="badge-sparkle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+      <span>IEEE Sensors Council Egypt Chapter Presents</span>
     </div>
-    <div class="hero-meta">
-      <div><span class="hero-meta-label">WHEN</span><strong>November 12 &amp; 14, 2026</strong></div>
-      <div><span class="hero-meta-label">WHERE</span><strong>The British University in Egypt</strong></div>
+
+    <!-- Huge Confident Headline & Subtitle -->
+    <h1 class="hero-headline">
+      Sensors Summit 2026
+      <span class="hero-theme-gradient">Digital Twin in Biosensing Applications</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Discover how digital twin technologies connect physical biosensing systems with digital models. Join academics, researchers, and senior students for knowledge exchange, networking, and technical innovation.
+    </p>
+
+    <!-- Glass Pill CTAs -->
+    <div class="hero-cta-group">
+      <a class="cta-pill-primary" href="#registration">
+        <span>Register Now</span>
+        <span class="cta-arrow" aria-hidden="true">→</span>
+      </a>
+      <a class="cta-pill-secondary" href="#about">
+        <span>Explore Details</span>
+      </a>
+    </div>
+
+    <div class="hero-review-notice">
+      *Registration applications are subject to review by the organizing committee. Submission does not guarantee acceptance.
+    </div>
+
+    <!-- Countdown Timer (Dark Glass Card) -->
+    <div class="countdown-container" id="countdownTimer" aria-labelledby="countdown-heading" role="region">
+      <div class="countdown-header-tag">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span id="countdown-heading">Summit Starts In</span>
+      </div>
+      <div class="countdown-grid" id="countdownGrid" role="timer" aria-live="off">
+        <div class="countdown-box"><strong id="countdownDays">--</strong><span>Days</span></div>
+        <div class="countdown-box"><strong id="countdownHours">--</strong><span>Hours</span></div>
+        <div class="countdown-box"><strong id="countdownMinutes">--</strong><span>Minutes</span></div>
+        <div class="countdown-box"><strong id="countdownSeconds">--</strong><span>Seconds</span></div>
+      </div>
+      <div class="countdown-banner hidden" id="countdownBanner" role="status" aria-live="polite">The Summit Has Started!</div>
+    </div>
+  </div>
+
+  <!-- Large Rounded Glass Overview Panel Below Hero (Peeking Panel with REAL Data only) -->
+  <div class="overview-panel-wrapper">
+    <div class="panel-glow-backdrop" aria-hidden="true"></div>
+    <div class="overview-panel">
+      <div class="overview-panel-header">
+        <div class="panel-header-title">
+          <span class="panel-header-badge">Summit Overview</span>
+          <span class="panel-header-note">Essential event information verified from official organizers</span>
+        </div>
+      </div>
+
+      <!-- 4 Real Content Glass Cards (1px hairline border style from reference) -->
+      <div class="overview-cards-grid">
+        <!-- Card 1: Event Dates -->
+        <div class="info-glass-card">
+          <div class="card-top-meta">
+            <span class="card-label">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="3" y1="10" y2="10"/></svg>
+              Event Dates
+            </span>
+            <span class="card-tag accent">Confirmed</span>
+          </div>
+          <div class="card-primary-val">Nov 12 &amp; 14, 2026</div>
+          <div class="card-secondary-val">
+            Day 1: Talks &amp; Keynotes (9:00 AM)<br>
+            Day 2: Hands-on Workshop (TBA)
+          </div>
+        </div>
+
+        <!-- Card 2: Host Venue -->
+        <div class="info-glass-card">
+          <div class="card-top-meta">
+            <span class="card-label">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              Host Venue
+            </span>
+            <span class="card-tag">In-Person</span>
+          </div>
+          <div class="card-primary-val">British University in Egypt</div>
+          <div class="card-secondary-val">
+            <a href="https://maps.app.goo.gl/BhbY8ptNSHnDszbR6" target="_blank" rel="noopener noreferrer" class="card-link" aria-label="Open BUE on Google Maps">
+              El Sherouk City, Cairo ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 3: Registration Fee -->
+        <div class="info-glass-card">
+          <div class="card-top-meta">
+            <span class="card-label">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+              Registration Fee
+            </span>
+            <span class="card-tag green">Fixed</span>
+          </div>
+          <div class="card-primary-val">200 EGP</div>
+          <div class="card-secondary-val">
+            Standard attendance. Optional round-trip transport: 300 EGP total.
+          </div>
+        </div>
+
+        <!-- Card 4: Organizers & Theme -->
+        <div class="info-glass-card">
+          <div class="card-top-meta">
+            <span class="card-label">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Organized By
+            </span>
+            <span class="card-tag accent">Official Chapter</span>
+          </div>
+          <div class="card-primary-val">IEEE Sensors Council</div>
+          <div class="card-secondary-val">
+            Egypt Chapter · Theme: Digital Twin in Biosensing Applications
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
 <main class="container">
-  <section class="intro-section" aria-labelledby="summit-intro-title">
-    <div>
-      <div class="section-kicker">The Summit</div>
-      <h2 id="summit-intro-title">Ideas that sense what comes next.</h2>
-    </div>
-    <div class="intro-copy">
-      <p>IEEE Sensors Summit 2026 explores the evolving relationship between sensing technologies and digital twins in biosensors. The summit creates space for research, practical innovation, and collaboration across the sensing community.</p>
-      <p>Join conversations around the technologies and ideas connecting real-world signals with new ways to understand and respond to them.</p>
-      <div class="signal-row" aria-label="Summit themes"><span>SENSING</span><span>RESEARCH</span><span>INNOVATION</span><span>COLLABORATION</span></div>
-    </div>
-  </section>
 
-  <section class="rules-section" id="rules" aria-labelledby="rules-title">
-    <div class="section-heading">
-      <div class="section-kicker">Before you register</div>
-      <h2 id="rules-title">Participation rules</h2>
-      <p>Current registration information from the event application. Organizers should review this section against the final approved event rules before launch.</p>
-    </div>
-    <div class="rules-grid">
-      <article class="rule-item"><h3>Application review</h3><p>Applications are reviewed by the organizing team. Submitting an application does not guarantee acceptance; the final decision is sent by email.</p></article>
-      <article class="rule-item"><h3>Attendance</h3><p>Select one or both event days when applying. Day 1 is the Summit Talks &amp; Keynotes; Day 2 is the Hands-on Workshop.</p></article>
-      <article class="rule-item"><h3>Day 2 eligibility</h3><p>The workshop is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility is reviewed by organizers.</p></article>
-      <article class="rule-item"><h3>Fees and transport</h3><p>The existing application lists a 200 EGP registration fee and an additional 100 EGP for requested transportation.</p></article>
-      <article class="rule-item"><h3>Payment review</h3><p>Payment details and proof are reviewed by the organizing team. Providing a reference does not itself confirm payment.</p></article>
-      <article class="rule-item"><h3>Refund information</h3><p>The refund terms shown in the application are repeated in the Refund Information section below and require organizer approval before publication.</p></article>
-    </div>
-  </section>
-
-  <div class="notice" id="registration">
-    <strong>Limited Seats Available</strong><br>
-    Registration applications will be reviewed by the organizing team.
-    Submitting this form does not guarantee acceptance. Day 2 is restricted
-    to eligible categories. You will receive an email with the final decision.
-  </div>
-
-  <form id="registrationForm" novalidate>
-
-    <section class="section">
-      <h2>1. Personal Information</h2>
-      <p class="description">Please provide your personal and contact details.</p>
-
-      <div class="field">
-        <label for="fullName">Full Name <span class="required">*</span></label>
-        <input id="fullName" name="fullName" required autocomplete="name">
-      </div>
-
-      <div class="grid">
-        <div class="field">
-          <label for="mobile">Mobile Number <span class="required">*</span></label>
-          <div class="country-phone">
-            <select id="mobileCountry" aria-label="Mobile number country"></select>
-            <input id="mobile" name="mobile" type="tel" required autocomplete="tel" aria-describedby="mobileHelp">
-          </div>
-          <div class="help" id="mobileHelp">Numbers beginning with + are read as international and override the selected country.</div>
-        </div>
-        <div class="field">
-          <label for="email">Email Address <span class="required">*</span></label>
-          <input id="email" name="email" type="email" required autocomplete="email">
-        </div>
-      </div>
-
-      <div class="field">
-        <span class="field-label">Gender <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="gender" value="Male" required> Male</label>
-        <label class="choice"><input type="radio" name="gender" value="Female"> Female</label>
-      </div>
-
-      <div class="field">
-        <span class="field-label">Are you an IEEE Member? <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="ieeeMember" value="Yes" required> Yes</label>
-        <label class="choice"><input type="radio" name="ieeeMember" value="No"> No</label>
-      </div>
-
-      <div class="field hidden" id="ieeeNumberField">
-        <label for="ieeeNumber">IEEE Membership Number <span class="required">*</span></label>
-        <input id="ieeeNumber" name="ieeeNumber">
-      </div>
-
-      <div class="field">
-        <span class="field-label">Are you a BUE staff member or student? <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="bueMember" value="Yes" required> Yes</label>
-        <label class="choice"><input type="radio" name="bueMember" value="No"> No</label>
-      </div>
-
-      <div id="nationalIdFields" class="hidden">
-        <div class="field">
-          <label for="nationalId">National ID Number <span class="required">*</span></label>
-          <input id="nationalId" name="nationalId" inputmode="numeric" maxlength="14">
-          <div class="help">Enter your 14-digit Egyptian National ID number.</div>
-        </div>
-        <div class="field">
-          <label for="nationalIdFile">National ID Card (Front and Back) <span class="required">*</span></label>
-          <input id="nationalIdFile" name="nationalIdFile" type="file" accept=".pdf,.jpg,.jpeg,.png">
-          <div class="help">Upload one file containing both sides. PDF, JPG or PNG, maximum 5 MB.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>2. Education &amp; Professional Background</h2>
-      <p class="description">Select your current status to display the relevant questions.</p>
-
-      <div class="field">
-        <span class="field-label">Current Status <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="status" value="Student" required> Student</label>
-        <label class="choice"><input type="radio" name="status" value="Graduate"> Graduate</label>
-      </div>
-
-      <div id="studentFields" class="hidden">
-        <div class="field">
-          <label for="studentDepartment">Which department are you studying in? <span class="required">*</span></label>
-          <select id="studentDepartment" name="studentDepartment">
-            <option value="">Select department</option>
-            <option>Electrical Engineering</option>
-            <option>Electronics and Communications Engineering</option>
-            <option>Artificial Intelligence</option>
-            <option>Computer Science</option>
-            <option>Computer Engineering</option>
-            <option>Biomedical Engineering</option>
-            <option value="Other">Other (Please specify)</option>
-          </select>
-          <input class="hidden other-input" id="studentDepartmentOther" name="studentDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
-        </div>
-
-        <div class="field">
-          <label for="university">What is the name of your university? <span class="required">*</span></label>
-          <select id="university" name="university">
-            <option value="">Select university or institute</option>
-            <option>Ahram Canadian University</option>
-            <option>Ain Shams University</option>
-            <option>Al-Azhar University</option>
-            <option>Alexandria University</option>
-            <option>Arab Academy for Science, Technology and Maritime Transport</option>
-            <option>Arab Open University</option>
-            <option>Aswan University</option>
-            <option>Assiut University</option>
-            <option>Badr University in Cairo (BUC)</option>
-            <option>Benha National University</option>
-            <option>Benha University</option>
-            <option>Beni-Suef University</option>
-            <option>BFCAI (Faculty of Computers &amp; Artificial Intelligence)</option>
-            <option>Borg El Arab Technological University</option>
-            <option>The British University in Egypt (BUE)</option>
-            <option>Cairo University</option>
-            <option>Canadian International College (CIC)</option>
-            <option>Coventry University Egypt</option>
-            <option>Damanhour University</option>
-            <option>Damietta University</option>
-            <option>Delta Technological University</option>
-            <option>Delta University for Science and Technology</option>
-            <option>Deraya University</option>
-            <option>Egypt-Japan University of Science and Technology (E-JUST)</option>
-            <option>Egypt University of Informatics (EUI)</option>
-            <option>Egyptian Chinese University (ECU)</option>
-            <option>Egyptian E-Learning University (EELU)</option>
-            <option>Egyptian Russian University (ERU)</option>
-            <option>El Shorouk Academy</option>
-            <option>Fayoum University</option>
-            <option>Future High Institute of Engineering in Fayoum</option>
-            <option>Future University in Egypt (FUE)</option>
-            <option>German University in Cairo (GUC)</option>
-            <option>Giza Higher Institute of Engineering and Technology</option>
-            <option>Giza Higher Institute for Administrative Sciences</option>
-            <option>Heliopolis University</option>
-            <option>Helwan University</option>
-            <option>Higher Institute for Engineering and Technology</option>
-            <option>Higher Technological Institute (HTI), Beni Suef</option>
-            <option>Horus University</option>
-            <option>Institute of Aviation Engineering and Technology</option>
-            <option>Kafr El Sheikh University</option>
-            <option>Luxor University</option>
-            <option>Mansoura National University</option>
-            <option>Mansoura University</option>
-            <option>Matrouh University</option>
-            <option>May University in Cairo (MUC)</option>
-            <option>Menoufia University</option>
-            <option>Minia University</option>
-            <option>Minufiya National University</option>
-            <option>Misr International University (MIU)</option>
-            <option>Misr University for Science and Technology (MUST)</option>
-            <option>Modern Academy for Engineering and Technology</option>
-            <option>Modern University for Technology and Information</option>
-            <option>MSA University</option>
-            <option>Nahda University</option>
-            <option>New Assiut Technological University</option>
-            <option>New Cairo Academy</option>
-            <option>New Cairo Technological University</option>
-            <option>New Giza University (NGU)</option>
-            <option>New Ismailia National University</option>
-            <option>New Mansoura University</option>
-            <option>New Valley University</option>
-            <option>Nile University</option>
-            <option>October 6 University</option>
-            <option>Pharos University in Alexandria</option>
-            <option>Port Said University</option>
-            <option>Sadat Academy for Management Sciences</option>
-            <option>Sadat City University</option>
-            <option>Sohag University</option>
-            <option>South Valley University</option>
-            <option>Sphinx University</option>
-            <option>Suez Canal University</option>
-            <option>Suez University</option>
-            <option>Tanta University</option>
-            <option>The University of Hertfordshire Hosted by GAF</option>
-            <option>Tiba Academy</option>
-            <option>University of October 6</option>
-            <option>University of British Columbia / Canadian International College</option>
-            <option>Zagazig National University</option>
-            <option>Zagazig University</option>
-            <option value="Other">Other (Please specify)</option>
-          </select>
-          <input class="hidden other-input" id="universityOther" name="universityOther" placeholder="Specify your university" style="margin-top:10px">
-        </div>
-
-        <div class="field">
-          <label for="studyYear">Current Study Year <span class="required">*</span></label>
-          <select id="studyYear" name="studyYear">
-            <option value="">Select study year</option>
-            <option>1st Year</option>
-            <option>2nd Year</option>
-            <option>3rd Year</option>
-            <option>4th Year</option>
-            <option>5th Year</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="graduateFields" class="hidden">
-        <div class="field">
-          <label for="graduateDepartment">Which department did you graduate from? <span class="required">*</span></label>
-          <select id="graduateDepartment" name="graduateDepartment">
-            <option value="">Select department</option>
-            <option>Electrical Engineering</option>
-            <option>Electronics and Communications Engineering</option>
-            <option>Artificial Intelligence</option>
-            <option>Computer Science</option>
-            <option>Computer Engineering</option>
-            <option>Biomedical Engineering</option>
-            <option value="Other">Other (Please specify)</option>
-          </select>
-          <input class="hidden other-input" id="graduateDepartmentOther" name="graduateDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
-        </div>
-
-        <div class="field">
-          <label for="graduationPeriod">When did you graduate? <span class="required">*</span></label>
-          <select id="graduationPeriod" name="graduationPeriod">
-            <option value="">Select graduation period</option>
-            <option>Before 2014</option>
-            <option>2014–2019</option>
-            <option>2020–2024</option>
-            <option value="Other">Other (Please specify year)</option>
-          </select>
-          <input class="hidden other-input" id="graduationYearOther" name="graduationYearOther" type="number" min="1950" max="2026" placeholder="Enter graduation year" style="margin-top:10px">
-        </div>
-
-        <div class="field">
-          <label for="mastersStatus">Master's Degree Status <span class="required">*</span></label>
-          <select id="mastersStatus" name="mastersStatus">
-            <option value="">Select status</option>
-            <option>Not Started</option>
-            <option>Currently Studying</option>
-            <option>Completed</option>
-          </select>
-        </div>
-        <div id="mastersCurrent" class="grid hidden">
-          <div class="field">
-            <label for="mastersStart">Master's Start Year <span class="required">*</span></label>
-            <input id="mastersStart" name="mastersStart" type="number" min="2000" max="2035">
-          </div>
-          <div class="field">
-            <label for="mastersExpected">Expected Completion Year <span class="required">*</span></label>
-            <input id="mastersExpected" name="mastersExpected" type="number" min="2000" max="2040">
-          </div>
-        </div>
-        <div id="mastersCompleted" class="field hidden">
-          <label for="mastersYear">Master's Completion Year <span class="required">*</span></label>
-          <input id="mastersYear" name="mastersYear" type="number" min="2000" max="2026">
-        </div>
-
-        <div class="field">
-          <label for="phdStatus">PhD Status <span class="required">*</span></label>
-          <select id="phdStatus" name="phdStatus">
-            <option value="">Select status</option>
-            <option>Not Started</option>
-            <option>Currently Studying</option>
-            <option>Completed</option>
-          </select>
-        </div>
-        <div id="phdCurrent" class="field hidden">
-          <label for="phdStart">PhD Start Year <span class="required">*</span></label>
-          <input id="phdStart" name="phdStart" type="number" min="2000" max="2040">
-        </div>
-        <div id="phdCompleted" class="field hidden">
-          <label for="phdYear">PhD Award Year <span class="required">*</span></label>
-          <input id="phdYear" name="phdYear" type="number" min="2000" max="2026">
-        </div>
-
-        <div class="field">
-          <label for="jobTitle">Current Job Title <span class="required">*</span></label>
-          <input id="jobTitle" name="jobTitle">
-        </div>
-        <div class="field">
-          <label for="organization">Organization <span class="required">*</span></label>
-          <input id="organization" name="organization">
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>3. Attendance Selection</h2>
-      <p class="description">Select the day or days you wish to attend. The registration fee is the same whether you select one day or both days.</p>
-
-      <label class="choice">
-        <input type="checkbox" id="day1" name="attendance" value="Day 1">
-        <span><strong>Day 1 | Summit Talks &amp; Keynotes</strong><br>November 12, 2026</span>
-      </label>
-      <label class="choice">
-        <input type="checkbox" id="day2" name="attendance" value="Day 2">
-        <span><strong>Day 2 | Hands-on Workshop</strong><br>November 14, 2026</span>
-      </label>
-      <div class="help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
-      <p id="attendanceError" class="field-error" role="alert" hidden>Please select at least one attendance day.</p>
-    </section>
-
-    <section class="section">
-      <h2>4. Transportation Preferences</h2>
-      <p class="description">Transportation, if requested, costs an additional 100 EGP.</p>
-
-      <div class="field">
-        <span class="field-label">Do you require transportation? <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="transport" value="Ramses Square" required> Yes, from Ramses Square (+100 EGP)</label>
-        <label class="choice"><input type="radio" name="transport" value="Other location"> Yes, from another location (+100 EGP)</label>
-        <label class="choice"><input type="radio" name="transport" value="No transport"> No, I will arrange my own transportation (0 EGP)</label>
-      </div>
-
-      <div id="pickupField" class="field hidden">
-        <label for="pickupLocation">Preferred Pickup Location <span class="required">*</span></label>
-        <input id="pickupLocation" name="pickupLocation" placeholder="Enter your preferred pickup location">
-        <div class="help">Alternative pickup requests are subject to review and availability.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>5. Registration Fees</h2>
-      <p class="description">Review your registration fee before submitting payment details.</p>
-      <div class="fee-box">
-        <div class="fee-line"><span>Registration Fee</span><strong>200 EGP</strong></div>
-        <div class="fee-line"><span>Transportation</span><strong id="transportFee">0 EGP</strong></div>
-        <div class="fee-line total"><span>Total Amount</span><span id="totalFee">200 EGP</span></div>
-      </div>
-      <div class="help">The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.</div>
-    </section>
-
-    <section class="section">
-      <h2>6. Payment Details</h2>
-      <p class="description">Enter your payment information. Payment verification will be completed by the organizing team.</p>
-
-      <div class="field">
-        <span class="field-label">Payment Method <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="paymentMethod" value="InstaPay" required> InstaPay</label>
-        <label class="choice"><input type="radio" name="paymentMethod" value="Mobile Wallet"> Mobile Wallet</label>
-      </div>
-
-      <div class="grid">
-        <div class="field">
-          <label for="transactionRef">Transaction Reference Number <span class="required">*</span></label>
-          <input id="transactionRef" name="transactionRef" required>
-        </div>
-        <div class="field">
-          <label for="paymentDate">Payment Date <span class="required">*</span></label>
-          <input id="paymentDate" name="paymentDate" type="date" required>
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="paymentTime">Payment Time <span class="required">*</span></label>
-        <input id="paymentTime" name="paymentTime" type="time" required>
-      </div>
-
-      <div class="field">
-        <label for="paymentProof">Upload Proof of Payment <span class="required">*</span></label>
-        <input id="paymentProof" name="paymentProof" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
-        <div class="help">Accepted formats: PDF, JPG, PNG. Maximum file size: 5 MB.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>7. Refund Information</h2>
-      <p class="description">Provide accurate details so that an eligible refund can be processed.</p>
-
-      <div class="field">
-        <label for="recipientName">Recipient Full Name <span class="required">*</span></label>
-        <input id="recipientName" name="recipientName" required>
-      </div>
-
-      <div class="field">
-        <span class="field-label">Preferred Refund Method <span class="required">*</span></span>
-        <label class="choice"><input type="radio" name="refundMethod" value="InstaPay" required> InstaPay</label>
-        <label class="choice"><input type="radio" name="refundMethod" value="Mobile Wallet"> Mobile Wallet</label>
-      </div>
-
-      <div id="refundInstaPay" class="hidden">
-        <div class="field">
-          <label for="instapayDetails">InstaPay Username, Receiving Link, or Registered Phone Number <span class="required">*</span></label>
-          <input id="instapayDetails" name="instapayDetails" placeholder="Enter your InstaPay receiving details">
-        </div>
-      </div>
-
-      <div id="refundWallet" class="hidden">
-        <div class="field">
-          <label for="walletNumber">Mobile Wallet Phone Number <span class="required">*</span></label>
-          <div class="country-phone">
-            <select id="walletCountry" aria-label="Wallet number country"></select>
-            <input id="walletNumber" name="walletNumber" type="tel" placeholder="Enter the wallet phone number" autocomplete="tel">
-          </div>
-          <div class="help">Numbers beginning with + are read as international and override the selected country.</div>
-        </div>
-      </div>
-
-      <div class="warning">
-        <strong>Important Refund Notice</strong><br>
-        Please verify that your recipient name and refund details are accurate and complete. Incorrect or invalid information may prevent your refund from being processed. Contact the organizing team at
-        <a href="mailto:Amr_Nabih@ieee.org">Amr_Nabih@ieee.org</a>
-        if you need to correct your information or have payment-related questions.
-        <br><br>
-        <strong>Refund Policy:</strong>
-        Rejected applicants will receive a full refund of any payment made. Accepted participants are eligible for a refund if they attend all the days they registered and paid for. No refund will be issued if a participant misses any selected day. If you register for both days but attend only one, you will not be eligible for a refund.
-      </div>
-
-      <label class="choice" style="margin-top:18px">
-        <input type="checkbox" id="refundAcknowledgement" required>
-        <span>I have reviewed the refund notice and policy and confirm that the details I provided are accurate. <span class="required">*</span></span>
-      </label>
-    </section>
-
-    <section class="section">
-      <h2>8. Review &amp; Submit</h2>
-      <p class="description">Please review your information before submitting your application.</p>
-
-      <label class="choice">
-        <input type="checkbox" id="accuracyAcknowledgement" required>
-        <span>I confirm that the information provided is accurate and understand that submitting this form does not guarantee acceptance. <span class="required">*</span></span>
-      </label>
-
-      <button type="submit">Submit Registration Application</button>
-      <p class="help" style="text-align:center;margin-top:12px">
-        Your application is subject to review by the organizing team.
+  <!-- Section B: About the Summit (Centered icon cards) -->
+  <section class="page-section" id="about" aria-labelledby="about-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">ABOUT THE SUMMIT</div>
+      <h2 id="about-title">Connecting Sensing Technologies with Digital Innovation</h2>
+      <p>
+        Sensors Summit 2026 is an initiative organized by the IEEE Sensors Council Egypt Chapter to encourage knowledge exchange, academic engagement, and networking around emerging sensing technologies.
       </p>
-      <div id="formMessage" class="form-status hidden" role="status" aria-live="polite" aria-atomic="true" style="margin-top:18px"></div>
-    </section>
-  </form>
-
-  <section class="faq-section" id="faq" aria-labelledby="faq-title">
-    <div class="section-heading">
-      <div class="section-kicker">Quick answers</div>
-      <h2 id="faq-title">Frequently asked questions</h2>
+      <p style="margin-top:12px">
+        This edition explores <strong>Digital Twin in Biosensing Applications</strong>, highlighting the intersection of sensor technologies, digital representations, data-driven analysis, and biosensing research.
+      </p>
+      <p style="margin-top:12px">
+        The summit provides an opportunity for participants to engage with a specialized technical topic, connect with members of the academic and engineering communities, and explore potential directions for research and innovation.
+      </p>
     </div>
-    <div class="faq-list" id="faqList"></div>
+
+    <h3 class="reveal-on-scroll" style="font-size:20px;margin-bottom:16px">Why Attend?</h3>
+    <div class="cards-grid-4">
+      <div class="icon-card reveal-on-scroll reveal-stagger-1">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        </div>
+        <h3>Explore Emerging Technologies</h3>
+        <p>Discover the concepts and potential applications of digital twins in biosensing.</p>
+      </div>
+
+      <div class="icon-card reveal-on-scroll reveal-stagger-2">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+        </div>
+        <h3>Exchange Knowledge</h3>
+        <p>Engage with technical perspectives and ideas relevant to sensing technologies and research.</p>
+      </div>
+
+      <div class="icon-card reveal-on-scroll reveal-stagger-3">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Build Professional Connections</h3>
+        <p>Connect with academics, researchers, senior students, and members of the technology community.</p>
+      </div>
+
+      <div class="icon-card reveal-on-scroll reveal-stagger-4">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <h3>Discover New Opportunities</h3>
+        <p>Broaden your understanding of the evolving relationship between physical sensing systems and digital technologies.</p>
+      </div>
+    </div>
   </section>
 
-  <section class="partners-section" id="partners" aria-labelledby="partners-title">
-    <div class="section-heading">
-      <div class="section-kicker">In good company</div>
-      <h2 id="partners-title">Partner and sponsor</h2>
-      <p>Official partner and sponsor identities will be published here once approved logo assets and mappings are supplied.</p>
+  <!-- Section C: Summit Theme -->
+  <section class="page-section" id="theme" aria-labelledby="theme-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">SUMMIT THEME</div>
+      <h2 id="theme-title">Digital Twin in Biosensing Applications</h2>
     </div>
-    <div class="partner-grid" id="partnerGrid"></div>
+
+    <div class="theme-box reveal-on-scroll">
+      <p>
+        A digital twin is a digital representation of a physical system that can be informed by data from that system. In biosensing, this concept opens opportunities to explore how sensor measurements, digital models, and computational analysis can work together.
+      </p>
+      <p><strong>Potential areas of exploration include:</strong></p>
+      <ul class="theme-list">
+        <li>
+          <svg class="theme-list-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Digital representations of biosensing systems.</span>
+        </li>
+        <li>
+          <svg class="theme-list-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Sensor data integration and analysis.</span>
+        </li>
+        <li>
+          <svg class="theme-list-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Monitoring and modelling of biological processes.</span>
+        </li>
+        <li>
+          <svg class="theme-list-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Research opportunities in data-driven biosensing.</span>
+        </li>
+        <li>
+          <svg class="theme-list-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Emerging applications and challenges in digital twin technologies.</span>
+        </li>
+      </ul>
+      <p>
+        The summit theme offers a focused opportunity to explore these concepts and their relevance to the future of biosensing.
+      </p>
+    </div>
   </section>
+
+  <!-- Section D: Event Details (Centered Compact Icon-Led Cards) -->
+  <section class="page-section" id="details" aria-labelledby="details-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">EVENT DETAILS</div>
+      <h2 id="details-title">Key Summit Information</h2>
+      <p>Essential details regarding event identity, schedule, venue, organizer, and attendance mode.</p>
+    </div>
+
+    <div class="details-grid">
+      <div class="detail-item reveal-on-scroll reveal-stagger-1">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+        </div>
+        <span class="detail-label">Event</span>
+        <div class="detail-value">Sensors Summit 2026</div>
+      </div>
+
+      <div class="detail-item reveal-on-scroll reveal-stagger-2">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span class="detail-label">Theme</span>
+        <div class="detail-value">Digital Twin in Biosensing Applications</div>
+      </div>
+
+      <div class="detail-item reveal-on-scroll reveal-stagger-3">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="3" y1="10" y2="10"/></svg>
+        </div>
+        <span class="detail-label">Dates</span>
+        <div class="detail-value">November 12 and November 14, 2026</div>
+      </div>
+
+      <div class="detail-item reveal-on-scroll reveal-stagger-4">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <span class="detail-label">Venue</span>
+        <div class="detail-value">
+          <a href="https://maps.app.goo.gl/BhbY8ptNSHnDszbR6" target="_blank" rel="noopener noreferrer" class="venue-link" aria-label="The British University in Egypt on Google Maps (opens in new tab)">
+            The British University in Egypt (BUE)
+            <svg class="external-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="detail-item reveal-on-scroll reveal-stagger-5">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="detail-label">Organizer</span>
+        <div class="detail-value">IEEE Sensors Council Egypt Chapter</div>
+      </div>
+
+      <div class="detail-item reveal-on-scroll">
+        <div class="detail-item-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <span class="detail-label">Attendance</span>
+        <div class="detail-value">In person</div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px" class="reveal-on-scroll">
+      <a class="button-primary" href="#registration">Start Your Registration <span class="btn-arrow" aria-hidden="true">↗</span></a>
+    </div>
+  </section>
+
+  <!-- Section E: Who Should Attend? (Centered Cards) -->
+  <section class="page-section" id="audience" aria-labelledby="audience-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">WHO SHOULD ATTEND?</div>
+      <h2 id="audience-title">Welcoming the Sensing &amp; Research Community</h2>
+      <p>Sensors Summit 2026 welcomes participants interested in sensing technologies, biosensing, digital twins, and related research areas.</p>
+    </div>
+
+    <div class="cards-grid-3">
+      <div class="icon-card reveal-on-scroll reveal-stagger-1">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        </div>
+        <h3>Academics</h3>
+        <p>Explore emerging technical directions and opportunities for academic exchange.</p>
+      </div>
+
+      <div class="icon-card reveal-on-scroll reveal-stagger-2">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M10 13v4"/><path d="M8 15h4"/></svg>
+        </div>
+        <h3>Researchers</h3>
+        <p>Engage with concepts relevant to biosensing systems, sensing data, and digital modelling.</p>
+      </div>
+
+      <div class="icon-card reveal-on-scroll reveal-stagger-3">
+        <div class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        </div>
+        <h3>Senior Students</h3>
+        <p>Expand your technical perspective, learn about emerging applications, and connect with the research community.</p>
+      </div>
+    </div>
+
+    <p class="reveal-on-scroll" style="margin-top:24px;color:var(--muted);font-size:15px;max-width:760px">
+      If you are interested in the intersection of sensing and digital technologies, this summit offers an opportunity to explore the field and connect with others who share that interest.
+    </p>
+  </section>
+
+  <!-- Section F: Join the Summit -->
+  <section class="page-section" id="join" aria-labelledby="join-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">JOIN THE SUMMIT</div>
+      <h2 id="join-title">Be Part of the Conversation</h2>
+      <p>
+        Be part of the conversation around the future of biosensing and digital twin technologies. Review the registration details, select your intended attendance days, and submit your application for review.
+      </p>
+    </div>
+
+    <div class="join-card reveal-on-scroll">
+      <div class="join-grid">
+        <div class="join-stat">
+          <span>Dates</span>
+          <strong>November 12 &amp; 14, 2026</strong>
+        </div>
+        <div class="join-stat">
+          <span>Location</span>
+          <strong>
+            <a href="https://maps.app.goo.gl/BhbY8ptNSHnDszbR6" target="_blank" rel="noopener noreferrer" class="venue-link" aria-label="The British University in Egypt on Google Maps (opens in new tab)">
+              BUE, El Sherouk ↗
+            </a>
+          </strong>
+        </div>
+        <div class="join-stat">
+          <span>Standard Fee</span>
+          <strong>EGP 200</strong>
+        </div>
+        <div class="join-stat">
+          <span>With Transportation</span>
+          <strong>EGP 300 total</strong>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <a class="button-cta" href="#registration">Register Now <span class="btn-arrow" aria-hidden="true">↗</span></a>
+        <span style="font-size:13px;color:var(--muted);font-style:italic">
+          Your application will be reviewed by the organizing committee. Your registration is not confirmed until you receive confirmation by email.
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section H: Plan Your Participation -->
+  <section class="page-section" id="plan" aria-labelledby="plan-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">PLAN YOUR PARTICIPATION</div>
+      <h2 id="plan-title">Essential Details for Attendees</h2>
+      <p>Review key information to prepare your summit schedule, travel, and attendance requirements.</p>
+    </div>
+
+    <div class="cards-grid-2">
+      <div class="feature-card reveal-on-scroll reveal-stagger-1">
+        <h3>Event Dates</h3>
+        <p>
+          November 12 and November 14, 2026. Please select your intended attendance day or days in the registration form. The final event agenda and session timings will be announced once confirmed by the organizing committee.
+        </p>
+      </div>
+
+      <div class="feature-card reveal-on-scroll reveal-stagger-2">
+        <h3>Venue</h3>
+        <p>
+          <a href="https://maps.app.goo.gl/BhbY8ptNSHnDszbR6" target="_blank" rel="noopener noreferrer" class="venue-link" aria-label="The British University in Egypt on Google Maps (opens in new tab)">
+            The British University in Egypt (BUE)
+            <svg class="external-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+          </a>.
+          The summit will take place in person at the host university. Further venue and arrival information will be communicated through the official event channels when available.
+        </p>
+      </div>
+
+      <div class="feature-card reveal-on-scroll reveal-stagger-3">
+        <h3>Attendance</h3>
+        <p>
+          Participation is in person. Participants are responsible for submitting accurate registration details and following the instructions provided by the organizing committee.
+        </p>
+      </div>
+
+      <div class="feature-card reveal-on-scroll reveal-stagger-4">
+        <h3>Transportation</h3>
+        <p>
+          Participants may select the transportation option during registration, subject to the arrangements confirmed by the organizing committee. Transportation details will be sent by email after registration confirmation.
+        </p>
+      </div>
+    </div>
+
+    <div class="feature-card reveal-on-scroll">
+      <h3>Event Agenda</h3>
+      <p>
+        The detailed agenda has not yet been finalized for publication. Confirmed session information and timings will be shared once approved.
+      </p>
+    </div>
+  </section>
+
+  <!-- Section I: Participation Fees (Centered Cards) -->
+  <section class="page-section" id="fees" aria-labelledby="fees-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">PARTICIPATION FEES</div>
+      <h2 id="fees-title">Clear &amp; Transparent Fees</h2>
+      <p>Participation options tailored for standard attendance and round-trip event transportation.</p>
+    </div>
+
+    <div class="fee-cards-container">
+      <div class="fee-card reveal-on-scroll reveal-stagger-1">
+        <span class="fee-card-badge">Standard Option</span>
+        <h3>Standard Registration</h3>
+        <p class="fee-card-desc">Participation without transportation</p>
+        <div class="fee-amount">EGP 200</div>
+        <p style="font-size:13px;color:var(--muted);margin:0;text-align:center">Access to registered technical summit sessions and conference materials.</p>
+      </div>
+
+      <div class="fee-card featured reveal-on-scroll reveal-stagger-2">
+        <span class="fee-card-badge">With Transport</span>
+        <h3>Registration with Transportation</h3>
+        <p class="fee-card-desc">Includes the additional transportation fee</p>
+        <div class="fee-amount">EGP 300</div>
+        <p style="font-size:13px;color:var(--muted);margin:0;text-align:center">Includes round-trip event bus transportation from confirmed pickup locations.</p>
+      </div>
+    </div>
+
+    <div class="fee-note-box reveal-on-scroll">
+      <strong>Important Note:</strong> The participation fee does not increase when selecting both event dates.
+    </div>
+  </section>
+
+  <!-- Section J: Registration Process (Centered Numbered Cards) -->
+  <section class="page-section" id="process" aria-labelledby="process-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">REGISTRATION PROCESS</div>
+      <h2 id="process-title">How to Register</h2>
+      <p>Follow these 5 simple steps to submit your application for Sensors Summit 2026.</p>
+    </div>
+
+    <div class="process-steps">
+      <div class="step-card reveal-on-scroll reveal-stagger-1">
+        <div class="step-number">1</div>
+        <h3>Complete the Form</h3>
+        <p>Enter your personal and contact information accurately, and provide the requested academic or professional details.</p>
+      </div>
+
+      <div class="step-card reveal-on-scroll reveal-stagger-2">
+        <div class="step-number">2</div>
+        <h3>Select Attendance</h3>
+        <p>Choose your intended attendance day or days and indicate whether you require transportation.</p>
+      </div>
+
+      <div class="step-card reveal-on-scroll reveal-stagger-3">
+        <div class="step-number">3</div>
+        <h3>Submit Payment</h3>
+        <p>Pay the applicable participation fee using InstaPay or mobile wallet. Provide the 12-digit reference and proof.</p>
+      </div>
+
+      <div class="step-card reveal-on-scroll reveal-stagger-4">
+        <div class="step-number">4</div>
+        <h3>Submit Application</h3>
+        <p>Review your entries and submit your application for review by the organizing committee.</p>
+      </div>
+
+      <div class="step-card reveal-on-scroll reveal-stagger-5">
+        <div class="step-number">5</div>
+        <h3>Await Confirmation</h3>
+        <p>The organizing committee will review your application. You will be notified of the outcome by email.</p>
+      </div>
+    </div>
+
+    <div class="notice reveal-on-scroll" style="margin-top:20px">
+      <strong>Important Notice:</strong> Submitting the form or making a payment does not guarantee acceptance. Registration is subject to review and confirmation.
+    </div>
+
+    <div class="process-info-box reveal-on-scroll">
+      <h4>Payment Methods</h4>
+      <p>The currently available payment methods are <strong>InstaPay</strong> and <strong>Mobile Wallet</strong>. Follow the payment instructions provided through the official registration process. Ensure that your transaction information and uploaded proof are accurate and readable.</p>
+
+      <h4>Transaction Reference</h4>
+      <p>The transaction reference submitted through the registration form must contain <strong>exactly 12 digits</strong>. Please verify the reference carefully before submission, including any leading zeroes.</p>
+
+      <h4>Registration Deadline</h4>
+      <p>The registration closing date and time will be announced after approval by the organizing committee. Please follow the official event communication channels for updates.</p>
+    </div>
+  </section>
+
+  <!-- Section K: Registration Form -->
+  <section class="page-section" id="registration" aria-labelledby="reg-heading">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">REGISTRATION FORM</div>
+      <h2 id="reg-heading">Apply for Sensors Summit 2026</h2>
+      <p>
+        Complete the registration form carefully. Ensure that your information and uploaded documents are accurate before submitting your application.
+      </p>
+    </div>
+
+    <div class="notice reveal-on-scroll">
+      <strong>Limited Seats Available</strong><br>
+      Registration applications are subject to review by the organizing committee.
+      Submission does not guarantee acceptance. Day 2 is restricted
+      to eligible categories. You will receive an email with the final decision.
+    </div>
+
+    <form id="registrationForm" novalidate>
+
+      <section class="section reveal-on-scroll">
+        <h2>1. Personal Information</h2>
+        <p class="description">Please provide your personal and contact details.</p>
+
+        <div class="field">
+          <label for="fullName">Full Name <span class="required">*</span></label>
+          <input id="fullName" name="fullName" required autocomplete="name">
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="mobile">Mobile Number <span class="required">*</span></label>
+            <div class="country-phone">
+              <select id="mobileCountry" aria-label="Mobile number country"></select>
+              <input id="mobile" name="mobile" type="tel" required autocomplete="tel" aria-describedby="mobileHelp">
+            </div>
+            <div class="help" id="mobileHelp">Numbers beginning with + are read as international and override the selected country.</div>
+          </div>
+          <div class="field">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input id="email" name="email" type="email" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Gender <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="gender" value="Male" required> Male</label>
+          <label class="choice"><input type="radio" name="gender" value="Female"> Female</label>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Are you an IEEE Member? <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="ieeeMember" value="Yes" required> Yes</label>
+          <label class="choice"><input type="radio" name="ieeeMember" value="No"> No</label>
+        </div>
+
+        <div class="field hidden" id="ieeeNumberField">
+          <label for="ieeeNumber">IEEE Membership Number <span class="required">*</span></label>
+          <input id="ieeeNumber" name="ieeeNumber">
+        </div>
+
+        <div class="field">
+          <span class="field-label">Are you a BUE staff member or student? <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="bueMember" value="Yes" required> Yes</label>
+          <label class="choice"><input type="radio" name="bueMember" value="No"> No</label>
+        </div>
+
+        <div id="nationalIdFields" class="hidden">
+          <div class="field">
+            <label for="nationalId">National ID Number <span class="required">*</span></label>
+            <input id="nationalId" name="nationalId" inputmode="numeric" maxlength="14">
+            <div class="help">Enter your 14-digit Egyptian National ID number.</div>
+          </div>
+          <div class="field">
+            <label for="nationalIdFile">National ID Card (Front and Back) <span class="required">*</span></label>
+            <input id="nationalIdFile" name="nationalIdFile" type="file" accept=".pdf,.jpg,.jpeg,.png">
+            <div class="help">Upload one file containing both sides. PDF, JPG or PNG, maximum 5 MB.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">How did you hear about the Summit?</span>
+          <div class="choices-grid">
+            <label class="choice"><input type="checkbox" name="referralSources" value="Social Media"> <span>Social Media</span></label>
+            <label class="choice"><input type="checkbox" name="referralSources" value="Friend"> <span>Friend</span></label>
+            <label class="choice"><input type="checkbox" name="referralSources" value="IEEE Event"> <span>IEEE Event</span></label>
+            <label class="choice"><input type="checkbox" name="referralSources" value="IEEE Email"> <span>IEEE Email</span></label>
+            <label class="choice"><input type="checkbox" name="referralSources" value="University Activity"> <span>University Activity</span></label>
+            <label class="choice"><input type="checkbox" name="referralSources" value="Through an Ambassador" id="referralAmbassadorCheckbox"> <span>Through an Ambassador</span></label>
+          </div>
+        </div>
+
+        <div class="field hidden" id="ambassadorCodeField">
+          <label for="ambassadorCode">Ambassador Code <span class="required">*</span></label>
+          <input id="ambassadorCode" name="ambassadorCode" placeholder="Enter your Ambassador Code" autocomplete="off">
+          <div class="help">Please enter the referral code provided by your Ambassador.</div>
+        </div>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>2. Education &amp; Professional Background</h2>
+        <p class="description">Select your current status to display the relevant questions.</p>
+
+        <div class="field">
+          <span class="field-label">Current Status <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="status" value="Student" required> Student</label>
+          <label class="choice"><input type="radio" name="status" value="Graduate"> Graduate</label>
+        </div>
+
+        <div id="studentFields" class="hidden">
+          <div class="field">
+            <label for="studentDepartment">Which department are you studying in? <span class="required">*</span></label>
+            <select id="studentDepartment" name="studentDepartment">
+              <option value="">Select department</option>
+              <option>Electrical Engineering</option>
+              <option>Electronics and Communications Engineering</option>
+              <option>Artificial Intelligence</option>
+              <option>Computer Science</option>
+              <option>Computer Engineering</option>
+              <option>Biomedical Engineering</option>
+              <option value="Other">Other (Please specify)</option>
+            </select>
+            <input class="hidden other-input" id="studentDepartmentOther" name="studentDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
+          </div>
+
+          <div class="field">
+            <label for="university">What is the name of your university? <span class="required">*</span></label>
+            <select id="university" name="university">
+              <option value="">Select university or institute</option>
+              <option>Ahram Canadian University</option>
+              <option>Ain Shams University</option>
+              <option>Al-Azhar University</option>
+              <option>Alexandria University</option>
+              <option>Arab Academy for Science, Technology and Maritime Transport</option>
+              <option>Arab Open University</option>
+              <option>Aswan University</option>
+              <option>Assiut University</option>
+              <option>Badr University in Cairo (BUC)</option>
+              <option>Benha National University</option>
+              <option>Benha University</option>
+              <option>Beni-Suef University</option>
+              <option>BFCAI (Faculty of Computers &amp; Artificial Intelligence)</option>
+              <option>Borg El Arab Technological University</option>
+              <option>The British University in Egypt (BUE)</option>
+              <option>Cairo University</option>
+              <option>Canadian International College (CIC)</option>
+              <option>Coventry University Egypt</option>
+              <option>Damanhour University</option>
+              <option>Damietta University</option>
+              <option>Delta Technological University</option>
+              <option>Delta University for Science and Technology</option>
+              <option>Deraya University</option>
+              <option>Egypt-Japan University of Science and Technology (E-JUST)</option>
+              <option>Egypt University of Informatics (EUI)</option>
+              <option>Egyptian Chinese University (ECU)</option>
+              <option>Egyptian E-Learning University (EELU)</option>
+              <option>Egyptian Russian University (ERU)</option>
+              <option>El Shorouk Academy</option>
+              <option>Fayoum University</option>
+              <option>Future High Institute of Engineering in Fayoum</option>
+              <option>Future University in Egypt (FUE)</option>
+              <option>German University in Cairo (GUC)</option>
+              <option>Giza Higher Institute of Engineering and Technology</option>
+              <option>Giza Higher Institute for Administrative Sciences</option>
+              <option>Heliopolis University</option>
+              <option>Helwan University</option>
+              <option>Higher Institute for Engineering and Technology</option>
+              <option>Higher Technological Institute (HTI), Beni Suef</option>
+              <option>Horus University</option>
+              <option>Institute of Aviation Engineering and Technology</option>
+              <option>Kafr El Sheikh University</option>
+              <option>Luxor University</option>
+              <option>Mansoura National University</option>
+              <option>Mansoura University</option>
+              <option>Matrouh University</option>
+              <option>May University in Cairo (MUC)</option>
+              <option>Menoufia University</option>
+              <option>Minia University</option>
+              <option>Minufiya National University</option>
+              <option>Misr International University (MIU)</option>
+              <option>Misr University for Science and Technology (MUST)</option>
+              <option>Modern Academy for Engineering and Technology</option>
+              <option>Modern University for Technology and Information</option>
+              <option>MSA University</option>
+              <option>Nahda University</option>
+              <option>New Assiut Technological University</option>
+              <option>New Cairo Academy</option>
+              <option>New Cairo Technological University</option>
+              <option>New Giza University (NGU)</option>
+              <option>New Ismailia National University</option>
+              <option>New Mansoura University</option>
+              <option>New Valley University</option>
+              <option>Nile University</option>
+              <option>October 6 University</option>
+              <option>Pharos University in Alexandria</option>
+              <option>Port Said University</option>
+              <option>Sadat Academy for Management Sciences</option>
+              <option>Sadat City University</option>
+              <option>Sohag University</option>
+              <option>South Valley University</option>
+              <option>Sphinx University</option>
+              <option>Suez Canal University</option>
+              <option>Suez University</option>
+              <option>Tanta University</option>
+              <option>The University of Hertfordshire Hosted by GAF</option>
+              <option>Tiba Academy</option>
+              <option>University of October 6</option>
+              <option>University of British Columbia / Canadian International College</option>
+              <option>Zagazig National University</option>
+              <option>Zagazig University</option>
+              <option value="Other">Other (Please specify)</option>
+            </select>
+            <input class="hidden other-input" id="universityOther" name="universityOther" placeholder="Specify your university" style="margin-top:10px">
+          </div>
+
+          <div class="field">
+            <label for="studyYear">Current Study Year <span class="required">*</span></label>
+            <select id="studyYear" name="studyYear">
+              <option value="">Select study year</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+              <option>5th Year</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="graduateFields" class="hidden">
+          <div class="field">
+            <label for="graduateDepartment">Which department did you graduate from? <span class="required">*</span></label>
+            <select id="graduateDepartment" name="graduateDepartment">
+              <option value="">Select department</option>
+              <option>Electrical Engineering</option>
+              <option>Electronics and Communications Engineering</option>
+              <option>Artificial Intelligence</option>
+              <option>Computer Science</option>
+              <option>Computer Engineering</option>
+              <option>Biomedical Engineering</option>
+              <option value="Other">Other (Please specify)</option>
+            </select>
+            <input class="hidden other-input" id="graduateDepartmentOther" name="graduateDepartmentOther" placeholder="Specify your department" style="margin-top:10px">
+          </div>
+
+          <div class="field">
+            <label for="graduationPeriod">When did you graduate? <span class="required">*</span></label>
+            <select id="graduationPeriod" name="graduationPeriod">
+              <option value="">Select graduation period</option>
+              <option>Before 2014</option>
+              <option>2014–2019</option>
+              <option>2020–2024</option>
+              <option value="Other">Other (Please specify year)</option>
+            </select>
+            <input class="hidden other-input" id="graduationYearOther" name="graduationYearOther" type="number" min="1950" max="2026" placeholder="Enter graduation year" style="margin-top:10px">
+          </div>
+
+          <div class="field">
+            <label for="mastersStatus">Master's Degree Status <span class="required">*</span></label>
+            <select id="mastersStatus" name="mastersStatus">
+              <option value="">Select status</option>
+              <option>Not Started</option>
+              <option>Currently Studying</option>
+              <option>Completed</option>
+            </select>
+          </div>
+          <div id="mastersCurrent" class="grid hidden">
+            <div class="field">
+              <label for="mastersStart">Master's Start Year <span class="required">*</span></label>
+              <input id="mastersStart" name="mastersStart" type="number" min="2000" max="2035">
+            </div>
+            <div class="field">
+              <label for="mastersExpected">Expected Completion Year <span class="required">*</span></label>
+              <input id="mastersExpected" name="mastersExpected" type="number" min="2000" max="2040">
+            </div>
+          </div>
+          <div id="mastersCompleted" class="field hidden">
+            <label for="mastersYear">Master's Completion Year <span class="required">*</span></label>
+            <input id="mastersYear" name="mastersYear" type="number" min="2000" max="2026">
+          </div>
+
+          <div class="field">
+            <label for="phdStatus">PhD Status <span class="required">*</span></label>
+            <select id="phdStatus" name="phdStatus">
+              <option value="">Select status</option>
+              <option>Not Started</option>
+              <option>Currently Studying</option>
+              <option>Completed</option>
+            </select>
+          </div>
+          <div id="phdCurrent" class="field hidden">
+            <label for="phdStart">PhD Start Year <span class="required">*</span></label>
+            <input id="phdStart" name="phdStart" type="number" min="2000" max="2040">
+          </div>
+          <div id="phdCompleted" class="field hidden">
+            <label for="phdYear">PhD Award Year <span class="required">*</span></label>
+            <input id="phdYear" name="phdYear" type="number" min="2000" max="2026">
+          </div>
+
+          <div class="field">
+            <label for="jobTitle">Current Job Title <span class="required">*</span></label>
+            <input id="jobTitle" name="jobTitle">
+          </div>
+          <div class="field">
+            <label for="organization">Organization <span class="required">*</span></label>
+            <input id="organization" name="organization">
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>3. Attendance Selection</h2>
+        <p class="description">Select the day or days you wish to attend. The registration fee is the same whether you select one day or both days.</p>
+
+        <label class="choice">
+          <input type="checkbox" id="day1" name="attendance" value="Day 1">
+          <span><strong>Day 1 | Summit Talks &amp; Keynotes</strong><br>November 12, 2026</span>
+        </label>
+        <label class="choice">
+          <input type="checkbox" id="day2" name="attendance" value="Day 2">
+          <span><strong>Day 2 | Hands-on Workshop</strong><br>November 14, 2026</span>
+        </label>
+        <div class="help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
+        <p id="attendanceError" class="field-error" role="alert" hidden>Please select at least one attendance day.</p>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>4. Transportation Preferences</h2>
+        <p class="description">Transportation, if requested, costs an additional 100 EGP.</p>
+
+        <div class="field">
+          <span class="field-label">Do you require transportation? <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="transport" value="Ramses Square" required> Yes, from Ramses Square (+100 EGP)</label>
+          <label class="choice"><input type="radio" name="transport" value="Other location"> Yes, from another location (+100 EGP)</label>
+          <label class="choice"><input type="radio" name="transport" value="No transport"> No, I will arrange my own transportation (0 EGP)</label>
+        </div>
+
+        <div id="pickupField" class="field hidden">
+          <label for="pickupLocation">Preferred Pickup Location <span class="required">*</span></label>
+          <input id="pickupLocation" name="pickupLocation" placeholder="Enter your preferred pickup location">
+          <div class="help">Alternative pickup requests are subject to review and availability.</div>
+        </div>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>5. Registration Fees</h2>
+        <p class="description">Review your registration fee before submitting payment details.</p>
+        <div class="fee-box">
+          <div class="fee-line"><span>Registration Fee</span><strong>200 EGP</strong></div>
+          <div class="fee-line"><span>Transportation</span><strong id="transportFee">0 EGP</strong></div>
+          <div class="fee-line total"><span>Total Amount</span><span id="totalFee">200 EGP</span></div>
+        </div>
+        <div class="help">The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.</div>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>6. Payment Details</h2>
+        <p class="description">Enter your payment information. Payment verification will be completed by the organizing team.</p>
+
+        <div class="field">
+          <span class="field-label">Payment Method <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="paymentMethod" value="InstaPay" required> InstaPay</label>
+          <label class="choice"><input type="radio" name="paymentMethod" value="Mobile Wallet"> Mobile Wallet</label>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="transactionRef">Transaction Reference Number <span class="required">*</span></label>
+            <input id="transactionRef" name="transactionRef" type="text" inputmode="numeric" maxlength="12" pattern="^[0-9]{12}$" placeholder="Enter exactly 12 numeric digits" autocomplete="off" required aria-describedby="transactionRefHelp">
+            <div class="help" id="transactionRefHelp">Must be exactly 12 numeric digits (from your InstaPay or Mobile Wallet receipt).</div>
+          </div>
+          <div class="field">
+            <label for="paymentDate">Payment Date <span class="required">*</span></label>
+            <input id="paymentDate" name="paymentDate" type="date" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="paymentTime">Payment Time <span class="required">*</span></label>
+          <input id="paymentTime" name="paymentTime" type="time" required>
+        </div>
+
+        <div class="payment-upload-layout">
+          <!-- Payment Instructions Glass Card -->
+          <div class="payment-instructions-card" id="paymentInstructionsCard">
+            <div class="payment-instructions-header">
+              <div class="payment-instructions-title-row">
+                <svg class="payment-title-icon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00B5E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                <h3 class="payment-instructions-title">Payment Instructions</h3>
+              </div>
+              <p class="payment-instructions-subtitle">Pay via InstaPay or a mobile wallet, then upload your transfer screenshot.</p>
+            </div>
+
+            <div class="payment-amount-box">
+              <span class="payment-amount-label">Amount to Pay</span>
+              <span class="payment-amount-value" id="paymentInstructionsAmount">200 EGP</span>
+            </div>
+
+            <div class="payment-rows">
+              <!-- Row 1: Mobile wallet / InstaPay number -->
+              <div class="payment-row">
+                <div class="payment-row-content">
+                  <span class="payment-row-label">Mobile wallet / InstaPay number</span>
+                  <span class="payment-row-value payment-row-value--mono" id="paymentWalletNumber"></span>
+                </div>
+                <button type="button" class="payment-copy-btn" id="copyWalletNumberBtn" aria-label="Copy mobile wallet and InstaPay number">
+                  <svg class="copy-icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <svg class="check-icon hidden" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span class="copy-btn-text">Copy</span>
+                </button>
+              </div>
+
+              <!-- Row 2: Account name -->
+              <div class="payment-row">
+                <div class="payment-row-content">
+                  <span class="payment-row-label">Account name</span>
+                  <span class="payment-row-value" id="paymentAccountName"></span>
+                </div>
+              </div>
+
+              <!-- Row 3: InstaPay handle -->
+              <div class="payment-row">
+                <div class="payment-row-content">
+                  <span class="payment-row-label">InstaPay handle</span>
+                  <span class="payment-row-value payment-row-value--mono" id="paymentInstapayHandle"></span>
+                </div>
+                <button type="button" class="payment-copy-btn" id="copyInstapayHandleBtn" aria-label="Copy InstaPay handle">
+                  <svg class="copy-icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <svg class="check-icon hidden" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span class="copy-btn-text">Copy</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Primary button: Pay via InstaPay -->
+            <a id="paymentInstapayBtn" class="payment-instapay-btn" href="" target="_blank" rel="noopener noreferrer">
+              <span>Pay via InstaPay</span>
+              <span class="btn-arrow" aria-hidden="true">↗</span>
+              <span class="sr-only">(opens in a new tab)</span>
+            </a>
+
+            <!-- Instruction line -->
+            <p class="payment-instructions-text">After paying, upload a screenshot of the transfer in the payment proof field below.</p>
+
+            <!-- Small note -->
+            <p class="payment-instructions-note">Payment does not guarantee acceptance. The <a href="#refundPolicy">refund policy</a> applies.</p>
+
+            <!-- Tip line -->
+            <div class="payment-instructions-tip">
+              <svg class="payment-tip-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00B5E2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Add your full name in the transfer note so we can match your payment.</span>
+            </div>
+
+            <!-- Visually hidden announcement for screen readers -->
+            <div id="paymentCopyStatus" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+          </div>
+
+          <!-- Existing Payment Proof Upload Field -->
+          <div class="field payment-proof-field">
+            <label for="paymentProof">Upload Proof of Payment <span class="required">*</span></label>
+            <input id="paymentProof" name="paymentProof" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
+            <div class="help">Accepted formats: PDF, JPG, PNG. Maximum file size: 5 MB.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>7. Refund Information</h2>
+        <p class="description">Provide accurate details so that an eligible refund can be processed.</p>
+
+        <div class="field">
+          <label for="recipientName">Recipient Full Name <span class="required">*</span></label>
+          <input id="recipientName" name="recipientName" required>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Preferred Refund Method <span class="required">*</span></span>
+          <label class="choice"><input type="radio" name="refundMethod" value="InstaPay" required> InstaPay</label>
+          <label class="choice"><input type="radio" name="refundMethod" value="Mobile Wallet"> Mobile Wallet</label>
+        </div>
+
+        <div id="refundInstaPay" class="hidden">
+          <div class="field">
+            <label for="instapayDetails">InstaPay Username, Receiving Link, or Registered Phone Number <span class="required">*</span></label>
+            <input id="instapayDetails" name="instapayDetails" placeholder="Enter your InstaPay receiving details">
+          </div>
+        </div>
+
+        <div id="refundWallet" class="hidden">
+          <div class="field">
+            <label for="walletNumber">Mobile Wallet Phone Number <span class="required">*</span></label>
+            <div class="country-phone">
+              <select id="walletCountry" aria-label="Wallet number country"></select>
+              <input id="walletNumber" name="walletNumber" type="tel" placeholder="Enter the wallet phone number" autocomplete="tel">
+            </div>
+            <div class="help">Numbers beginning with + are read as international and override the selected country.</div>
+          </div>
+        </div>
+
+        <div class="warning" id="refundPolicy">
+          <strong>Important Refund Notice</strong><br>
+          Please verify that your recipient name and refund details are accurate and complete. Incorrect or invalid information may prevent your refund from being processed. Contact the organizing team at <a href="mailto:Amr_Nabih@ieee.org">Amr_Nabih@ieee.org</a> or <a href="tel:+201212551698">+20 121 255 1698</a> if you need to correct your information or have payment-related questions.
+          <br><br>
+          <strong>Refund Policy:</strong><br>
+          Rejected applicants will receive a full refund of any payment made. Accepted participants are eligible for a refund if they attend all the days they registered and paid for. No refund will be issued if a participant misses any selected day. If you register for both days but attend only one, you will not be eligible for a refund.
+        </div>
+
+        <label class="choice" style="margin-top:18px">
+          <input type="checkbox" id="refundAcknowledgement" required>
+          <span>I have reviewed the refund notice and policy and confirm that the details I provided are accurate. <span class="required">*</span></span>
+        </label>
+      </section>
+
+      <section class="section reveal-on-scroll">
+        <h2>8. Review &amp; Submit</h2>
+        <p class="description">Please review your information before submitting your application.</p>
+
+        <p style="font-size:14px;color:var(--navy);margin-bottom:14px;line-height:1.6">
+          I confirm that the information provided in this application is accurate to the best of my knowledge. I understand that my application is subject to review by the organizing committee and that submitting this form does not guarantee acceptance. I have read the Registration Policies and understand that my application and participation are subject to the stated policies.
+        </p>
+
+        <label class="choice" style="margin-bottom:12px">
+          <input type="checkbox" id="accuracyAcknowledgement" required>
+          <span>I agree to the Registration Policies and Privacy Information. <span class="required">*</span></span>
+        </label>
+
+        <label class="choice" style="margin-bottom:20px">
+          <input type="checkbox" id="registrationConsent" name="registrationConsent" value="Yes" required>
+          <span>I agree to the use of the personal information I provide for registration processing, communication regarding Sensors Summit 2026, and related event-organizing purposes. <span class="required">*</span></span>
+        </label>
+
+        <button type="submit">Submit Registration Application <span class="btn-arrow" aria-hidden="true">↗</span></button>
+        <button type="button" id="reviewInfoBtn" class="button-secondary" style="width:100%;margin-top:10px">Review My Information</button>
+
+        <p class="help" style="text-align:center;margin-top:12px">
+          Your application is subject to review by the organizing committee.
+        </p>
+        <div id="formMessage" class="form-status hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+      </section>
+    </form>
+  </section>
+
+  <!-- Section L: Registration Policies -->
+  <section class="page-section" id="policies" aria-labelledby="policies-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">EVENT POLICIES</div>
+      <h2 id="policies-title">Registration Policies</h2>
+      <p>Sensors Summit 2026 · Digital Twin in Biosensing Applications</p>
+    </div>
+
+    <div class="policies-container reveal-on-scroll">
+      <div class="policy-clause">
+        <h3>1. Registration and Application Review</h3>
+        <p>All applications are reviewed by the organizing committee.</p>
+        <p>Submitting an application does not guarantee acceptance or confirm participation. Participants will be notified of the application outcome by email.</p>
+      </div>
+
+      <div class="policy-clause">
+        <h3>2. Registration Information and Changes</h3>
+        <p>Participants are responsible for providing accurate registration information and submitting the requested documents.</p>
+        <p>Requests to correct or update registration information must be submitted before registration closes.</p>
+        <p>Requests to change selected attendance days after submission will be reviewed individually by the organizing committee.</p>
+        <p>The registration closing date and time will be announced after approval by the organizing committee.</p>
+      </div>
+
+      <div class="policy-clause">
+        <h3>3. Participation Fees and Payment</h3>
+        <p>The participation fees are:</p>
+        <ul>
+          <li>EGP 200 for standard participation.</li>
+          <li>EGP 300 for participation with transportation.</li>
+        </ul>
+        <p>Available payment methods are InstaPay and mobile wallet.</p>
+        <p>Participants must submit the required transaction reference and payment proof.</p>
+        <p>The transaction reference must contain exactly 12 digits, including any leading zeroes.</p>
+        <p>Payment does not guarantee acceptance.</p>
+      </div>
+
+      <div class="policy-clause">
+        <h3>4. Transportation</h3>
+        <p>Participants who select transportation will pay the applicable additional fee.</p>
+        <p>Transportation details will be communicated by email after registration confirmation.</p>
+      </div>
+
+      <div class="policy-clause">
+        <h3>5. Privacy and Personal Information</h3>
+        <p>Personal information and uploaded documents will be used for registration and event-organizing purposes. Access to this information will be restricted to authorized individuals.</p>
+        <p>Participants should use the official contact details below if they encounter a registration, payment, upload, or technical issue.</p>
+      </div>
+
+      <div class="policy-clause">
+        <h3>6. Official Contact</h3>
+        <p><strong>Eng. Amr Nabih</strong></p>
+        <p>Email: <a href="mailto:Amr_Nabih@ieee.org" class="link-inline">Amr_Nabih@ieee.org</a></p>
+        <p>Phone: <a href="tel:+201212551698" class="link-inline">+20 121 255 1698</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section M: Frequently Asked Questions -->
+  <section class="page-section" id="faq" aria-labelledby="faq-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">FREQUENTLY ASKED QUESTIONS</div>
+      <h2 id="faq-title">Frequently Asked Questions</h2>
+      <p>Find answers to common questions about summit schedule, location, eligibility, fees, and policies.</p>
+    </div>
+    <div class="faq-list reveal-on-scroll" id="faqList"></div>
+  </section>
+
+  <!-- Section N: Contact Section (Centered Card) -->
+  <section class="page-section" id="contact" aria-labelledby="contact-title">
+    <div class="section-heading reveal-on-scroll">
+      <div class="section-kicker">NEED ASSISTANCE?</div>
+      <h2 id="contact-title">We're Here to Help</h2>
+      <p>
+        If you encounter a problem during registration, need help with payment verification, experience an upload issue, or have a question about the registration process, please contact the event's designated contact person.
+      </p>
+    </div>
+
+    <div class="support-card reveal-on-scroll">
+      <span class="support-badge">Designated Event Contact</span>
+      <h3 class="support-name">Eng. Amr Nabih</h3>
+      <p class="support-note">
+        When contacting the organizing team, briefly describe your issue and include the relevant registration details needed to identify your application. Do not send passwords or other account credentials.
+      </p>
+
+      <div class="support-links">
+        <a class="support-link" href="mailto:Amr_Nabih@ieee.org" aria-label="Send email to Eng. Amr Nabih at Amr_Nabih@ieee.org">
+          <svg class="support-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span><strong>Email:</strong> Amr_Nabih@ieee.org</span>
+        </a>
+
+        <a class="support-link" href="tel:+201212551698" aria-label="Call Eng. Amr Nabih at +20 121 255 1698">
+          <svg class="support-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span><strong>Phone:</strong> +20 121 255 1698</span>
+        </a>
+      </div>
+
+      <div>
+        <a class="button-primary" href="mailto:Amr_Nabih@ieee.org">Contact the Organizing Team</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section O: Organization and Partners (Editorial Showcase Island) -->
+  <section class="page-section partners-showcase-section reveal-on-scroll" id="partners" aria-labelledby="partners-title">
+    <div class="section-heading">
+      <div class="section-kicker">ORGANIZATION &amp; PARTNERS</div>
+      <h2 id="partners-title">Organization and Partners</h2>
+      <p>Official organizing chapter, host venue, main sponsor, and supporting partners for Sensors Summit 2026.</p>
+    </div>
+
+    <div class="partners-showcase-grid" id="partnerGrid">
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/Egypt Chapter Logo - Original.png" alt="IEEE Sensors Council Egypt Chapter Logo" loading="lazy">
+        <span>Organizer</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/BUE-Logo.png" alt="The British University in Egypt Logo - Host Venue" loading="lazy">
+        <span>Host Venue</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/IEEE Women in Sensors Logo RGB.png" alt="IEEE Women in Sensors Logo - Main Sponsor" loading="lazy">
+        <span>Main Sponsor</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/FABLAB-Logo.png" alt="FabLab Egypt Logo" loading="lazy">
+        <span>FabLab Egypt</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/ELEC_Logo.png" alt="ELEC Logo" loading="lazy">
+        <span>ELEC</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/ASIS-Logo.png" alt="ASIS Logo" loading="lazy">
+        <span>ASIS</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/DAAD-Logo.png" alt="DAAD Egypt Logo" loading="lazy">
+        <span>DAAD Egypt</span>
+      </div>
+      <div class="partners-showcase-item">
+        <img src="./src/assets/logos/IEEE Sensors Council Logo.png" alt="IEEE Sensors Council Logo" loading="lazy">
+        <span>IEEE Sensors Council</span>
+      </div>
+    </div>
+  </section>
+
 </main>
 
+<!-- Section O: Footer (Deep Navy with High Contrast Text) -->
 <footer class="site-footer">
   <div class="footer-inner">
-    <div class="footer-note">IEEE Sensors Council Egypt Chapter · Sensor Summit 2026<br>Digital Twins in Biosensors</div>
-    <nav class="footer-nav" aria-label="Footer navigation">
-      <a href="#home">Home</a><a href="#rules">Rules</a><a href="#registration">Registration</a><a href="#faq">FAQ</a><a href="#partners">Partner and sponsor</a>
-    </nav>
+    <div class="footer-brand">
+      <img class="footer-logo" src="./src/assets/logos/Egypt Chapter Logo - White.png" alt="IEEE Sensors Council Egypt Chapter Logo" loading="lazy">
+      <div class="footer-note">
+        <strong>Sensors Summit 2026</strong><br>
+        Digital Twin in Biosensing Applications<br>
+        Organized by <strong>IEEE Sensors Council Egypt Chapter</strong><br>
+        Hosted at The British University in Egypt (BUE)<br>
+        November 12 &amp; 14, 2026
+      </div>
+    </div>
+
+    <div>
+      <div class="footer-col-title">Quick Links</div>
+      <ul class="footer-links">
+        <li><a href="#about">About the Summit</a></li>
+        <li><a href="#details">Event Details</a></li>
+        <li><a href="#registration">Registration</a></li>
+        <li><a href="#policies">Registration Policies</a></li>
+        <li><a href="#faq">Frequently Asked Questions</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="footer-col-title">Contact</div>
+      <ul class="footer-links">
+        <li><a href="mailto:Amr_Nabih@ieee.org">Amr_Nabih@ieee.org</a></li>
+        <li><a href="tel:+201212551698">+20 121 255 1698</a></li>
+      </ul>
+      <p style="margin-top:16px;font-size:12px;color:#8BAEC9;line-height:1.5">
+        *All event details and policies are subject to confirmation by the organizing committee.
+      </p>
+    </div>
+
+    <div>
+      <div class="footer-col-title">Connect with IEEE Sensors Council Egypt Chapter</div>
+      <div class="footer-social-grid">
+        <a class="social-link-btn" href="mailto:egypt-sensorcouncil@ieee.org" aria-label="Email IEEE Sensors Council Egypt Chapter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://youtube.com/@ieeesensorscouncilegyptchapter?si=zNRtidcjJWh7_-bp" target="_blank" rel="noopener noreferrer" aria-label="YouTube Channel">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://whatsapp.com/channel/0029Vb1iNb7HwXb6x98p8d0p" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Channel">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://www.linkedin.com/company/ieee-sensors-council-egypt-chapter/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn Page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://www.instagram.com/sensorscouncilegypt?igsh=bWQ0ZDljeG1nZnlj" target="_blank" rel="noopener noreferrer" aria-label="Instagram Profile">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://www.facebook.com/share/1DX3SxsE77/" target="_blank" rel="noopener noreferrer" aria-label="Facebook Page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.5 5H18V0h-3.808C10.595 0 9 1.583 9 4.615V8z"/></svg>
+        </a>
+        <a class="social-link-btn" href="https://r8.ieee.org/egypt-sensor-council/" target="_blank" rel="noopener noreferrer" aria-label="Official Website">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 Sensors Summit. All rights reserved.</span>
+    <span>IEEE Sensors Council Egypt Chapter</span>
   </div>
 </footer>
 
@@ -822,7 +1345,8 @@ button:disabled { cursor: wait; opacity: .7; }
 const $ = id => document.getElementById(id);
 
 function setVisible(id, visible) {
-  $(id).classList.toggle("hidden", !visible);
+  const el = $(id);
+  if (el) el.classList.toggle("hidden", !visible);
 }
 
 function setRequired(id, required) {
@@ -831,15 +1355,17 @@ function setRequired(id, required) {
 }
 
 function updateOther(selectId, inputId) {
-  const show = $(selectId).value === "Other";
+  const select = $(selectId);
+  if (!select) return;
+  const show = select.value === "Other";
   setVisible(inputId, show);
   setRequired(inputId, show);
 }
 
 document.querySelectorAll('input[name="ieeeMember"]').forEach(el => {
   el.addEventListener("change", () => {
-    const show = el.checked && el.value === "Yes";
     if (!el.checked) return;
+    const show = el.value === "Yes";
     setVisible("ieeeNumberField", show);
     setRequired("ieeeNumber", show);
   });
@@ -855,10 +1381,28 @@ document.querySelectorAll('input[name="bueMember"]').forEach(el => {
   });
 });
 
+const referralAmbassadorEl = $("referralAmbassadorCheckbox");
+if (referralAmbassadorEl) {
+  referralAmbassadorEl.addEventListener("change", () => {
+    const show = referralAmbassadorEl.checked;
+    setVisible("ambassadorCodeField", show);
+    setRequired("ambassadorCode", show);
+    if (!show) {
+      const codeInput = $("ambassadorCode");
+      if (codeInput) codeInput.value = "";
+      const err = document.querySelector('.field-error[data-for="ambassadorCode"]');
+      if (err) {
+        err.textContent = "";
+        err.hidden = true;
+      }
+    }
+  });
+}
+
 document.querySelectorAll('input[name="status"]').forEach(el => {
   el.addEventListener("change", () => {
-    const student = el.value === "Student";
     if (!el.checked) return;
+    const student = el.value === "Student";
     setVisible("studentFields", student);
     setVisible("graduateFields", !student);
 
@@ -881,33 +1425,53 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
   });
 });
 
-$("studentDepartment").addEventListener("change", () =>
-  updateOther("studentDepartment", "studentDepartmentOther"));
-$("graduateDepartment").addEventListener("change", () =>
-  updateOther("graduateDepartment", "graduateDepartmentOther"));
-$("university").addEventListener("change", () =>
-  updateOther("university", "universityOther"));
-$("graduationPeriod").addEventListener("change", () =>
-  updateOther("graduationPeriod", "graduationYearOther"));
+const studentDeptEl = $("studentDepartment");
+if (studentDeptEl) studentDeptEl.addEventListener("change", () => updateOther("studentDepartment", "studentDepartmentOther"));
 
-$("mastersStatus").addEventListener("change", () => {
-  const current = $("mastersStatus").value === "Currently Studying";
-  const completed = $("mastersStatus").value === "Completed";
-  setVisible("mastersCurrent", current);
-  setVisible("mastersCompleted", completed);
-  setRequired("mastersStart", current);
-  setRequired("mastersExpected", current);
-  setRequired("mastersYear", completed);
-});
+const gradDeptEl = $("graduateDepartment");
+if (gradDeptEl) gradDeptEl.addEventListener("change", () => updateOther("graduateDepartment", "graduateDepartmentOther"));
 
-$("phdStatus").addEventListener("change", () => {
-  const current = $("phdStatus").value === "Currently Studying";
-  const completed = $("phdStatus").value === "Completed";
-  setVisible("phdCurrent", current);
-  setVisible("phdCompleted", completed);
-  setRequired("phdStart", current);
-  setRequired("phdYear", completed);
-});
+const uniEl = $("university");
+if (uniEl) uniEl.addEventListener("change", () => updateOther("university", "universityOther"));
+
+const gradPeriodEl = $("graduationPeriod");
+if (gradPeriodEl) gradPeriodEl.addEventListener("change", () => updateOther("graduationPeriod", "graduationYearOther"));
+
+const mastersStatusEl = $("mastersStatus");
+if (mastersStatusEl) {
+  mastersStatusEl.addEventListener("change", () => {
+    const current = mastersStatusEl.value === "Currently Studying";
+    const completed = mastersStatusEl.value === "Completed";
+    setVisible("mastersCurrent", current);
+    setVisible("mastersCompleted", completed);
+    setRequired("mastersStart", current);
+    setRequired("mastersExpected", current);
+    setRequired("mastersYear", completed);
+  });
+}
+
+const phdStatusEl = $("phdStatus");
+if (phdStatusEl) {
+  phdStatusEl.addEventListener("change", () => {
+    const current = phdStatusEl.value === "Currently Studying";
+    const completed = phdStatusEl.value === "Completed";
+    setVisible("phdCurrent", current);
+    setVisible("phdCompleted", completed);
+    setRequired("phdStart", current);
+    setRequired("phdYear", completed);
+  });
+}
+
+function updateFees() {
+  const transport = document.querySelector('input[name="transport"]:checked');
+  const extra = transport && transport.value !== "No transport" ? 100 : 0;
+  const transportFeeEl = $("transportFee");
+  const totalFeeEl = $("totalFee");
+  if (transportFeeEl) transportFeeEl.textContent = extra + " EGP";
+  if (totalFeeEl) totalFeeEl.textContent = (200 + extra) + " EGP";
+  const payInstructionsAmt = $("paymentInstructionsAmount");
+  if (payInstructionsAmt && totalFeeEl) payInstructionsAmt.textContent = totalFeeEl.textContent;
+}
 
 document.querySelectorAll('input[name="transport"]').forEach(el => {
   el.addEventListener("change", () => {
@@ -918,15 +1482,6 @@ document.querySelectorAll('input[name="transport"]').forEach(el => {
     updateFees();
   });
 });
-
-function updateFees() {
-  const transport = document.querySelector('input[name="transport"]:checked');
-  const extra = transport && transport.value !== "No transport" ? 100 : 0;
-  $("transportFee").textContent = extra + " EGP";
-  $("totalFee").textContent = (200 + extra) + " EGP";
-}
-document.querySelectorAll('input[name="transport"]').forEach(el =>
-  el.addEventListener("change", updateFees));
 
 document.querySelectorAll('input[name="refundMethod"]').forEach(el => {
   el.addEventListener("change", () => {
@@ -939,185 +1494,24 @@ document.querySelectorAll('input[name="refundMethod"]').forEach(el => {
   });
 });
 
-function validateFiles() {
-  const fileInputs = document.querySelectorAll('input[type="file"]');
-  for (const input of fileInputs) {
-    if (input.required && !input.files.length) {
-      input.reportValidity();
-      return false;
+const day1El = $("day1");
+const day2El = $("day2");
+if (day1El) {
+  day1El.addEventListener("change", () => {
+    if (day1El.checked || (day2El && day2El.checked)) {
+      const err = $("attendanceError");
+      if (err) err.hidden = true;
     }
-    if (input.files.length) {
-      const file = input.files[0];
-      const allowed = /\.(pdf|jpe?g|png)$/i.test(file.name);
-      if (!allowed) {
-        alert("Please upload a PDF, JPG, or PNG file.");
-        input.value = "";
-        return false;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Each file must be 5 MB or smaller.");
-        input.value = "";
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-
-const API_URL = "https://script.google.com/macros/s/AKfycbw_Emn4j9U2d_DJHxqp7TT1vMHXdQDFEVBoRNAAdW4OWrTEIVL3OedkwV-DauFb23tFQQ/exec";
-
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const result = String(reader.result);
-      resolve(result.substring(result.indexOf(",") + 1));
-    };
-
-    reader.onerror = () => reject(new Error("Could not read an uploaded file."));
-    reader.readAsDataURL(file);
   });
 }
-
-async function prepareFile(inputId) {
-  const input = $(inputId);
-  if (!input || !input.files.length) return null;
-
-  const file = input.files[0];
-
-  return {
-    name: file.name,
-    mimeType: file.type,
-    base64: await readFileAsBase64(file)
-  };
+if (day2El) {
+  day2El.addEventListener("change", () => {
+    if ((day1El && day1El.checked) || day2El.checked) {
+      const err = $("attendanceError");
+      if (err) err.hidden = true;
+    }
+  });
 }
-
-$("registrationForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  return;
-
-  if (!$("day1").checked && !$("day2").checked) {
-    $("attendanceError").hidden = false;
-    $("day1").focus();
-    return;
-  }
-
-  $("attendanceError").hidden = true;
-
-  if (!validateFiles()) return;
-
-  const nationalId = $("nationalId");
-
-  if (
-    !$("nationalIdFields").classList.contains("hidden") &&
-    !/^\d{14}$/.test(nationalId.value)
-  ) {
-    alert("Please enter a valid 14-digit National ID number.");
-    nationalId.focus();
-    return;
-  }
-
-  const form = $("registrationForm");
-  const button = form.querySelector('button[type="submit"]');
-  const message = $("formMessage");
-
-  if (button.disabled) return;
-
-  button.disabled = true;
-  button.textContent = "Submitting...";
-  message.classList.remove("hidden");
-  message.textContent = "Submitting your application. Please wait.";
-
-  try {
-    const formData = new FormData(form);
-    const data = {};
-
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) continue;
-
-      if (key === "attendance") {
-        if (!data.attendance) data.attendance = [];
-        data.attendance.push(value);
-      } else {
-        data[key] = value;
-      }
-    }
-
-    data.totalFee = $("totalFee").textContent.replace(" EGP", "");
-
-    data.files = {};
-
-    const paymentFile = await prepareFile("paymentProof");
-    if (paymentFile) data.files.paymentProof = paymentFile;
-
-    const nationalIdFile = await prepareFile("nationalIdFile");
-    if (nationalIdFile) data.files.nationalIdFile = nationalIdFile;
-
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      throw new Error("The registration service returned an HTTP error.");
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.message || "Registration failed.");
-    }
-
-    message.textContent =
-      "Your application was submitted successfully. Registration ID: " +
-      result.registrationId +
-      ". Your application is pending review. Please save your registration ID.";
-
-    message.scrollIntoView({ behavior: "smooth", block: "center" });
-    form.reset();
-
-    setVisible("ieeeNumberField", false);
-    setVisible("nationalIdFields", false);
-    setVisible("studentFields", false);
-    setVisible("graduateFields", false);
-    setVisible("pickupField", false);
-    setVisible("refundInstaPay", false);
-    setVisible("refundWallet", false);
-    setVisible("mastersCurrent", false);
-    setVisible("mastersCompleted", false);
-    setVisible("phdCurrent", false);
-    setVisible("phdCompleted", false);
-
-    document.querySelectorAll(".other-input").forEach(input => {
-      input.classList.add("hidden");
-    });
-
-    $("attendanceError").hidden = true;
-    updateFees();
-  } catch (error) {
-    console.error("Registration submission error:", error);
-
-    message.textContent =
-      "We could not confirm your submission. Please do not submit repeatedly. Check the registration system before trying again.";
-
-    message.scrollIntoView({ behavior: "smooth", block: "center" });
-  } finally {
-    button.disabled = false;
-    button.textContent = "Submit Registration Application";
-  }
-});
-
-$("day1").addEventListener("change", () => {
-  if ($("day1").checked || $("day2").checked) $("attendanceError").hidden = true;
-});
-$("day2").addEventListener("change", () => {
-  if ($("day1").checked || $("day2").checked) $("attendanceError").hidden = true;
-});
 </script>
 <script type="module" src="/src/main.js"></script>
 </body>
