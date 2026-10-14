@@ -53,11 +53,8 @@
   <div class="vertical-light-beam" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <!-- Small Pill Badge with Sparkle / Sensor Icon -->
+    <!-- Small Pill Badge with Text -->
     <div class="pill-badge">
-      <svg class="badge-sparkle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-      </svg>
       <span>IEEE Sensors Council Egypt Chapter Presents</span>
     </div>
 
@@ -124,7 +121,6 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="3" y1="10" y2="10"/></svg>
               Event Dates
             </span>
-            <span class="card-tag accent">Confirmed</span>
           </div>
           <div class="card-primary-val">Nov 12 &amp; 14, 2026</div>
           <div class="card-secondary-val">
@@ -140,7 +136,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               Host Venue
             </span>
-            <span class="card-tag">In-Person</span>
+            <span class="card-tag green">In-Person</span>
           </div>
           <div class="card-primary-val">British University in Egypt</div>
           <div class="card-secondary-val">
@@ -157,7 +153,6 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               Registration Fee
             </span>
-            <span class="card-tag green">Fixed</span>
           </div>
           <div class="card-primary-val">200 EGP</div>
           <div class="card-secondary-val">
@@ -172,7 +167,6 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               Organized By
             </span>
-            <span class="card-tag accent">Official Chapter</span>
           </div>
           <div class="card-primary-val">IEEE Sensors Council</div>
           <div class="card-secondary-val">
@@ -1097,9 +1091,11 @@
         <h2>8. Review &amp; Submit</h2>
         <p class="description">Please review your information before submitting your application.</p>
 
-        <p style="font-size:14px;color:var(--navy);margin-bottom:14px;line-height:1.6">
-          I confirm that the information provided in this application is accurate to the best of my knowledge. I understand that my application is subject to review by the organizing committee and that submitting this form does not guarantee acceptance. I have read the Registration Policies and understand that my application and participation are subject to the stated policies.
-        </p>
+        <div class="consent-declaration-box">
+          <p>
+            I confirm that the information provided in this application is accurate to the best of my knowledge. I understand that my application is subject to review by the organizing committee and that submitting this form does not guarantee acceptance. I have read the Registration Policies and understand that my application and participation are subject to the stated policies.
+          </p>
+        </div>
 
         <label class="choice" style="margin-bottom:12px">
           <input type="checkbox" id="accuracyAcknowledgement" required>
@@ -1120,6 +1116,24 @@
         <div id="formMessage" class="form-status hidden" role="status" aria-live="polite" aria-atomic="true"></div>
       </section>
     </form>
+
+    <!-- Dedicated Read-Only Review Modal -->
+    <div id="reviewModal" class="review-modal hidden" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle">
+      <div class="review-modal-backdrop" id="reviewModalBackdrop"></div>
+      <div class="review-modal-content">
+        <div class="review-modal-header">
+          <h3 id="reviewModalTitle">Application Summary</h3>
+          <button type="button" class="review-modal-close" id="closeReviewTopBtn" aria-label="Close review">&times;</button>
+        </div>
+        <div class="review-modal-body" id="reviewModalBody">
+          <!-- Populated dynamically with entered information -->
+        </div>
+        <div class="review-modal-footer">
+          <p class="review-modal-notice">Read-only preview. Final submission remains on the form.</p>
+          <button type="button" class="button-secondary" id="backToFormBtn">Back to Form</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Section L: Registration Policies -->
@@ -1200,7 +1214,6 @@
     </div>
 
     <div class="support-card reveal-on-scroll">
-      <span class="support-badge">Designated Event Contact</span>
       <h3 class="support-name">Eng. Amr Nabih</h3>
       <p class="support-note">
         When contacting the organizing team, briefly describe your issue and include the relevant registration details needed to identify your application. Do not send passwords or other account credentials.
@@ -1210,6 +1223,11 @@
         <a class="support-link" href="mailto:Amr_Nabih@ieee.org" aria-label="Send email to Eng. Amr Nabih at Amr_Nabih@ieee.org">
           <svg class="support-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
           <span><strong>Email:</strong> Amr_Nabih@ieee.org</span>
+        </a>
+
+        <a class="support-link" href="mailto:egypt-sensors@ieee.org" aria-label="Send email to IEEE Sensors Council Egypt Chapter at egypt-sensors@ieee.org">
+          <svg class="support-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span><strong>Email:</strong> egypt-sensors@ieee.org</span>
         </a>
 
         <a class="support-link" href="tel:+201212551698" aria-label="Call Eng. Amr Nabih at +20 121 255 1698">

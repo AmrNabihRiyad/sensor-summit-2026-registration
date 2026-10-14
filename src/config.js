@@ -45,7 +45,7 @@ let _instapayLink = "https://ipn.eg/S/nabih.amr/instapay/3wOugn";
 export const PAYMENT = {
   methods: ["InstaPay", "Mobile Wallet"],
   walletNumber: "01018689048",
-  accountName: "Amr Nabih h",
+  accountName: "Amr Nabih",
   instapayHandle: "nabih.amr@instapay",
   get instapayLink() {
     return _instapayLink;

@@ -237,6 +237,23 @@ function errorNode(field) {
   return error;
 }
 
+function hasPassedValidation(field) {
+  if (!isVisible(field)) return false;
+  if (!touched.has(field)) return false;
+  if (currentError(field)) return false;
+
+  if (field.type === "checkbox") {
+    return field.required ? field.checked : true;
+  }
+  if (field.type === "radio") {
+    return form.querySelector(`input[type="radio"][name="${CSS.escape(field.name)}"]:checked`) !== null;
+  }
+  if (field.type === "file") {
+    return Boolean(field.files && field.files.length > 0);
+  }
+  return typeof field.value === "string" && field.value.trim().length > 0;
+}
+
 function describeError(field, message) {
   if (!field.id && field.name) {
     field.id = `field-${field.name.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
@@ -244,10 +261,16 @@ function describeError(field, message) {
   const error = errorNode(field);
   error.textContent = message;
   error.hidden = !message;
-  field.setAttribute("aria-invalid", String(Boolean(message)));
   if (message) {
+    field.setAttribute("aria-invalid", "true");
     const existing = (field.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
     field.setAttribute("aria-describedby", [...new Set([...existing, error.id])].join(" "));
+  } else {
+    if (hasPassedValidation(field)) {
+      field.setAttribute("aria-invalid", "false");
+    } else {
+      field.removeAttribute("aria-invalid");
+    }
   }
 }
 
@@ -259,12 +282,30 @@ function validationOptions() {
 }
 
 function updateErrors(fields) {
+  const errorMap = new Map();
   for (const { field, message } of fields) {
-    if (field?.name !== "attendance") describeError(field, message);
+    if (field) {
+      errorMap.set(field, message);
+      if (field.name) errorMap.set(field.name, message);
+    }
   }
+
+  for (const field of form.querySelectorAll("input, select, textarea")) {
+    if (!isVisible(field)) continue;
+    if (field.name === "attendance") continue;
+
+    const message = errorMap.get(field) || (field.name && errorMap.get(field.name)) || "";
+    if (message) {
+      touched.add(field);
+      describeError(field, message);
+    } else if (touched.has(field) || field.hasAttribute("aria-invalid")) {
+      describeError(field, "");
+    }
+  }
+
   const attendanceError = document.querySelector("#attendanceError");
   const attendanceInvalid = fields.some(({ field }) => field?.name === "attendance");
-  attendanceError.hidden = !attendanceInvalid;
+  if (attendanceError) attendanceError.hidden = !attendanceInvalid;
   return fields;
 }
 
@@ -281,8 +322,9 @@ form.addEventListener("focusout", (event) => {
 
 form.addEventListener("input", (event) => {
   const field = event.target;
-  if (field.id === "transactionRef") touched.add(field);
-  if (touched.has(field)) describeError(field, currentError(field));
+  if (!(field instanceof HTMLElement) || !field.matches("input, select, textarea") || !isVisible(field)) return;
+  touched.add(field);
+  describeError(field, currentError(field));
 });
 
 const transactionRefInput = document.querySelector("#transactionRef");
@@ -293,7 +335,12 @@ if (transactionRefInput) {
   });
 }
 
-form.addEventListener("change", () => {
+form.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && target.matches("input, select, textarea") && isVisible(target)) {
+    touched.add(target);
+    describeError(target, currentError(target));
+  }
   queueMicrotask(() => {
     for (const field of form.querySelectorAll("input, select, textarea")) {
       if (!isVisible(field)) {
@@ -463,13 +510,188 @@ async function submitRegistration(event) {
 
 form.addEventListener("submit", submitRegistration, true);
 
+// Dedicated Read-Only Review Modal Handler
 const reviewBtn = document.querySelector("#reviewInfoBtn");
-if (reviewBtn) {
-  reviewBtn.addEventListener("click", () => {
-    const target = document.querySelector("#fullName");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-      target.focus();
-    }
-  });
+const reviewModal = document.querySelector("#reviewModal");
+const reviewModalBody = document.querySelector("#reviewModalBody");
+const backToFormBtn = document.querySelector("#backToFormBtn");
+const closeReviewTopBtn = document.querySelector("#closeReviewTopBtn");
+const reviewModalBackdrop = document.querySelector("#reviewModalBackdrop");
+
+function formatValue(val) {
+  if (val === null || val === undefined || val === "") return '<em style="color: #6A8098;">Not provided</em>';
+  return escapeReviewHtml(String(val));
 }
+
+function escapeReviewHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function openReviewModal() {
+  if (!reviewModal || !reviewModalBody) return;
+
+  const getVal = (selector) => {
+    const el = document.querySelector(selector);
+    return el && isVisible(el) ? el.value.trim() : "";
+  };
+
+  const getRadioVal = (name) => {
+    const checked = form.querySelector(`input[name="${name}"]:checked`);
+    return checked && isVisible(checked) ? checked.value : "";
+  };
+
+  const getCheckedBoxes = (name) => {
+    const checked = Array.from(form.querySelectorAll(`input[name="${name}"]:checked`));
+    return checked.map((el) => el.value);
+  };
+
+  const getFileName = (id) => {
+    const input = document.querySelector(`#${id}`);
+    return input && isVisible(input) && input.files && input.files.length > 0 ? input.files[0].name : "";
+  };
+
+  // 1. Personal Info
+  const fullName = getVal("#fullName");
+  const email = getVal("#email");
+  const mobileCountry = document.querySelector("#mobileCountry")?.value || "EG";
+  const mobileNum = getVal("#mobile");
+  const mobile = mobileNum ? `${mobileNum} (${mobileCountry})` : "";
+  const gender = getRadioVal("gender");
+  const ieeeMember = getRadioVal("ieeeMember");
+  const ieeeNumber = ieeeMember === "Yes" ? getVal("#ieeeNumber") : "";
+  const bueMember = getRadioVal("bueMember");
+  const nationalId = bueMember === "No" ? getVal("#nationalId") : "";
+  const nationalIdFile = bueMember === "No" ? getFileName("nationalIdFile") : "";
+
+  // 2. Academic / Professional Status
+  const status = getRadioVal("status");
+  let affiliationDetails = "";
+  if (status === "Student") {
+    const dept = getVal("#studentDepartment") === "Other" ? getVal("#studentDepartmentOther") : getVal("#studentDepartment");
+    const uni = getVal("#university") === "Other" ? getVal("#universityOther") : getVal("#university");
+    const year = getVal("#studyYear");
+    affiliationDetails = `
+      <div class="review-row"><span class="review-row-label">Department</span><span class="review-row-value">${formatValue(dept)}</span></div>
+      <div class="review-row"><span class="review-row-label">University</span><span class="review-row-value">${formatValue(uni)}</span></div>
+      <div class="review-row"><span class="review-row-label">Study Year</span><span class="review-row-value">${formatValue(year)}</span></div>
+    `;
+  } else if (status === "Graduate") {
+    const dept = getVal("#graduateDepartment") === "Other" ? getVal("#graduateDepartmentOther") : getVal("#graduateDepartment");
+    const gradPeriod = getVal("#graduationPeriod") === "Other" ? getVal("#graduationYearOther") : getVal("#graduationPeriod");
+    const masters = getVal("#mastersStatus");
+    const phd = getVal("#phdStatus");
+    const job = getVal("#jobTitle");
+    const org = getVal("#organization");
+    affiliationDetails = `
+      <div class="review-row"><span class="review-row-label">Graduation Department</span><span class="review-row-value">${formatValue(dept)}</span></div>
+      <div class="review-row"><span class="review-row-label">Graduation Period</span><span class="review-row-value">${formatValue(gradPeriod)}</span></div>
+      ${masters ? `<div class="review-row"><span class="review-row-label">Master's Status</span><span class="review-row-value">${formatValue(masters)}</span></div>` : ""}
+      ${phd ? `<div class="review-row"><span class="review-row-label">PhD Status</span><span class="review-row-value">${formatValue(phd)}</span></div>` : ""}
+      <div class="review-row"><span class="review-row-label">Job Title</span><span class="review-row-value">${formatValue(job)}</span></div>
+      <div class="review-row"><span class="review-row-label">Organization</span><span class="review-row-value">${formatValue(org)}</span></div>
+    `;
+  }
+
+  // 3. Attendance & Transport
+  const attendance = getCheckedBoxes("attendance");
+  const transport = getRadioVal("transport");
+  const pickup = transport === "Other location" ? getVal("#pickupLocation") : "";
+  const totalFee = document.querySelector("#totalFee")?.textContent.trim() || "200 EGP";
+
+  // 4. Payment
+  const paymentMethod = getRadioVal("paymentMethod");
+  const transactionRef = getVal("#transactionRef");
+  const paymentDate = getVal("#paymentDate");
+  const paymentTime = getVal("#paymentTime");
+  const paymentProofFile = getFileName("paymentProof");
+
+  // 5. Refund
+  const recipientName = getVal("#recipientName");
+  const refundMethod = getRadioVal("refundMethod");
+  const refundDetail = refundMethod === "InstaPay" ? getVal("#instapayDetails") : getVal("#walletNumber");
+
+  // 6. Referral & Declarations
+  const referrals = getCheckedBoxes("referralSources");
+  const ambassadorCode = referrals.includes("Through an Ambassador") ? getVal("#ambassadorCode") : "";
+  const consentAgreed = document.querySelector("#registrationConsent")?.checked ? "Agreed" : "Not agreed";
+  const policiesAgreed = document.querySelector("#accuracyAcknowledgement")?.checked ? "Agreed" : "Not agreed";
+  const refundAgreed = document.querySelector("#refundAcknowledgement")?.checked ? "Agreed" : "Not agreed";
+
+  reviewModalBody.innerHTML = `
+    <div class="review-group">
+      <h4 class="review-group-title">1. Personal Information</h4>
+      <div class="review-row"><span class="review-row-label">Full Name</span><span class="review-row-value">${formatValue(fullName)}</span></div>
+      <div class="review-row"><span class="review-row-label">Email</span><span class="review-row-value">${formatValue(email)}</span></div>
+      <div class="review-row"><span class="review-row-label">Mobile</span><span class="review-row-value">${formatValue(mobile)}</span></div>
+      <div class="review-row"><span class="review-row-label">Gender</span><span class="review-row-value">${formatValue(gender)}</span></div>
+      <div class="review-row"><span class="review-row-label">IEEE Member</span><span class="review-row-value">${formatValue(ieeeMember)}${ieeeNumber ? ` (ID: ${escapeReviewHtml(ieeeNumber)})` : ""}</span></div>
+      <div class="review-row"><span class="review-row-label">BUE Member</span><span class="review-row-value">${formatValue(bueMember)}</span></div>
+      ${nationalId ? `<div class="review-row"><span class="review-row-label">National ID</span><span class="review-row-value">${formatValue(nationalId)}</span></div>` : ""}
+      ${nationalIdFile ? `<div class="review-row"><span class="review-row-label">ID Document</span><span class="review-row-value">${formatValue(nationalIdFile)}</span></div>` : ""}
+    </div>
+
+    <div class="review-group">
+      <h4 class="review-group-title">2. Academic &amp; Professional</h4>
+      <div class="review-row"><span class="review-row-label">Status</span><span class="review-row-value">${formatValue(status)}</span></div>
+      ${affiliationDetails}
+    </div>
+
+    <div class="review-group">
+      <h4 class="review-group-title">3. Attendance &amp; Transportation</h4>
+      <div class="review-row"><span class="review-row-label">Days</span><span class="review-row-value">${attendance.length ? formatValue(attendance.join(", ")) : '<em style="color: #6A8098;">None selected</em>'}</span></div>
+      <div class="review-row"><span class="review-row-label">Transportation</span><span class="review-row-value">${formatValue(transport)}${pickup ? ` (${escapeReviewHtml(pickup)})` : ""}</span></div>
+      <div class="review-row"><span class="review-row-label">Total Fee</span><span class="review-row-value" style="color: #34D399; font-weight: 700;">${formatValue(totalFee)}</span></div>
+    </div>
+
+    <div class="review-group">
+      <h4 class="review-group-title">4. Payment &amp; Refund</h4>
+      <div class="review-row"><span class="review-row-label">Payment Method</span><span class="review-row-value">${formatValue(paymentMethod)}</span></div>
+      <div class="review-row"><span class="review-row-label">Transaction Reference</span><span class="review-row-value" style="font-family: var(--font-mono);">${formatValue(transactionRef)}</span></div>
+      ${paymentDate ? `<div class="review-row"><span class="review-row-label">Payment Date &amp; Time</span><span class="review-row-value">${formatValue(paymentDate)}${paymentTime ? ` at ${formatValue(paymentTime)}` : ""}</span></div>` : ""}
+      <div class="review-row"><span class="review-row-label">Payment Proof</span><span class="review-row-value">${formatValue(paymentProofFile)}</span></div>
+      <div class="review-row"><span class="review-row-label">Refund Recipient</span><span class="review-row-value">${formatValue(recipientName)}</span></div>
+      <div class="review-row"><span class="review-row-label">Refund Method</span><span class="review-row-value">${formatValue(refundMethod)}${refundDetail ? ` (${escapeReviewHtml(refundDetail)})` : ""}</span></div>
+    </div>
+
+    <div class="review-group">
+      <h4 class="review-group-title">5. Referral &amp; Declarations</h4>
+      <div class="review-row"><span class="review-row-label">Referral Sources</span><span class="review-row-value">${referrals.length ? formatValue(referrals.join(", ")) : '<em style="color: #6A8098;">None</em>'}</span></div>
+      ${ambassadorCode ? `<div class="review-row"><span class="review-row-label">Ambassador Code</span><span class="review-row-value">${formatValue(ambassadorCode)}</span></div>` : ""}
+      <div class="review-row"><span class="review-row-label">Refund Policy</span><span class="review-row-value">${formatValue(refundAgreed)}</span></div>
+      <div class="review-row"><span class="review-row-label">Registration Policies</span><span class="review-row-value">${formatValue(policiesAgreed)}</span></div>
+      <div class="review-row"><span class="review-row-label">Data Processing</span><span class="review-row-value">${formatValue(consentAgreed)}</span></div>
+    </div>
+  `;
+
+  reviewModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeReviewModal() {
+  if (!reviewModal) return;
+  reviewModal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+if (reviewBtn) {
+  reviewBtn.addEventListener("click", openReviewModal);
+}
+if (backToFormBtn) {
+  backToFormBtn.addEventListener("click", closeReviewModal);
+}
+if (closeReviewTopBtn) {
+  closeReviewTopBtn.addEventListener("click", closeReviewModal);
+}
+if (reviewModalBackdrop) {
+  reviewModalBackdrop.addEventListener("click", closeReviewModal);
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && reviewModal && !reviewModal.classList.contains("hidden")) {
+    closeReviewModal();
+  }
+});

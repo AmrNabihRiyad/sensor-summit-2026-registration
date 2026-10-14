@@ -20,7 +20,7 @@ export function escapeHtml(str) {
 }
 
 export function generateRegistrationEmailHtml(data = {}, options = {}) {
-  const logoBaseUrl = options.logoBaseUrl || "https://raw.githubusercontent.com/AmrNabihRiyad/sensor-summit-2026-registration/feat/summit-website-updates/src/assets/logos";
+  const logoBaseUrl = options.logoBaseUrl || "https://raw.githubusercontent.com/AmrNabihRiyad/sensor-summit-2026-registration/main/src/assets/logos";
 
   const fullName = escapeHtml(data.fullName || "Applicant");
   const email = escapeHtml(data.email || "");
