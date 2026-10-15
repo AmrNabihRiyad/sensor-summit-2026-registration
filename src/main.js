@@ -386,11 +386,17 @@ function showStatus(message, isError = false) {
 
 function resetConditionalPanels() {
   for (const id of [
-    "ieeeNumberField", "nationalIdFields", "ambassadorCodeField", "studentFields", "graduateFields", "pickupField",
+    "ieeeNumberField", "nationalIdFields", "ambassadorCodeField", "studentFields", "graduateFields", "distinguishedGuestFields",
+    "guestTitleOtherField", "guestOrganizationTypeOtherField", "pickupField",
     "refundInstaPay", "refundWallet", "mastersCurrent", "mastersCompleted", "phdCurrent", "phdCompleted"
   ]) {
-    document.querySelector(`#${id}`).classList.add("hidden");
+    const el = document.querySelector(`#${id}`);
+    if (el) el.classList.add("hidden");
   }
+  document.querySelector("#paymentSection")?.classList.remove("hidden");
+  document.querySelector("#refundSection")?.classList.remove("hidden");
+  document.querySelector("#day2Choice")?.classList.remove("hidden");
+  document.querySelector("#day2Help")?.classList.remove("hidden");
   document.querySelectorAll(".other-input").forEach((field) => field.classList.add("hidden"));
   document.querySelectorAll(".hidden input, .hidden select, .hidden textarea").forEach((field) => {
     field.required = false;
@@ -426,10 +432,113 @@ async function buildPayload() {
   if (data.walletNumber) {
     data.walletNumber = normalizePhone(data.walletNumber, document.querySelector("#walletCountry").value);
   }
-  data.totalFee = document.querySelector("#totalFee").textContent.replace(" EGP", "");
+
+  const status = data.status;
+  const isGuest = status === "Distinguished Guest / Professional";
+  const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+  const isStudent = status === "Student";
+
+  if (isGuest) {
+    data.attendance = ["Day 1"];
+    data.totalFee = "0";
+    data.organization = (data.guestOrganization || "").trim();
+    data.guestOrganization = (data.guestOrganization || "").trim();
+    data.professionalTitle = (data.guestTitle || "").trim();
+    if (data.guestTitle === "Other") {
+      data.professionalTitleOther = (data.guestTitleOther || "").trim();
+    } else {
+      delete data.guestTitleOther;
+      delete data.professionalTitleOther;
+    }
+    data.organizationType = (data.guestOrganizationType || "").trim();
+    if (data.guestOrganizationType === "Other") {
+      data.organizationTypeOther = (data.guestOrganizationTypeOther || "").trim();
+    } else {
+      delete data.guestOrganizationTypeOther;
+      delete data.organizationTypeOther;
+    }
+
+    // Clean out payment/refund data
+    delete data.paymentMethod;
+    delete data.transactionRef;
+    delete data.paymentDate;
+    delete data.paymentTime;
+    delete data.recipientName;
+    delete data.refundMethod;
+    delete data.instapayDetails;
+    delete data.walletNumber;
+
+    // Clean out student/grad data
+    delete data.studentDepartment;
+    delete data.studentDepartmentOther;
+    delete data.university;
+    delete data.universityOther;
+    delete data.studyYear;
+    delete data.graduateDepartment;
+    delete data.graduateDepartmentOther;
+    delete data.graduationPeriod;
+    delete data.graduationYearOther;
+    delete data.mastersStatus;
+    delete data.mastersStart;
+    delete data.mastersExpected;
+    delete data.mastersYear;
+    delete data.phdStatus;
+    delete data.phdStart;
+    delete data.phdYear;
+    delete data.jobTitle;
+  } else if (isStudent) {
+    data.totalFee = (document.querySelector("#totalFee")?.textContent.replace(" EGP", "").trim()) || "200";
+
+    // Clean out graduate & guest data
+    delete data.graduateDepartment;
+    delete data.graduateDepartmentOther;
+    delete data.graduationPeriod;
+    delete data.graduationYearOther;
+    delete data.mastersStatus;
+    delete data.mastersStart;
+    delete data.mastersExpected;
+    delete data.mastersYear;
+    delete data.phdStatus;
+    delete data.phdStart;
+    delete data.phdYear;
+    delete data.jobTitle;
+    delete data.guestTitle;
+    delete data.guestTitleOther;
+    delete data.guestOrganization;
+    delete data.guestOrganizationType;
+    delete data.guestOrganizationTypeOther;
+  } else if (isGraduate) {
+    data.totalFee = (document.querySelector("#totalFee")?.textContent.replace(" EGP", "").trim()) || "0";
+
+    // Clean out student & guest data
+    delete data.studentDepartment;
+    delete data.studentDepartmentOther;
+    delete data.university;
+    delete data.universityOther;
+    delete data.studyYear;
+    delete data.guestTitle;
+    delete data.guestTitleOther;
+    delete data.guestOrganization;
+    delete data.guestOrganizationType;
+    delete data.guestOrganizationTypeOther;
+
+    if (data.totalFee === "0") {
+      delete data.paymentMethod;
+      delete data.transactionRef;
+      delete data.paymentDate;
+      delete data.paymentTime;
+      delete data.recipientName;
+      delete data.refundMethod;
+      delete data.instapayDetails;
+      delete data.walletNumber;
+    }
+  }
+
   data.files = {};
-  const paymentProof = await prepareFile("paymentProof");
-  if (paymentProof) data.files.paymentProof = paymentProof;
+  if (!isGuest && data.totalFee !== "0") {
+    const paymentProof = await prepareFile("paymentProof");
+    if (paymentProof) data.files.paymentProof = paymentProof;
+  }
   const nationalIdFile = await prepareFile("nationalIdFile");
   if (nationalIdFile) data.files.nationalIdFile = nationalIdFile;
   return data;
@@ -494,8 +603,24 @@ async function submitRegistration(event) {
       }
     });
     document.querySelector("#attendanceError").hidden = true;
+    const baseFeeDisplay = document.querySelector("#baseFeeDisplay");
+    if (baseFeeDisplay) baseFeeDisplay.textContent = "200 EGP";
     document.querySelector("#transportFee").textContent = "0 EGP";
     document.querySelector("#totalFee").textContent = "200 EGP";
+    const feeHelpText = document.querySelector("#feeHelpText");
+    if (feeHelpText) feeHelpText.textContent = "The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.";
+    const transportFeeLabel = document.querySelector("#transportFeeLabel");
+    if (transportFeeLabel) transportFeeLabel.textContent = "Transportation";
+    const transportFieldLabel = document.querySelector("#transportFieldLabel");
+    if (transportFieldLabel) transportFieldLabel.innerHTML = 'Do you require transportation? <span class="required">*</span>';
+    const transportLabelRamses = document.querySelector("#transportLabelRamses");
+    if (transportLabelRamses) transportLabelRamses.textContent = "Yes, from Ramses Square (+100 EGP)";
+    const transportLabelOther = document.querySelector("#transportLabelOther");
+    if (transportLabelOther) transportLabelOther.textContent = "Yes, from another location (+100 EGP)";
+    const transportLabelNone = document.querySelector("#transportLabelNone");
+    if (transportLabelNone) transportLabelNone.textContent = "No, I will arrange my own transportation (0 EGP)";
+    const transportDesc = document.querySelector("#transportationSection .description");
+    if (transportDesc) transportDesc.textContent = "Transportation, if requested, costs an additional 100 EGP.";
   } catch (error) {
     const message = error.name === "TimeoutError"
       ? "The request timed out. We could not submit your application. Please try again. If the problem continues, contact the organizing team."
@@ -570,6 +695,7 @@ function openReviewModal() {
 
   // 2. Academic / Professional Status
   const status = getRadioVal("status");
+  const isGuest = status === "Distinguished Guest / Professional";
   let affiliationDetails = "";
   if (status === "Student") {
     const dept = getVal("#studentDepartment") === "Other" ? getVal("#studentDepartmentOther") : getVal("#studentDepartment");
@@ -580,7 +706,7 @@ function openReviewModal() {
       <div class="review-row"><span class="review-row-label">University</span><span class="review-row-value">${formatValue(uni)}</span></div>
       <div class="review-row"><span class="review-row-label">Study Year</span><span class="review-row-value">${formatValue(year)}</span></div>
     `;
-  } else if (status === "Graduate") {
+  } else if (status === "Graduate" || status === "Graduate / Alumni") {
     const dept = getVal("#graduateDepartment") === "Other" ? getVal("#graduateDepartmentOther") : getVal("#graduateDepartment");
     const gradPeriod = getVal("#graduationPeriod") === "Other" ? getVal("#graduationYearOther") : getVal("#graduationPeriod");
     const masters = getVal("#mastersStatus");
@@ -595,13 +721,33 @@ function openReviewModal() {
       <div class="review-row"><span class="review-row-label">Job Title</span><span class="review-row-value">${formatValue(job)}</span></div>
       <div class="review-row"><span class="review-row-label">Organization</span><span class="review-row-value">${formatValue(org)}</span></div>
     `;
+  } else if (isGuest) {
+    const title = getVal("#guestTitle") === "Other" ? getVal("#guestTitleOther") : getVal("#guestTitle");
+    const org = getVal("#guestOrganization");
+    const orgType = getVal("#guestOrganizationType") === "Other" ? getVal("#guestOrganizationTypeOther") : getVal("#guestOrganizationType");
+    affiliationDetails = `
+      <div class="review-row"><span class="review-row-label">Professional / Academic Title</span><span class="review-row-value">${formatValue(title)}</span></div>
+      <div class="review-row"><span class="review-row-label">Organization / Institution</span><span class="review-row-value">${formatValue(org)}</span></div>
+      <div class="review-row"><span class="review-row-label">Organization Type</span><span class="review-row-value">${formatValue(orgType)}</span></div>
+    `;
   }
 
   // 3. Attendance & Transport
   const attendance = getCheckedBoxes("attendance");
   const transport = getRadioVal("transport");
   const pickup = transport === "Other location" ? getVal("#pickupLocation") : "";
-  const totalFee = document.querySelector("#totalFee")?.textContent.trim() || "200 EGP";
+  const totalFee = document.querySelector("#totalFee")?.textContent.trim() || (isGuest ? "0 EGP" : "200 EGP");
+
+  let transportReviewValue = formatValue(transport);
+  if (isGuest) {
+    if (transport && transport !== "No transport") {
+      transportReviewValue = `${formatValue(transport)} (Complimentary - 0 EGP)${pickup ? ` (${escapeReviewHtml(pickup)})` : ""}`;
+    } else {
+      transportReviewValue = transport ? formatValue(transport) : "No transport";
+    }
+  } else if (pickup) {
+    transportReviewValue = `${formatValue(transport)} (${escapeReviewHtml(pickup)})`;
+  }
 
   // 4. Payment
   const paymentMethod = getRadioVal("paymentMethod");
@@ -621,6 +767,26 @@ function openReviewModal() {
   const consentAgreed = document.querySelector("#registrationConsent")?.checked ? "Agreed" : "Not agreed";
   const policiesAgreed = document.querySelector("#accuracyAcknowledgement")?.checked ? "Agreed" : "Not agreed";
   const refundAgreed = document.querySelector("#refundAcknowledgement")?.checked ? "Agreed" : "Not agreed";
+
+  const paymentReviewHtml = (isGuest || totalFee === "0 EGP")
+    ? `
+      <div class="review-group">
+        <h4 class="review-group-title">4. Payment &amp; Refund</h4>
+        <div class="review-row"><span class="review-row-label">Registration Fee</span><span class="review-row-value" style="color: #34D399; font-weight: 700;">Free (0 EGP)</span></div>
+        <div class="review-row"><span class="review-row-label">Payment Information</span><span class="review-row-value">Not required (Free Registration)</span></div>
+      </div>
+    `
+    : `
+      <div class="review-group">
+        <h4 class="review-group-title">4. Payment &amp; Refund</h4>
+        <div class="review-row"><span class="review-row-label">Payment Method</span><span class="review-row-value">${formatValue(paymentMethod)}</span></div>
+        <div class="review-row"><span class="review-row-label">Transaction Reference</span><span class="review-row-value" style="font-family: var(--font-mono);">${formatValue(transactionRef)}</span></div>
+        ${paymentDate ? `<div class="review-row"><span class="review-row-label">Payment Date &amp; Time</span><span class="review-row-value">${formatValue(paymentDate)}${paymentTime ? ` at ${formatValue(paymentTime)}` : ""}</span></div>` : ""}
+        <div class="review-row"><span class="review-row-label">Payment Proof</span><span class="review-row-value">${formatValue(paymentProofFile)}</span></div>
+        <div class="review-row"><span class="review-row-label">Refund Recipient</span><span class="review-row-value">${formatValue(recipientName)}</span></div>
+        <div class="review-row"><span class="review-row-label">Refund Method</span><span class="review-row-value">${formatValue(refundMethod)}${refundDetail ? ` (${escapeReviewHtml(refundDetail)})` : ""}</span></div>
+      </div>
+    `;
 
   reviewModalBody.innerHTML = `
     <div class="review-group">
@@ -644,25 +810,17 @@ function openReviewModal() {
     <div class="review-group">
       <h4 class="review-group-title">3. Attendance &amp; Transportation</h4>
       <div class="review-row"><span class="review-row-label">Days</span><span class="review-row-value">${attendance.length ? formatValue(attendance.join(", ")) : '<em style="color: #6A8098;">None selected</em>'}</span></div>
-      <div class="review-row"><span class="review-row-label">Transportation</span><span class="review-row-value">${formatValue(transport)}${pickup ? ` (${escapeReviewHtml(pickup)})` : ""}</span></div>
+      <div class="review-row"><span class="review-row-label">Transportation</span><span class="review-row-value">${transportReviewValue}</span></div>
       <div class="review-row"><span class="review-row-label">Total Fee</span><span class="review-row-value" style="color: #34D399; font-weight: 700;">${formatValue(totalFee)}</span></div>
     </div>
 
-    <div class="review-group">
-      <h4 class="review-group-title">4. Payment &amp; Refund</h4>
-      <div class="review-row"><span class="review-row-label">Payment Method</span><span class="review-row-value">${formatValue(paymentMethod)}</span></div>
-      <div class="review-row"><span class="review-row-label">Transaction Reference</span><span class="review-row-value" style="font-family: var(--font-mono);">${formatValue(transactionRef)}</span></div>
-      ${paymentDate ? `<div class="review-row"><span class="review-row-label">Payment Date &amp; Time</span><span class="review-row-value">${formatValue(paymentDate)}${paymentTime ? ` at ${formatValue(paymentTime)}` : ""}</span></div>` : ""}
-      <div class="review-row"><span class="review-row-label">Payment Proof</span><span class="review-row-value">${formatValue(paymentProofFile)}</span></div>
-      <div class="review-row"><span class="review-row-label">Refund Recipient</span><span class="review-row-value">${formatValue(recipientName)}</span></div>
-      <div class="review-row"><span class="review-row-label">Refund Method</span><span class="review-row-value">${formatValue(refundMethod)}${refundDetail ? ` (${escapeReviewHtml(refundDetail)})` : ""}</span></div>
-    </div>
+    ${paymentReviewHtml}
 
     <div class="review-group">
       <h4 class="review-group-title">5. Referral &amp; Declarations</h4>
       <div class="review-row"><span class="review-row-label">Referral Sources</span><span class="review-row-value">${referrals.length ? formatValue(referrals.join(", ")) : '<em style="color: #6A8098;">None</em>'}</span></div>
       ${ambassadorCode ? `<div class="review-row"><span class="review-row-label">Ambassador Code</span><span class="review-row-value">${formatValue(ambassadorCode)}</span></div>` : ""}
-      <div class="review-row"><span class="review-row-label">Refund Policy</span><span class="review-row-value">${formatValue(refundAgreed)}</span></div>
+      ${!isGuest && totalFee !== "0 EGP" ? `<div class="review-row"><span class="review-row-label">Refund Policy</span><span class="review-row-value">${formatValue(refundAgreed)}</span></div>` : ""}
       <div class="review-row"><span class="review-row-label">Registration Policies</span><span class="review-row-value">${formatValue(policiesAgreed)}</span></div>
       <div class="review-row"><span class="review-row-label">Data Processing</span><span class="review-row-value">${formatValue(consentAgreed)}</span></div>
     </div>

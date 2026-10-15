@@ -168,7 +168,7 @@ function errorForField(field, form, options) {
   if (field.id === "email") return validateEmail(value);
   if (field.id === "mobile" || field.id === "walletNumber") return validatePhone(value, options.countryFor(field));
   if (field.id === "nationalId") return validateEgyptianNationalId(value);
-  if (["universityOther", "studentDepartmentOther", "graduateDepartmentOther", "jobTitle", "organization", "pickupLocation", "ieeeNumber"].includes(field.id)) {
+  if (["universityOther", "studentDepartmentOther", "graduateDepartmentOther", "jobTitle", "organization", "pickupLocation", "ieeeNumber", "guestOrganization", "guestTitleOther", "guestOrganizationTypeOther"].includes(field.id)) {
     const normalized = value.trim();
     if (normalized.length < 2) return "Enter at least 2 characters.";
     if (normalized.length > VALIDATION_RULES.organization.maxLength) return "Use 160 characters or fewer.";
@@ -189,6 +189,14 @@ export function validateForm(form, options) {
     }
     const message = errorForField(field, form, options);
     if (message) errors.push({ field, message });
+  }
+
+  const selectedCategory = form.querySelector('input[name="status"]:checked')?.value;
+  if (selectedCategory === "Distinguished Guest / Professional") {
+    const day2 = form.querySelector("#day2");
+    if (day2 && day2.checked) {
+      errors.push({ field: day2, message: "Distinguished Guest / Professional registration is restricted to Day 1 only." });
+    }
   }
 
   if (!form.querySelector('input[name="attendance"]:checked')) {

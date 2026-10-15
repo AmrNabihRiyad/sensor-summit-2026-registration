@@ -40,6 +40,64 @@ export const FEES = Object.freeze({
   currency: "EGP"
 });
 
+/**
+ * Calculates registration fees based on attendee category, attendance days, and transportation choice.
+ *
+ * Rules:
+ * - Distinguished Guest / Professional: Always completely free (0 EGP).
+ * - Graduate / Alumni: Day 1 only is Free (0 EGP). Day 2 only is 200 EGP. Both days is 200 EGP (for Day 2 only).
+ * - Student: 200 EGP regardless of whether Day 1, Day 2, or both days are selected.
+ * - Transportation: Adds 100 EGP if selected (except for free Guest category).
+ */
+export function calculateFee({ category, attendance = [], transport = "No transport" } = {}) {
+  const isGuest = category === "Distinguished Guest / Professional";
+  const isGraduate = category === "Graduate" || category === "Graduate / Alumni";
+  const isStudent = category === "Student";
+
+  if (isGuest) {
+    return {
+      baseFee: 0,
+      transportFee: 0,
+      totalFee: 0
+    };
+  }
+
+  const days = Array.isArray(attendance) ? attendance : (attendance ? [attendance] : []);
+  const hasDay1 = days.some((d) => {
+    const s = String(d).toLowerCase().trim();
+    return s === "day 1" || s === "1" || s.includes("day 1") || s.includes("nov 12") || s.includes("november 12") || s === "12";
+  });
+  const hasDay2 = days.some((d) => {
+    const s = String(d).toLowerCase().trim();
+    return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+  });
+
+  let baseFee = 0;
+  if (isStudent) {
+    baseFee = (hasDay1 || hasDay2) ? FEES.baseAmount : FEES.baseAmount;
+  } else if (isGraduate) {
+    if (hasDay2) {
+      baseFee = FEES.baseAmount;
+    } else if (hasDay1) {
+      baseFee = 0;
+    } else {
+      baseFee = 0;
+    }
+  } else {
+    baseFee = (hasDay1 || hasDay2) ? FEES.baseAmount : FEES.baseAmount;
+  }
+
+  const hasTransport = transport && transport !== "No transport";
+  const transportFee = hasTransport ? FEES.transportAmount : 0;
+  const totalFee = baseFee + transportFee;
+
+  return {
+    baseFee,
+    transportFee,
+    totalFee
+  };
+}
+
 let _instapayLink = "https://ipn.eg/S/nabih.amr/instapay/3wOugn";
 
 export const PAYMENT = {

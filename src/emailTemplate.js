@@ -26,26 +26,56 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
   const email = escapeHtml(data.email || "");
   const mobile = escapeHtml(data.mobile || "");
   const status = escapeHtml(data.status || "");
+  const isGuest = data.status === "Distinguished Guest / Professional";
   const universityOrOrg = escapeHtml(
     data.university === "Other"
       ? (data.universityOther || "Other")
-      : (data.university || data.organization || "Not specified")
+      : (data.university || data.organization || data.guestOrganization || "Not specified")
   );
-  const department = escapeHtml(
-    data.status === "Student"
-      ? (data.studentDepartment === "Other" ? data.studentDepartmentOther : data.studentDepartment)
-      : (data.graduateDepartment === "Other" ? data.graduateDepartmentOther : data.graduateDepartment) || "Not specified"
-  );
+  let departmentOrTitle = "";
+  if (data.status === "Student") {
+    departmentOrTitle = data.studentDepartment === "Other" ? data.studentDepartmentOther : data.studentDepartment;
+  } else if (data.status === "Graduate" || data.status === "Graduate / Alumni") {
+    departmentOrTitle = data.graduateDepartment === "Other" ? data.graduateDepartmentOther : data.graduateDepartment;
+  } else if (isGuest) {
+    departmentOrTitle = data.professionalTitle === "Other"
+      ? (data.professionalTitleOther || "Other")
+      : (data.professionalTitle || (data.guestTitle === "Other" ? data.guestTitleOther : data.guestTitle) || data.jobTitle);
+  }
+  const department = escapeHtml(departmentOrTitle || "Not specified");
   
   const attendanceList = Array.isArray(data.attendance)
     ? data.attendance.map(escapeHtml).join(", ")
     : escapeHtml(data.attendance || "Not selected");
 
-  const transport = escapeHtml(data.transport || "No transport");
-  const pickup = data.transport && data.transport.includes("Other") && data.pickupLocation
+  const rawTransport = data.transport || "No transport";
+  const hasTransport = rawTransport && rawTransport !== "No transport";
+  const pickup = rawTransport && rawTransport.includes("Other") && data.pickupLocation
     ? ` (${escapeHtml(data.pickupLocation)})`
     : "";
-  const totalFee = escapeHtml(data.totalFee || "200");
+
+  let transportDisplay = "";
+  let transportFeeDisplay = "";
+  if (isGuest) {
+    if (hasTransport) {
+      transportDisplay = `${escapeHtml(rawTransport)}${pickup} (Complimentary)`;
+      transportFeeDisplay = "0 EGP (Complimentary)";
+    } else {
+      transportDisplay = "No transport";
+      transportFeeDisplay = "0 EGP";
+    }
+  } else {
+    if (hasTransport) {
+      transportDisplay = `${escapeHtml(rawTransport)}${pickup}`;
+      transportFeeDisplay = "100 EGP";
+    } else {
+      transportDisplay = "No transport";
+      transportFeeDisplay = "0 EGP";
+    }
+  }
+
+  const totalFeeVal = isGuest ? "0" : (data.totalFee !== undefined && data.totalFee !== null ? String(data.totalFee) : "200");
+  const totalFeeDisplay = isGuest || totalFeeVal === "0" ? "0 EGP (Free Registration)" : `${escapeHtml(totalFeeVal)} EGP`;
   const registrationId = data.registrationId ? escapeHtml(data.registrationId) : null;
   const referralSources = Array.isArray(data.referralSources)
     ? data.referralSources.map(escapeHtml).join(", ")
@@ -109,7 +139,9 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
                   <td>
                     <strong style="color: #002855; font-size: 14px; display: block; margin-bottom: 4px;">Application Under Review</strong>
                     <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #2D3E50;">
-                      Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved. You will receive a follow-up email once the review is completed.
+                      ${isGuest || totalFeeVal === "0"
+                        ? "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your registration details have been received; it does not constitute final event acceptance until approved. You will receive a follow-up email once the review is completed."
+                        : "Please note that all registration applications are subject to review by the organizing committee. This email confirms that your details and payment records have been received; it does not constitute final event acceptance or payment verification until approved. You will receive a follow-up email once the review is completed."}
                     </p>
                   </td>
                 </tr>
@@ -146,11 +178,15 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
                 </tr>
                 <tr style="border-bottom: 1px solid #F4F7FA;">
                   <td style="color: #5A6E82; padding: 6px 0;"><strong>Transportation:</strong></td>
-                  <td style="padding: 6px 0;">${transport}${pickup}</td>
+                  <td style="padding: 6px 0;">${transportDisplay}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #F4F7FA;">
+                  <td style="color: #5A6E82; padding: 6px 0;"><strong>Transportation Fee:</strong></td>
+                  <td style="padding: 6px 0;">${transportFeeDisplay}</td>
                 </tr>
                 <tr style="border-bottom: 1px solid #F4F7FA;">
                   <td style="color: #5A6E82; padding: 6px 0;"><strong>Total Registration Fee:</strong></td>
-                  <td style="padding: 6px 0; color: #0B6623; font-weight: 700;">${totalFee} EGP</td>
+                  <td style="padding: 6px 0; color: #0B6623; font-weight: 700;">${totalFeeDisplay}</td>
                 </tr>
                 <tr style="border-bottom: 1px solid #F4F7FA;">
                   <td style="color: #5A6E82; padding: 6px 0;"><strong>Referral Sources:</strong></td>
@@ -164,7 +200,9 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
                 ` : ""}
               </table>
               <p style="margin: 12px 0 0; font-size: 11px; color: #8A9CAE; font-style: italic;">
-                *For your privacy and security, sensitive identification numbers, payment transaction references, and uploaded document attachments are not displayed in email communications.
+                ${isGuest || totalFeeVal === "0"
+                  ? "*For your privacy and security, sensitive identification numbers and uploaded document attachments are not displayed in email communications."
+                  : "*For your privacy and security, sensitive identification numbers, payment transaction references, and uploaded document attachments are not displayed in email communications."}
               </p>
             </td>
           </tr>
@@ -201,7 +239,9 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
             <td style="padding: 0 32px 28px; border-bottom: 1px solid #E2ECF4;">
               <h3 style="margin: 0 0 8px; font-size: 14px; color: #002855;">Need Assistance?</h3>
               <p style="margin: 0 0 6px; font-size: 13px; color: #5A6E82;">
-                If you have questions regarding your application status, payment verification, or attendance arrangements, please contact the designated event coordinator:
+                ${isGuest || totalFeeVal === "0"
+                  ? "If you have questions regarding your application status or attendance arrangements, please contact the designated event coordinator:"
+                  : "If you have questions regarding your application status, payment verification, or attendance arrangements, please contact the designated event coordinator:"}
               </p>
               <p style="margin: 0; font-size: 13px; color: #2D3E50;">
                 <strong>Eng. Amr Nabih</strong> &middot;
