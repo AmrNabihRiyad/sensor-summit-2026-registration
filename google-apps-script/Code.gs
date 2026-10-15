@@ -232,13 +232,23 @@ function doPost(e) {
 
     const transport = data.transport || "No transport";
     const hasTransport = transport && transport !== "No transport";
-    const calculatedTransportFee = (isGuest ? 0 : (hasTransport ? 100 : 0));
+    let calculatedTransportFee = 0;
+    if (isGuest) {
+      calculatedTransportFee = 0;
+    } else if (isGraduate) {
+      calculatedTransportFee = (hasDay2 && hasTransport) ? 100 : 0;
+    } else {
+      calculatedTransportFee = hasTransport ? 100 : 0;
+    }
     const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
     data.totalFee = String(calculatedTotalFee);
 
-    // 5. Strict 12-digit transaction reference validation (Only required when totalFee > 0)
+    // 5. Strict 12-digit transaction reference validation
+    // Payment is required for Student, and for Graduate / Alumni attending Day 2 (or both days).
+    // Payment is NOT required for Distinguished Guest / Professional or Graduate / Alumni attending Day 1 only.
+    const isPaymentRequired = isStudent || (isGraduate && hasDay2);
     let transactionRef = String(data.transactionRef || "").trim();
-    if (calculatedTotalFee > 0) {
+    if (isPaymentRequired && calculatedTotalFee > 0) {
       if (!/^[0-9]{12}$/.test(transactionRef)) {
         return createJsonResponse({
           success: false,
@@ -262,7 +272,7 @@ function doPost(e) {
 
     if (data.files && typeof data.files === "object") {
       const folder = getUploadsFolder();
-      if (data.files.paymentProof && data.files.paymentProof.base64 && calculatedTotalFee > 0) {
+      if (data.files.paymentProof && data.files.paymentProof.base64 && isPaymentRequired && calculatedTotalFee > 0) {
         paymentProofUrl = saveBase64File(folder, data.files.paymentProof, `${registrationId}_PaymentProof`);
       }
       if (data.files.nationalIdFile && data.files.nationalIdFile.base64) {
@@ -286,7 +296,7 @@ function doPost(e) {
       "Registration ID": registrationId,
       "Submission Timestamp": timestamp.toISOString(),
       "Application Status": "Pending Review",
-      "Payment Status": calculatedTotalFee === 0 ? "Confirmed - Free" : "Pending Verification",
+      "Payment Status": (!isPaymentRequired || calculatedTotalFee === 0) ? "Confirmed - Free" : "Pending Verification",
       "Refund Status": "N/A",
       "fullName": sanitizeForSheet(data.fullName),
       "mobile": sanitizeForSheet(data.mobile),

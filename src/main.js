@@ -397,6 +397,8 @@ function resetConditionalPanels() {
   document.querySelector("#refundSection")?.classList.remove("hidden");
   document.querySelector("#day2Choice")?.classList.remove("hidden");
   document.querySelector("#day2Help")?.classList.remove("hidden");
+  const day2El = document.querySelector("#day2");
+  if (day2El) day2El.disabled = false;
   document.querySelectorAll(".other-input").forEach((field) => field.classList.add("hidden"));
   document.querySelectorAll(".hidden input, .hidden select, .hidden textarea").forEach((field) => {
     field.required = false;
@@ -437,6 +439,13 @@ async function buildPayload() {
   const isGuest = status === "Distinguished Guest / Professional";
   const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
   const isStudent = status === "Student";
+
+  const attendanceList = Array.isArray(data.attendance) ? data.attendance : (data.attendance ? [data.attendance] : []);
+  const hasDay2 = attendanceList.some(d => {
+    const s = String(d).toLowerCase().trim();
+    return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+  });
+  const isPaymentRequired = isStudent || (isGraduate && hasDay2);
 
   if (isGuest) {
     data.attendance = ["Day 1"];
@@ -522,7 +531,7 @@ async function buildPayload() {
     delete data.guestOrganizationType;
     delete data.guestOrganizationTypeOther;
 
-    if (data.totalFee === "0") {
+    if (!isPaymentRequired) {
       delete data.paymentMethod;
       delete data.transactionRef;
       delete data.paymentDate;
@@ -535,7 +544,7 @@ async function buildPayload() {
   }
 
   data.files = {};
-  if (!isGuest && data.totalFee !== "0") {
+  if (isPaymentRequired) {
     const paymentProof = await prepareFile("paymentProof");
     if (paymentProof) data.files.paymentProof = paymentProof;
   }
@@ -750,6 +759,12 @@ function openReviewModal() {
   }
 
   // 4. Payment
+  const hasDay2 = attendance.some(d => {
+    const s = String(d).toLowerCase().trim();
+    return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+  });
+  const isPaymentRequired = isStudent || (isGraduate && hasDay2);
+
   const paymentMethod = getRadioVal("paymentMethod");
   const transactionRef = getVal("#transactionRef");
   const paymentDate = getVal("#paymentDate");
@@ -768,12 +783,12 @@ function openReviewModal() {
   const policiesAgreed = document.querySelector("#accuracyAcknowledgement")?.checked ? "Agreed" : "Not agreed";
   const refundAgreed = document.querySelector("#refundAcknowledgement")?.checked ? "Agreed" : "Not agreed";
 
-  const paymentReviewHtml = (isGuest || totalFee === "0 EGP")
+  const paymentReviewHtml = !isPaymentRequired
     ? `
       <div class="review-group">
         <h4 class="review-group-title">4. Payment &amp; Refund</h4>
-        <div class="review-row"><span class="review-row-label">Registration Fee</span><span class="review-row-value" style="color: #34D399; font-weight: 700;">Free (0 EGP)</span></div>
-        <div class="review-row"><span class="review-row-label">Payment Information</span><span class="review-row-value">Not required (Free Registration)</span></div>
+        <div class="review-row"><span class="review-row-label">Registration Fee</span><span class="review-row-value" style="color: #34D399; font-weight: 700;">${isGuest ? "Free (0 EGP)" : (totalFee === "0 EGP" ? "Free (0 EGP)" : totalFee)}</span></div>
+        <div class="review-row"><span class="review-row-label">Payment Information</span><span class="review-row-value">${isGuest ? "Not required (Free Registration)" : "Not required (Day 1 only)"}</span></div>
       </div>
     `
     : `
@@ -820,7 +835,7 @@ function openReviewModal() {
       <h4 class="review-group-title">5. Referral &amp; Declarations</h4>
       <div class="review-row"><span class="review-row-label">Referral Sources</span><span class="review-row-value">${referrals.length ? formatValue(referrals.join(", ")) : '<em style="color: #6A8098;">None</em>'}</span></div>
       ${ambassadorCode ? `<div class="review-row"><span class="review-row-label">Ambassador Code</span><span class="review-row-value">${formatValue(ambassadorCode)}</span></div>` : ""}
-      ${!isGuest && totalFee !== "0 EGP" ? `<div class="review-row"><span class="review-row-label">Refund Policy</span><span class="review-row-value">${formatValue(refundAgreed)}</span></div>` : ""}
+      ${isPaymentRequired ? `<div class="review-row"><span class="review-row-label">Refund Policy</span><span class="review-row-value">${formatValue(refundAgreed)}</span></div>` : ""}
       <div class="review-row"><span class="review-row-label">Registration Policies</span><span class="review-row-value">${formatValue(policiesAgreed)}</span></div>
       <div class="review-row"><span class="review-row-label">Data Processing</span><span class="review-row-value">${formatValue(consentAgreed)}</span></div>
     </div>

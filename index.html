@@ -1498,12 +1498,14 @@ function calculateCurrentFees() {
   } else if (category === "Graduate / Alumni" || category === "Graduate") {
     if (day2Checked) {
       baseFee = 200;
+      transportFee = hasTransport ? 100 : 0;
     } else if (day1Checked) {
       baseFee = 0;
+      transportFee = 0;
     } else {
       baseFee = 0;
+      transportFee = 0;
     }
-    transportFee = hasTransport ? 100 : 0;
   } else {
     // Student or initial default
     baseFee = 200;
@@ -1521,6 +1523,9 @@ function updateFees() {
   const category = getSelectedCategory();
   const fees = calculateCurrentFees();
   const isGuest = category === "Distinguished Guest / Professional";
+  const isGraduate = category === "Graduate" || category === "Graduate / Alumni";
+  const isStudent = category === "Student";
+  const day2Checked = $("day2")?.checked || false;
 
   const baseFeeDisplay = $("baseFeeDisplay");
   const transportFeeEl = $("transportFee");
@@ -1551,6 +1556,18 @@ function updateFees() {
     if (feeHelpText) {
       feeHelpText.textContent = "Distinguished Guest / Professional registration is completely free (0 EGP), including complimentary transportation upon request. Attendance is Day 1 only (November 12, 2026).";
     }
+  } else if (isGraduate && !day2Checked) {
+    if (transportFeeLabel) transportFeeLabel.textContent = "Transportation (Complimentary for Day 1)";
+    if (transportFieldLabel) transportFieldLabel.innerHTML = 'Do you require transportation? <span class="required">*</span>';
+    if (transportLabelRamses) transportLabelRamses.textContent = "Yes, from Ramses Square (Complimentary for Day 1 - 0 EGP)";
+    if (transportLabelOther) transportLabelOther.textContent = "Yes, from another location (Complimentary for Day 1 - 0 EGP)";
+    if (transportLabelNone) transportLabelNone.textContent = "No, I will arrange my own transportation (0 EGP)";
+    if (transportDesc) {
+      transportDesc.textContent = "Transportation for Day 1 is complimentary upon request and does not affect the registration total (0 EGP).";
+    }
+    if (feeHelpText) {
+      feeHelpText.textContent = "Day 1 (November 12) is completely free of charge, including complimentary transportation upon request. Day 2 (November 14 workshop) registration is 200 EGP (plus 100 EGP for transportation if selected).";
+    }
   } else {
     if (transportFeeLabel) transportFeeLabel.textContent = "Transportation";
     if (transportFieldLabel) transportFieldLabel.innerHTML = 'Do you require transportation? <span class="required">*</span>';
@@ -1561,19 +1578,31 @@ function updateFees() {
       transportDesc.textContent = "Transportation, if requested, costs an additional 100 EGP.";
     }
     if (feeHelpText) {
-      if (category === "Graduate / Alumni" || category === "Graduate") {
+      if (isGraduate) {
         feeHelpText.textContent = "Day 1 (November 12) is free of charge. Day 2 (November 14 workshop) registration is 200 EGP. Transportation adds 100 EGP if selected.";
       } else {
         feeHelpText.textContent = "The registration fee is 200 EGP regardless of whether you attend one day or both. Transportation adds 100 EGP if selected.";
       }
     }
-  const isFree = fees.totalFee === 0;
-  const hidePaymentAndRefund = isGuest || isFree;
+  }
 
-  setVisible("paymentSection", !hidePaymentAndRefund);
-  setVisible("refundSection", !hidePaymentAndRefund);
+  // Payment & Refund visibility:
+  // - Distinguished Guest / Professional: Never shown, never required.
+  // - Graduate / Alumni: Day 1 only: Hide and not required; Day 2 only or both days: Show and require.
+  // - Student: Always show, always require.
+  let showPaymentAndRefund = true;
+  if (isGuest) {
+    showPaymentAndRefund = false;
+  } else if (isGraduate) {
+    showPaymentAndRefund = day2Checked;
+  } else {
+    showPaymentAndRefund = true;
+  }
 
-  const paymentRequired = !hidePaymentAndRefund;
+  setVisible("paymentSection", showPaymentAndRefund);
+  setVisible("refundSection", showPaymentAndRefund);
+
+  const paymentRequired = showPaymentAndRefund;
   setRequired("paymentProof", paymentRequired);
   setRequired("transactionRef", paymentRequired);
   setRequired("paymentDate", paymentRequired);
@@ -1596,6 +1625,13 @@ function updateFees() {
   } else {
     setRequired("instapayDetails", false);
     setRequired("walletNumber", false);
+    document.querySelectorAll("#paymentSection .field-error, #refundSection .field-error").forEach(err => {
+      err.textContent = "";
+      err.hidden = true;
+    });
+    document.querySelectorAll("#paymentSection input, #paymentSection select, #refundSection input, #refundSection select").forEach(inp => {
+      inp.removeAttribute("aria-invalid");
+    });
   }
 }
 
@@ -1615,6 +1651,9 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
     if (!isStudent) {
       setRequired("studentDepartmentOther", false);
       setRequired("universityOther", false);
+    } else {
+      updateOther("studentDepartment", "studentDepartmentOther");
+      updateOther("university", "universityOther");
     }
 
     ["graduateDepartment", "graduationPeriod", "mastersStatus", "phdStatus", "jobTitle", "organization"]
@@ -1627,6 +1666,26 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
       setRequired("mastersYear", false);
       setRequired("phdStart", false);
       setRequired("phdYear", false);
+    } else {
+      updateOther("graduateDepartment", "graduateDepartmentOther");
+      updateOther("graduationPeriod", "graduationYearOther");
+
+      const msVal = $("mastersStatus")?.value;
+      const msCurrent = msVal === "Currently Studying";
+      const msComp = msVal === "Completed";
+      setVisible("mastersCurrent", msCurrent);
+      setVisible("mastersCompleted", msComp);
+      setRequired("mastersStart", msCurrent);
+      setRequired("mastersExpected", msCurrent);
+      setRequired("mastersYear", msComp);
+
+      const phdVal = $("phdStatus")?.value;
+      const phdCurrent = phdVal === "Currently Studying";
+      const phdComp = phdVal === "Completed";
+      setVisible("phdCurrent", phdCurrent);
+      setVisible("phdCompleted", phdComp);
+      setRequired("phdStart", phdCurrent);
+      setRequired("phdYear", phdComp);
     }
 
     setRequired("guestTitle", isGuest);
@@ -1648,12 +1707,16 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
 
     if (isGuest) {
       if (day1El) day1El.checked = true;
-      if (day2El) day2El.checked = false;
+      if (day2El) {
+        day2El.checked = false;
+        day2El.disabled = true;
+      }
       if (day2Choice) day2Choice.classList.add("hidden");
       if (day2Help) day2Help.classList.add("hidden");
       const err = $("attendanceError");
       if (err) err.hidden = true;
     } else {
+      if (day2El) day2El.disabled = false;
       if (day2Choice) day2Choice.classList.remove("hidden");
       if (day2Help) day2Help.classList.remove("hidden");
     }
@@ -1748,6 +1811,10 @@ if (day1El) {
 }
 if (day2El) {
   day2El.addEventListener("change", () => {
+    const isGuest = getSelectedCategory() === "Distinguished Guest / Professional";
+    if (isGuest && day2El.checked) {
+      day2El.checked = false;
+    }
     if ((day1El && day1El.checked) || day2El.checked) {
       const err = $("attendanceError");
       if (err) err.hidden = true;

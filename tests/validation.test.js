@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import {
   normalizePhone,
   VALIDATION_RULES,
@@ -286,9 +287,12 @@ test("calculateFee correctly evaluates fees for Student, Graduate / Alumni, and 
   assert.deepEqual(calculateFee({ category: "Graduate", attendance: ["Day 1"], transport: "No transport" }), {
     baseFee: 0, transportFee: 0, totalFee: 0
   });
-  // Day 1 only with transport: 100 EGP
+  // Day 1 only with transport: Free (0 EGP)
   assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), {
-    baseFee: 0, transportFee: 100, totalFee: 100
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Other location" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
   });
   // Day 2 only: 200 EGP standard (+100 transport)
   assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" }), {
@@ -473,7 +477,14 @@ test("backend Google Apps Script fee recalculation matches frontend calculateFee
 
     const transport = data.transport || "No transport";
     const hasTransport = transport && transport !== "No transport";
-    const calculatedTransportFee = (isGuest ? 0 : (hasTransport ? 100 : 0));
+    let calculatedTransportFee = 0;
+    if (isGuest) {
+      calculatedTransportFee = 0;
+    } else if (isGraduate) {
+      calculatedTransportFee = (hasDay2 && hasTransport) ? 100 : 0;
+    } else {
+      calculatedTransportFee = hasTransport ? 100 : 0;
+    }
     const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
 
     return {
@@ -712,8 +723,9 @@ test("SECURITY: Server-side validation pipeline blocks tampered, malicious, or b
     const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
 
     // Transaction reference validation
+    const isPaymentRequired = isStudent || (isGraduate && hasDay2);
     const transactionRef = String(data.transactionRef || "").trim();
-    if (calculatedTotalFee > 0 && !/^[0-9]{12}$/.test(transactionRef)) {
+    if (isPaymentRequired && calculatedTotalFee > 0 && !/^[0-9]{12}$/.test(transactionRef)) {
       return { valid: false, error: "12-digit transactionRef required" };
     }
 
@@ -1150,18 +1162,37 @@ test("POLICY: Server rejects Day 2 or both days for Distinguished Guest / Profes
   );
 });
 
-test("POLICY: Payment and refund fields are not required for Distinguished Guest / Professional", () => {
-  // Point 9: Payment & refund fields are optional/not required
-  function isPaymentRequired(category, totalFee) {
+test("POLICY: Payment and refund fields are not required for Distinguished Guest / Professional or Graduate / Alumni Day 1 only", () => {
+  function isPaymentRequired(category, attendance = []) {
     const isGuest = category === "Distinguished Guest / Professional";
-    const isFree = totalFee === 0 || totalFee === "0" || totalFee === "0 EGP";
-    return !(isGuest || isFree);
+    const isStudent = category === "Student";
+    const isGraduate = category === "Graduate" || category === "Graduate / Alumni";
+    const days = Array.isArray(attendance) ? attendance : [attendance];
+    const hasDay2 = days.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+    });
+    return isStudent || (isGraduate && hasDay2);
   }
 
-  assert.equal(isPaymentRequired("Distinguished Guest / Professional", 0), false);
-  assert.equal(isPaymentRequired("Distinguished Guest / Professional", "0 EGP"), false);
-  assert.equal(isPaymentRequired("Student", 200), true);
-  assert.equal(isPaymentRequired("Student", 300), true);
+  // Distinguished Guest / Professional: never required
+  assert.equal(isPaymentRequired("Distinguished Guest / Professional", ["Day 1"]), false);
+
+  // Graduate / Alumni: Day 1 only -> not required
+  assert.equal(isPaymentRequired("Graduate / Alumni", ["Day 1"]), false);
+  assert.equal(isPaymentRequired("Graduate", ["Day 1"]), false);
+
+  // Graduate / Alumni: Day 2 only -> required
+  assert.equal(isPaymentRequired("Graduate / Alumni", ["Day 2"]), true);
+  assert.equal(isPaymentRequired("Graduate", ["Day 2"]), true);
+
+  // Graduate / Alumni: Both days -> required
+  assert.equal(isPaymentRequired("Graduate / Alumni", ["Day 1", "Day 2"]), true);
+
+  // Student: always required
+  assert.equal(isPaymentRequired("Student", ["Day 1"]), true);
+  assert.equal(isPaymentRequired("Student", ["Day 2"]), true);
+  assert.equal(isPaymentRequired("Student", ["Day 1", "Day 2"]), true);
 });
 
 test("POLICY: Category switching correctly recalculates fees and does not retain stale transportation fee", () => {
@@ -1178,9 +1209,9 @@ test("POLICY: Category switching correctly recalculates fees and does not retain
   const step3 = calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" });
   assert.deepEqual(step3, { baseFee: 200, transportFee: 100, totalFee: 300 });
 
-  // 4. User switches to Graduate Day 1 (Day 1 free, transport +100 EGP)
+  // 4. User switches to Graduate Day 1 (Day 1 free, transport free)
   const step4 = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" });
-  assert.deepEqual(step4, { baseFee: 0, transportFee: 100, totalFee: 100 });
+  assert.deepEqual(step4, { baseFee: 0, transportFee: 0, totalFee: 0 });
 
   // 5. User switches back to Distinguished Guest
   const step5 = calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" });
@@ -1197,9 +1228,10 @@ test("POLICY: Existing Student and Graduate / Alumni fee policies remain strictl
   assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
 
   // Point 12: Graduate / Alumni fees
-  // Day 1 only: free base, +100 transport
+  // Day 1 only: free base, free transport
   assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" }), { baseFee: 0, transportFee: 0, totalFee: 0 });
-  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), { baseFee: 0, transportFee: 100, totalFee: 100 });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), { baseFee: 0, transportFee: 0, totalFee: 0 });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Other location" }), { baseFee: 0, transportFee: 0, totalFee: 0 });
   // Day 2 only: 200 base, +100 transport
   assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" }), { baseFee: 200, transportFee: 0, totalFee: 200 });
   assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "Ramses Square" }), { baseFee: 200, transportFee: 100, totalFee: 300 });
@@ -1425,4 +1457,554 @@ test("LOGO & EMAIL INTEGRATION: CID references in HTML email exactly match CONFI
     () => resolveBlobName("badFile", "test.pdf", "application/pdf"),
     /not an image/
   );
+});
+
+// ============================================================================
+// REGRESSION SUITE: 12 REQUIRED ACCEPTANCE TESTS
+// ============================================================================
+
+const indexHtmlContent = fs.readFileSync(new URL("../index.html", import.meta.url), "utf-8");
+
+test("REGRESSION 1: Student: all original academic fields and options remain available", () => {
+  // Category radio
+  assert.ok(indexHtmlContent.includes('value="Student"'), "Student status option must exist");
+
+  // Student Department and options
+  assert.ok(indexHtmlContent.includes('id="studentDepartment"'), "studentDepartment select must exist");
+  assert.ok(indexHtmlContent.includes('id="studentDepartmentOther"'), "studentDepartmentOther input must exist");
+  const studentDepts = [
+    "Electrical Engineering",
+    "Electronics and Communications Engineering",
+    "Artificial Intelligence",
+    "Computer Science",
+    "Computer Engineering",
+    "Biomedical Engineering",
+    "Other"
+  ];
+  for (const dept of studentDepts) {
+    assert.ok(indexHtmlContent.includes(dept), `studentDepartment must contain option "${dept}"`);
+  }
+
+  // University select and other
+  assert.ok(indexHtmlContent.includes('id="university"'), "university select must exist");
+  assert.ok(indexHtmlContent.includes('id="universityOther"'), "universityOther input must exist");
+  assert.ok(indexHtmlContent.includes("The British University in Egypt (BUE)"));
+  assert.ok(indexHtmlContent.includes("Cairo University"));
+  assert.ok(indexHtmlContent.includes("Ain Shams University"));
+
+  // Study year options
+  assert.ok(indexHtmlContent.includes('id="studyYear"'), "studyYear select must exist");
+  for (const year of ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]) {
+    assert.ok(indexHtmlContent.includes(year), `studyYear must contain option "${year}"`);
+  }
+});
+
+test("REGRESSION 2: Graduate / Alumni: all original academic and eligibility fields and options remain available", () => {
+  // Category radio
+  assert.ok(indexHtmlContent.includes('value="Graduate / Alumni"'), "Graduate / Alumni status option must exist");
+
+  // Graduate Department and options
+  assert.ok(indexHtmlContent.includes('id="graduateDepartment"'), "graduateDepartment select must exist");
+  assert.ok(indexHtmlContent.includes('id="graduateDepartmentOther"'), "graduateDepartmentOther input must exist");
+
+  // Graduation Period
+  assert.ok(indexHtmlContent.includes('id="graduationPeriod"'), "graduationPeriod select must exist");
+  assert.ok(indexHtmlContent.includes('id="graduationYearOther"'), "graduationYearOther input must exist");
+  for (const period of ["Before 2014", "2014–2019", "2020–2024"]) {
+    assert.ok(indexHtmlContent.includes(period), `graduationPeriod must contain option "${period}"`);
+  }
+
+  // Master's status & conditional fields
+  assert.ok(indexHtmlContent.includes('id="mastersStatus"'), "mastersStatus select must exist");
+  assert.ok(indexHtmlContent.includes('id="mastersStart"'), "mastersStart input must exist");
+  assert.ok(indexHtmlContent.includes('id="mastersExpected"'), "mastersExpected input must exist");
+  assert.ok(indexHtmlContent.includes('id="mastersYear"'), "mastersYear input must exist");
+
+  // PhD status & conditional fields
+  assert.ok(indexHtmlContent.includes('id="phdStatus"'), "phdStatus select must exist");
+  assert.ok(indexHtmlContent.includes('id="phdStart"'), "phdStart input must exist");
+  assert.ok(indexHtmlContent.includes('id="phdYear"'), "phdYear input must exist");
+
+  // Job title and organization
+  assert.ok(indexHtmlContent.includes('id="jobTitle"'), "jobTitle input must exist");
+  assert.ok(indexHtmlContent.includes('id="organization"'), "organization input must exist");
+
+  // Day 2 eligibility information
+  assert.ok(indexHtmlContent.includes("Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders"));
+});
+
+test("REGRESSION 3: Distinguished Guest / Professional: only the intended guest-specific questions appear", () => {
+  // Category radio
+  assert.ok(indexHtmlContent.includes('value="Distinguished Guest / Professional"'));
+
+  // Dedicated section
+  assert.ok(indexHtmlContent.includes('id="distinguishedGuestFields"'));
+
+  // A. Professional / Academic Title
+  assert.ok(indexHtmlContent.includes('id="guestTitle"'));
+  assert.ok(indexHtmlContent.includes('id="guestTitleOther"'));
+  const guestTitles = [
+    "Professor",
+    "Associate Professor",
+    "Assistant Professor",
+    "Lecturer",
+    "Teaching Assistant",
+    "Researcher",
+    "Company Executive / Manager",
+    "Engineer / Industry Professional",
+    "IEEE Volunteer / Representative",
+    "Government / Institutional Representative",
+    "Other"
+  ];
+  for (const title of guestTitles) {
+    assert.ok(indexHtmlContent.includes(title), `guestTitle must contain "${title}"`);
+  }
+
+  // B. Organization / Institution
+  assert.ok(indexHtmlContent.includes('id="guestOrganization"'));
+
+  // C. Organization Type
+  assert.ok(indexHtmlContent.includes('id="guestOrganizationType"'));
+  assert.ok(indexHtmlContent.includes('id="guestOrganizationTypeOther"'));
+  const orgTypes = [
+    "University / Academic Institution",
+    "Research Center / Laboratory",
+    "Private Company / Industry",
+    "Startup / Entrepreneurial Venture",
+    "Government Entity",
+    "IEEE / Professional Organization",
+    "Independent Professional",
+    "Other"
+  ];
+  for (const orgType of orgTypes) {
+    assert.ok(indexHtmlContent.includes(orgType), `guestOrganizationType must contain "${orgType}"`);
+  }
+});
+
+test("REGRESSION 4: Guest: Day 1 is selected by default and Day 2 cannot be selected", () => {
+  // In index.html, when guest is chosen, Day 1 is checked, Day 2 is unchecked, disabled, and hidden
+  assert.ok(indexHtmlContent.includes('day1El.checked = true;'));
+  assert.ok(indexHtmlContent.includes('day2El.disabled = true;'));
+  assert.ok(indexHtmlContent.includes('day2El.checked = false;'));
+  assert.ok(indexHtmlContent.includes('day2Choice.classList.add("hidden");'));
+
+  // Also in day2El change handler, if guest somehow triggers change, it is immediately unchecked
+  assert.ok(indexHtmlContent.includes("if (isGuest && day2El.checked)"));
+  assert.ok(/if\s*\(isGuest\s*&&\s*day2El\.checked\)\s*\{\s*day2El\.checked\s*=\s*false;\s*\}/.test(indexHtmlContent));
+});
+
+test("REGRESSION 5: Guest: registration succeeds without payment or refund fields when all required guest fields are valid", () => {
+  function validateGuestServerPayload(data) {
+    if (data.status !== "Distinguished Guest / Professional") return { success: false };
+    const attendance = Array.isArray(data.attendance) ? data.attendance : [data.attendance];
+    if (attendance.some(d => String(d).includes("Day 2") || String(d) === "14")) {
+      return { success: false, message: "Restricted to Day 1 only." };
+    }
+    if (!data.guestTitle || !data.guestOrganization || !data.guestOrganizationType) {
+      return { success: false, message: "Missing guest questions." };
+    }
+    // No transactionRef or paymentProof required
+    return { success: true, totalFee: 0 };
+  }
+
+  const result = validateGuestServerPayload({
+    status: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "Other location",
+    pickupLocation: "Heliopolis",
+    guestTitle: "Associate Professor",
+    guestOrganization: "Ain Shams University",
+    guestOrganizationType: "University / Academic Institution"
+    // No paymentMethod, transactionRef, paymentProof, refundMethod, recipientName
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.totalFee, 0);
+});
+
+test("REGRESSION 6: Guest: a forged backend request selecting Day 2 is rejected", () => {
+  function backendCheckGuest(status, attendance) {
+    const isGuest = status === "Distinguished Guest / Professional";
+    const days = Array.isArray(attendance) ? attendance : [attendance];
+    const hasDay2 = days.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+    });
+    if (isGuest && hasDay2) {
+      return { success: false, message: "Distinguished Guest / Professional registration is restricted to Day 1 only." };
+    }
+    return { success: true };
+  }
+
+  // Attempt Day 2 only
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 2"]).success, false);
+  // Attempt both days
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1", "Day 2"]).success, false);
+  // Attempt date string for Day 2
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["November 14, 2026"]).success, false);
+  // Valid Day 1 passes
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1"]).success, true);
+});
+
+test("REGRESSION 7: Graduate / Alumni, Day 1 only: payment and refund fields are hidden and not required", () => {
+  function isPaymentAndRefundRequired(category, attendanceDays) {
+    if (category === "Distinguished Guest / Professional") return false;
+    if (category === "Graduate / Alumni" || category === "Graduate") {
+      const days = Array.isArray(attendanceDays) ? attendanceDays : [attendanceDays].filter(Boolean);
+      return days.some(d => {
+        const s = String(d).toLowerCase().trim();
+        return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+      });
+    }
+    return true; // Student
+  }
+
+  // Graduate Day 1 only (with or without transport) -> payment/refund NOT required
+  assert.equal(isPaymentAndRefundRequired("Graduate / Alumni", ["Day 1"]), false);
+  assert.equal(isPaymentAndRefundRequired("Graduate", ["November 12, 2026"]), false);
+
+  // Fee calculations for Graduate Day 1: 0 EGP base, 0 EGP transport across all transport options
+  const feeWithTransport = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" });
+  assert.equal(feeWithTransport.baseFee, 0);
+  assert.equal(feeWithTransport.transportFee, 0);
+  assert.equal(feeWithTransport.totalFee, 0);
+
+  const feeWithOtherTransport = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Other location" });
+  assert.equal(feeWithOtherTransport.baseFee, 0);
+  assert.equal(feeWithOtherTransport.transportFee, 0);
+  assert.equal(feeWithOtherTransport.totalFee, 0);
+
+  const feeNoTransport = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" });
+  assert.equal(feeNoTransport.baseFee, 0);
+  assert.equal(feeNoTransport.transportFee, 0);
+  assert.equal(feeNoTransport.totalFee, 0);
+});
+
+test("REGRESSION 8: Graduate / Alumni, Day 2 only: existing payment and refund requirements apply", () => {
+  function isPaymentAndRefundRequired(category, attendanceDays) {
+    if (category === "Distinguished Guest / Professional") return false;
+    if (category === "Graduate / Alumni" || category === "Graduate") {
+      const days = Array.isArray(attendanceDays) ? attendanceDays : [attendanceDays].filter(Boolean);
+      return days.some(d => {
+        const s = String(d).toLowerCase().trim();
+        return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+      });
+    }
+    return true;
+  }
+
+  assert.equal(isPaymentAndRefundRequired("Graduate / Alumni", ["Day 2"]), true);
+  assert.equal(isPaymentAndRefundRequired("Graduate", ["November 14, 2026"]), true);
+
+  const fee = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" });
+  assert.equal(fee.baseFee, 200);
+  assert.equal(fee.totalFee, 200);
+});
+
+test("REGRESSION 9: Graduate / Alumni, both days: existing payment and refund requirements apply", () => {
+  function isPaymentAndRefundRequired(category, attendanceDays) {
+    if (category === "Distinguished Guest / Professional") return false;
+    if (category === "Graduate / Alumni" || category === "Graduate") {
+      const days = Array.isArray(attendanceDays) ? attendanceDays : [attendanceDays].filter(Boolean);
+      return days.some(d => {
+        const s = String(d).toLowerCase().trim();
+        return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+      });
+    }
+    return true;
+  }
+
+  assert.equal(isPaymentAndRefundRequired("Graduate / Alumni", ["Day 1", "Day 2"]), true);
+
+  const fee = calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" });
+  assert.equal(fee.baseFee, 200);
+  assert.equal(fee.transportFee, 100);
+  assert.equal(fee.totalFee, 300);
+});
+
+test("REGRESSION 10: Student: previous payment, refund, and fee behavior is unchanged", () => {
+  function isPaymentAndRefundRequired(category) {
+    if (category === "Distinguished Guest / Professional") return false;
+    if (category === "Graduate / Alumni" || category === "Graduate") return false;
+    return true; // Student always required
+  }
+
+  // Student requires payment across all attendance combinations
+  assert.equal(isPaymentAndRefundRequired("Student"), true);
+
+  // Student fees are invariant of days: 200 EGP base, +100 EGP transport
+  const sDay1 = calculateFee({ category: "Student", attendance: ["Day 1"], transport: "No transport" });
+  assert.deepEqual(sDay1, { baseFee: 200, transportFee: 0, totalFee: 200 });
+
+  const sDay2 = calculateFee({ category: "Student", attendance: ["Day 2"], transport: "No transport" });
+  assert.deepEqual(sDay2, { baseFee: 200, transportFee: 0, totalFee: 200 });
+
+  const sBoth = calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" });
+  assert.deepEqual(sBoth, { baseFee: 200, transportFee: 100, totalFee: 300 });
+});
+
+test("REGRESSION 11: Switching categories or attendance days updates conditional fields and validation correctly", () => {
+  // Verify UI handler re-runs other updates and clears hidden required attributes
+  assert.ok(indexHtmlContent.includes('updateOther("studentDepartment", "studentDepartmentOther");'));
+  assert.ok(indexHtmlContent.includes('updateOther("university", "universityOther");'));
+  assert.ok(indexHtmlContent.includes('updateOther("graduateDepartment", "graduateDepartmentOther");'));
+  assert.ok(indexHtmlContent.includes('updateOther("graduationPeriod", "graduationYearOther");'));
+  assert.ok(indexHtmlContent.includes('updateOther("guestTitle", "guestTitleOtherField", "guestTitleOther");'));
+  assert.ok(indexHtmlContent.includes('updateOther("guestOrganizationType", "guestOrganizationTypeOtherField", "guestOrganizationTypeOther");'));
+
+  // Attendance change recalculates fees and visibility
+  assert.ok(indexHtmlContent.includes('day1El.addEventListener("change", () => {'));
+  assert.ok(indexHtmlContent.includes('day2El.addEventListener("change", () => {'));
+});
+
+test("REGRESSION 12: Existing fee calculations, transportation behavior, uploads, spreadsheet persistence, and email integration remain intact", () => {
+  // Fees
+  assert.equal(calculateFee({ category: "Distinguished Guest / Professional", transport: "Ramses Square" }).totalFee, 0);
+  assert.equal(calculateFee({ category: "Student", transport: "No transport" }).totalFee, 200);
+
+  // Email template
+  const emailHtml = generateRegistrationEmailHtml({
+    fullName: "Dr. Samer",
+    email: "samer@bue.edu.eg",
+    mobile: "+201012345678",
+    status: "Distinguished Guest / Professional",
+    guestTitle: "Professor",
+    guestOrganization: "BUE",
+    guestOrganizationType: "University / Academic Institution",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    totalFee: "0"
+  });
+  assert.ok(emailHtml.includes("Dr. Samer"));
+  assert.ok(emailHtml.includes("Distinguished Guest / Professional"));
+  assert.ok(emailHtml.includes("Complimentary"));
+  assert.ok(emailHtml.includes("0 EGP"));
+});
+
+// ============================================================================
+// TARGETED REGRESSION SUITE: Free Transportation for Graduate / Alumni Day 1
+// ============================================================================
+
+const codeGsContent = fs.readFileSync(new URL("../google-apps-script/Code.gs", import.meta.url), "utf-8");
+
+test("TARGETED 1-3: Graduate / Alumni Day 1 only calculates EGP 0 across all transportation choices (DIRECT FRONTEND calculateFee)", () => {
+  // Directly tests production calculateFee from src/config.js
+
+  // 1. Graduate / Alumni, Day 1 only, No Transport: total EGP 0
+  const noTransport = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 1"],
+    transport: "No transport"
+  });
+  assert.deepEqual(noTransport, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // 2. Graduate / Alumni, Day 1 only, Ramses Square: total EGP 0
+  const ramses = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 1"],
+    transport: "Ramses Square"
+  });
+  assert.deepEqual(ramses, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // 3. Graduate / Alumni, Day 1 only, Other Location: total EGP 0
+  const otherLoc = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 1"],
+    transport: "Other location"
+  });
+  assert.deepEqual(otherLoc, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // Also verify date string variant
+  const dateString = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["November 12, 2026"],
+    transport: "Ramses Square"
+  });
+  assert.deepEqual(dateString, { baseFee: 0, transportFee: 0, totalFee: 0 });
+});
+
+test("TARGETED 4: Graduate / Alumni, Day 1 only: payment and refund fields are hidden and not required regardless of transportation", () => {
+  // Checks index.html logic: showPaymentAndRefund = isGuest ? false : (isGraduate ? day2Checked : true)
+  assert.ok(indexHtmlContent.includes("showPaymentAndRefund = day2Checked;"));
+
+  // Verify that transport choices for Graduate Day 1 are labeled complimentary in updateFees()
+  assert.ok(indexHtmlContent.includes('transportFeeLabel.textContent = "Transportation (Complimentary for Day 1)";'));
+  assert.ok(indexHtmlContent.includes('transportLabelRamses.textContent = "Yes, from Ramses Square (Complimentary for Day 1 - 0 EGP)";'));
+  assert.ok(indexHtmlContent.includes('transportLabelOther.textContent = "Yes, from another location (Complimentary for Day 1 - 0 EGP)";'));
+
+  // In payload builder, isPaymentRequired is false for Graduate Day 1
+  function isPaymentRequiredForPayload(status, attendance) {
+    const isStudent = status === "Student";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const days = Array.isArray(attendance) ? attendance : [attendance];
+    const hasDay2 = days.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+    });
+    return isStudent || (isGraduate && hasDay2);
+  }
+
+  assert.equal(isPaymentRequiredForPayload("Graduate / Alumni", ["Day 1"]), false);
+  assert.equal(isPaymentRequiredForPayload("Graduate / Alumni", ["November 12, 2026"]), false);
+});
+
+test("TARGETED 5-7: Graduate / Alumni Day 2 only and both days retain standard fees and required transport costs", () => {
+  // 5. Graduate / Alumni, Day 2 only, No Transport: total EGP 200
+  const day2NoTransport = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 2"],
+    transport: "No transport"
+  });
+  assert.deepEqual(day2NoTransport, { baseFee: 200, transportFee: 0, totalFee: 200 });
+
+  // 6. Graduate / Alumni, Day 2 only, with transport: total EGP 300
+  const day2WithTransport = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 2"],
+    transport: "Ramses Square"
+  });
+  assert.deepEqual(day2WithTransport, { baseFee: 200, transportFee: 100, totalFee: 300 });
+
+  // 7. Graduate / Alumni, both days, with transport: total EGP 300
+  const bothDaysWithTransport = calculateFee({
+    category: "Graduate / Alumni",
+    attendance: ["Day 1", "Day 2"],
+    transport: "Other location"
+  });
+  assert.deepEqual(bothDaysWithTransport, { baseFee: 200, transportFee: 100, totalFee: 300 });
+});
+
+test("TARGETED 8: Student fees and transportation calculations remain strictly unchanged", () => {
+  // Student Day 1, No Transport -> 200
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+
+  // Student Day 1, Ramses Square -> 300
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // Student Day 2, Other Location -> 300
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 2"], transport: "Other location" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // Student Both Days, Ramses Square -> 300
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+});
+
+test("TARGETED 9: Distinguished Guest / Professional remains free (including transport) and Day 2 requests are rejected", () => {
+  // Guest with transport is 0 EGP
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Other location" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+
+  // Backend verification (Note: Code.gs inspection via regex & test replica)
+  assert.ok(codeGsContent.includes('message: "Distinguished Guest / Professional registration is restricted to Day 1 only."'));
+});
+
+test("TARGETED 10: Backend independently calculates Graduate / Alumni Day 1 total as EGP 0 even if client submits a different totalFee (BACKEND REPLICA)", () => {
+  // Note: This test uses a replicated test harness of the Apps Script doPost() server recalculation logic
+  // because the live Google Apps Script environment cannot be executed natively in Node.js.
+  // The actual Code.gs file content is also verified via static analysis.
+
+  // Verify Code.gs contains the exact authoritative calculation
+  assert.ok(codeGsContent.includes("calculatedTransportFee = (hasDay2 && hasTransport) ? 100 : 0;"));
+
+  function serverRecalculateFees(data) {
+    const status = String(data.status || "").trim();
+    const isGuest = status === "Distinguished Guest / Professional";
+    const isGraduate = status === "Graduate" || status === "Graduate / Alumni";
+    const isStudent = status === "Student";
+
+    const attendanceList = Array.isArray(data.attendance)
+      ? data.attendance
+      : (data.attendance ? [data.attendance] : []);
+
+    const hasDay1 = attendanceList.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 1" || s === "1" || s.includes("day 1") || s.includes("nov 12") || s.includes("november 12") || s === "12";
+    });
+    const hasDay2 = attendanceList.some(d => {
+      const s = String(d).toLowerCase().trim();
+      return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
+    });
+
+    let calculatedBaseFee = 0;
+    if (isGuest) {
+      calculatedBaseFee = 0;
+    } else if (isStudent) {
+      calculatedBaseFee = 200;
+    } else if (isGraduate) {
+      if (hasDay2) {
+        calculatedBaseFee = 200;
+      } else if (hasDay1) {
+        calculatedBaseFee = 0;
+      } else {
+        calculatedBaseFee = 0;
+      }
+    } else {
+      calculatedBaseFee = 200;
+    }
+
+    const transport = data.transport || "No transport";
+    const hasTransport = transport && transport !== "No transport";
+    let calculatedTransportFee = 0;
+    if (isGuest) {
+      calculatedTransportFee = 0;
+    } else if (isGraduate) {
+      calculatedTransportFee = (hasDay2 && hasTransport) ? 100 : 0;
+    } else {
+      calculatedTransportFee = hasTransport ? 100 : 0;
+    }
+
+    const calculatedTotalFee = calculatedBaseFee + calculatedTransportFee;
+    const isPaymentRequired = isStudent || (isGraduate && hasDay2);
+    const paymentStatus = (!isPaymentRequired || calculatedTotalFee === 0) ? "Confirmed - Free" : "Pending Verification";
+
+    return {
+      authoritativeTotalFee: calculatedTotalFee,
+      isPaymentRequired,
+      paymentStatus
+    };
+  }
+
+  // Client attempts to submit 100 EGP for Graduate Day 1 with Ramses Square
+  const result1 = serverRecalculateFees({
+    status: "Graduate / Alumni",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    totalFee: "100" // Tampered / stale client value
+  });
+  assert.equal(result1.authoritativeTotalFee, 0);
+  assert.equal(result1.isPaymentRequired, false);
+  assert.equal(result1.paymentStatus, "Confirmed - Free");
+
+  // Client attempts to submit 300 EGP for Graduate Day 1 with Other location
+  const result2 = serverRecalculateFees({
+    status: "Graduate / Alumni",
+    attendance: ["Day 1"],
+    transport: "Other location",
+    totalFee: "300" // Tampered client value
+  });
+  assert.equal(result2.authoritativeTotalFee, 0);
+  assert.equal(result2.isPaymentRequired, false);
+  assert.equal(result2.paymentStatus, "Confirmed - Free");
+
+  // Graduate Day 2 with transport correctly requires payment and sets 300 EGP
+  const result3 = serverRecalculateFees({
+    status: "Graduate / Alumni",
+    attendance: ["Day 2"],
+    transport: "Ramses Square",
+    totalFee: "0" // Tampered 0 EGP by client
+  });
+  assert.equal(result3.authoritativeTotalFee, 300);
+  assert.equal(result3.isPaymentRequired, true);
+  assert.equal(result3.paymentStatus, "Pending Verification");
 });

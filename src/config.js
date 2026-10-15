@@ -44,10 +44,10 @@ export const FEES = Object.freeze({
  * Calculates registration fees based on attendee category, attendance days, and transportation choice.
  *
  * Rules:
- * - Distinguished Guest / Professional: Always completely free (0 EGP).
- * - Graduate / Alumni: Day 1 only is Free (0 EGP). Day 2 only is 200 EGP. Both days is 200 EGP (for Day 2 only).
- * - Student: 200 EGP regardless of whether Day 1, Day 2, or both days are selected.
- * - Transportation: Adds 100 EGP if selected (except for free Guest category).
+ * - Distinguished Guest / Professional: Always completely free (0 EGP), including complimentary transportation.
+ * - Graduate / Alumni: Day 1 only is Free (0 EGP), including free transportation. Day 2 only is 200 EGP (+100 EGP transport if requested). Both days is 200 EGP (+100 EGP transport if requested).
+ * - Student: 200 EGP regardless of whether Day 1, Day 2, or both days are selected (+100 EGP transport if requested).
+ * - Transportation: Adds 100 EGP if selected (except for free Guest category and Graduate / Alumni Day 1 only).
  */
 export function calculateFee({ category, attendance = [], transport = "No transport" } = {}) {
   const isGuest = category === "Distinguished Guest / Professional";
@@ -88,7 +88,12 @@ export function calculateFee({ category, attendance = [], transport = "No transp
   }
 
   const hasTransport = transport && transport !== "No transport";
-  const transportFee = hasTransport ? FEES.transportAmount : 0;
+  let transportFee = 0;
+  if (isGraduate) {
+    transportFee = (hasDay2 && hasTransport) ? FEES.transportAmount : 0;
+  } else {
+    transportFee = hasTransport ? FEES.transportAmount : 0;
+  }
   const totalFee = baseFee + transportFee;
 
   return {
