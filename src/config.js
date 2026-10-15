@@ -122,7 +122,7 @@ export const PAYMENT = {
 };
 
 export const API_CONFIG = Object.freeze({
-  endpointUrl: "https://script.google.com/macros/s/AKfycbw_Emn4j9U2d_DJHxqp7TT1vMHXdQDFEVBoRNAAdW4OWrTEIVL3OedkwV-DauFb23tFQQ/exec"
+  endpointUrl: "https://script.google.com/macros/s/AKfycbwMZzH6q5Nhoc21PeEwNmjU2-iF3v6_B3Q0jM9e5z-LEYEhFKR0_X_eviuo_KBhuoUpvw/exec"
 });
 
 export const SOCIAL_LINKS = Object.freeze([
