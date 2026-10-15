@@ -19,11 +19,12 @@ This directory contains the production-ready Google Apps Script backend referenc
      - Distinguished Guest / Professional: 0 EGP total (completely free).
    - Strict 12-digit ASCII payment transaction reference (`^[0-9]{12}$`) validated only when `calculatedTotalFee > 0`. Free registrations (0 EGP) do not require payment references or proof.
 3. **Data Storage in Google Sheets**:
-   - Preserves all 50 existing columns in exact historical order.
-   - Automatically appends the 5 new columns (`professionalTitle`, `professionalTitleOther`, `guestOrganization`, `organizationType`, `organizationTypeOther`) at columns 51 to 55 if missing, without reordering or overwriting existing rows.
+   - Preserves all 50 existing columns in exact established order.
+   - Dynamically inspects the actual header row to map each value under its matching column header.
+   - For Distinguished Guest registrations, maps professional title to `jobTitle` (column 31) and organization to `organization` (column 32) when using the standard 50-column schema, while also supporting extended columns 51-55 if configured.
 4. **Google Drive File Uploads**: Decodes and saves base64 payment receipts and national ID cards to Google Drive when provided.
 5. **Branded Confirmation Email**:
-   - Uses `MailApp.sendEmail()` with `htmlBody` and a plain-text body fallback.
+   - Uses `MailApp.sendEmail()` with `htmlBody`, inline logo blobs via `inlineImages` with `cid:` attachments loaded from Google Drive, and a plain-text fallback.
    - Includes all 7 IEEE Sensors Council Egypt Chapter social channels.
    - Strictly excludes sensitive personal data (National ID, transaction reference, uploaded Drive files).
    - Isolated in a `try...catch` block: email delivery failure is logged but **never** causes the registration to fail.
@@ -31,7 +32,7 @@ This directory contains the production-ready Google Apps Script backend referenc
 
 ---
 
-## 2. Google Sheets 55-Column Schema
+## 2. Google Sheets Schema & Mapping
 
 The spreadsheet uses the following exact 55 columns:
 

@@ -270,67 +270,83 @@ function doPost(e) {
       }
     }
 
-    // 8. Record to Google Sheets with exact 55-column schema (preserves columns 1-50)
+    // 8. Record to Google Sheets preserving the established 50-column schema
     const sheet = getRegistrationsSheet();
     ensureSheetHeaders(sheet);
 
-    const row = [
-      registrationId,                                                 // 1. Registration ID
-      timestamp.toISOString(),                                        // 2. Submission Timestamp
-      "Pending Review",                                               // 3. Application Status
-      calculatedTotalFee === 0 ? "Confirmed - Free" : "Pending Verification", // 4. Payment Status
-      "N/A",                                                          // 5. Refund Status
-      sanitizeForSheet(data.fullName),                                // 6. fullName
-      sanitizeForSheet(data.mobile),                                  // 7. mobile
-      sanitizeForSheet(data.email),                                   // 8. email
-      sanitizeForSheet(data.gender),                                  // 9. gender
-      sanitizeForSheet(data.ieeeMember),                              // 10. ieeeMember
-      sanitizeForSheet(data.ieeeNumber),                              // 11. ieeeNumber
-      sanitizeForSheet(data.bueMember),                               // 12. bueMember
-      sanitizeForSheet(data.nationalId),                              // 13. nationalId
-      sanitizeForSheet(data.status),                                  // 14. status
-      sanitizeForSheet(data.studentDepartment),                       // 15. studentDepartment
-      sanitizeForSheet(data.studentDepartmentOther),                  // 16. studentDepartmentOther
-      sanitizeForSheet(data.university),                              // 17. university
-      sanitizeForSheet(data.universityOther),                         // 18. universityOther
-      sanitizeForSheet(data.studyYear),                               // 19. studyYear
-      sanitizeForSheet(data.graduateDepartment),                      // 20. graduateDepartment
-      sanitizeForSheet(data.graduateDepartmentOther),                 // 21. graduateDepartmentOther
-      sanitizeForSheet(data.graduationPeriod),                        // 22. graduationPeriod
-      sanitizeForSheet(data.graduationYearOther),                     // 23. graduationYearOther
-      sanitizeForSheet(data.mastersStatus),                           // 24. mastersStatus
-      sanitizeForSheet(data.mastersStart),                            // 25. mastersStart
-      sanitizeForSheet(data.mastersExpected),                         // 26. mastersExpected
-      sanitizeForSheet(data.mastersYear),                             // 27. mastersYear
-      sanitizeForSheet(data.phdStatus),                               // 28. phdStatus
-      sanitizeForSheet(data.phdStart),                                // 29. phdStart
-      sanitizeForSheet(data.phdYear),                                 // 30. phdYear
-      sanitizeForSheet(data.jobTitle),                                // 31. jobTitle
-      sanitizeForSheet(data.organization || data.guestOrganization),  // 32. organization
-      sanitizeForSheet(Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "")), // 33. attendance
-      sanitizeForSheet(data.transport),                               // 34. transport
-      sanitizeForSheet(data.pickupLocation),                          // 35. pickupLocation
-      sanitizeForSheet(data.paymentMethod),                           // 36. paymentMethod
-      sanitizeForSheet(transactionRef),                               // 37. transactionRef
-      sanitizeForSheet(data.paymentDate),                             // 38. paymentDate
-      sanitizeForSheet(data.paymentTime),                             // 39. paymentTime
-      sanitizeForSheet(data.recipientName),                           // 40. recipientName
-      sanitizeForSheet(data.refundMethod),                            // 41. refundMethod
-      sanitizeForSheet(data.instapayDetails),                         // 42. instapayDetails
-      sanitizeForSheet(data.walletNumber),                            // 43. walletNumber
-      sanitizeForSheet(data.totalFee || "0"),                         // 44. totalFee
-      sanitizeForSheet(paymentProofUrl),                              // 45. paymentProof
-      sanitizeForSheet(nationalIdFileUrl),                            // 46. nationalIdFile
-      "Yes",                                                          // 47. registrationConsent
-      consentTimestamp,                                               // 48. consentTimestamp
-      sanitizeForSheet(referralSources.join(", ")),                   // 49. referralSources
-      sanitizeForSheet(data.ambassadorCode),                          // 50. ambassadorCode
-      sanitizeForSheet(data.professionalTitle || data.guestTitle),    // 51. professionalTitle
-      sanitizeForSheet((data.professionalTitle === "Other" || data.guestTitle === "Other") ? (data.professionalTitleOther || data.guestTitleOther || "") : ""), // 52. professionalTitleOther
-      sanitizeForSheet(data.guestOrganization || data.organization),  // 53. guestOrganization
-      sanitizeForSheet(data.organizationType || data.guestOrganizationType), // 54. organizationType
-      sanitizeForSheet((data.organizationType === "Other" || data.guestOrganizationType === "Other") ? (data.organizationTypeOther || data.guestOrganizationTypeOther || "") : "") // 55. organizationTypeOther
-    ];
+    const finalJobTitle = isGuest
+      ? (data.professionalTitle === "Other" ? (data.professionalTitleOther || "Other") : (data.professionalTitle || data.guestTitle || data.jobTitle || ""))
+      : (data.jobTitle || "");
+
+    const finalOrganization = isGuest
+      ? (data.organization || data.guestOrganization || "")
+      : (data.organization || "");
+
+    const fieldMap = {
+      "Registration ID": registrationId,
+      "Submission Timestamp": timestamp.toISOString(),
+      "Application Status": "Pending Review",
+      "Payment Status": calculatedTotalFee === 0 ? "Confirmed - Free" : "Pending Verification",
+      "Refund Status": "N/A",
+      "fullName": sanitizeForSheet(data.fullName),
+      "mobile": sanitizeForSheet(data.mobile),
+      "email": sanitizeForSheet(data.email),
+      "gender": sanitizeForSheet(data.gender),
+      "ieeeMember": sanitizeForSheet(data.ieeeMember),
+      "ieeeNumber": sanitizeForSheet(data.ieeeNumber),
+      "bueMember": sanitizeForSheet(data.bueMember),
+      "nationalId": sanitizeForSheet(data.nationalId),
+      "status": sanitizeForSheet(data.status),
+      "studentDepartment": sanitizeForSheet(data.studentDepartment),
+      "studentDepartmentOther": sanitizeForSheet(data.studentDepartmentOther),
+      "university": sanitizeForSheet(data.university),
+      "universityOther": sanitizeForSheet(data.universityOther),
+      "studyYear": sanitizeForSheet(data.studyYear),
+      "graduateDepartment": sanitizeForSheet(data.graduateDepartment),
+      "graduateDepartmentOther": sanitizeForSheet(data.graduateDepartmentOther),
+      "graduationPeriod": sanitizeForSheet(data.graduationPeriod),
+      "graduationYearOther": sanitizeForSheet(data.graduationYearOther),
+      "mastersStatus": sanitizeForSheet(data.mastersStatus),
+      "mastersStart": sanitizeForSheet(data.mastersStart),
+      "mastersExpected": sanitizeForSheet(data.mastersExpected),
+      "mastersYear": sanitizeForSheet(data.mastersYear),
+      "phdStatus": sanitizeForSheet(data.phdStatus),
+      "phdStart": sanitizeForSheet(data.phdStart),
+      "phdYear": sanitizeForSheet(data.phdYear),
+      "jobTitle": sanitizeForSheet(finalJobTitle),
+      "organization": sanitizeForSheet(finalOrganization),
+      "attendance": sanitizeForSheet(Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "")),
+      "transport": sanitizeForSheet(data.transport),
+      "pickupLocation": sanitizeForSheet(data.pickupLocation),
+      "paymentMethod": sanitizeForSheet(data.paymentMethod),
+      "transactionRef": sanitizeForSheet(transactionRef),
+      "paymentDate": sanitizeForSheet(data.paymentDate),
+      "paymentTime": sanitizeForSheet(data.paymentTime),
+      "recipientName": sanitizeForSheet(data.recipientName),
+      "refundMethod": sanitizeForSheet(data.refundMethod),
+      "instapayDetails": sanitizeForSheet(data.instapayDetails),
+      "walletNumber": sanitizeForSheet(data.walletNumber),
+      "totalFee": sanitizeForSheet(data.totalFee || "0"),
+      "paymentProof": sanitizeForSheet(paymentProofUrl),
+      "nationalIdFile": sanitizeForSheet(nationalIdFileUrl),
+      "registrationConsent": "Yes",
+      "consentTimestamp": consentTimestamp,
+      "referralSources": sanitizeForSheet(referralSources.join(", ")),
+      "ambassadorCode": sanitizeForSheet(data.ambassadorCode),
+      // Optional extra columns if present in existing sheet
+      "professionalTitle": sanitizeForSheet(data.professionalTitle || data.guestTitle),
+      "professionalTitleOther": sanitizeForSheet((data.professionalTitle === "Other" || data.guestTitle === "Other") ? (data.professionalTitleOther || data.guestTitleOther || "") : ""),
+      "guestOrganization": sanitizeForSheet(data.guestOrganization || data.organization),
+      "organizationType": sanitizeForSheet(data.organizationType || data.guestOrganizationType),
+      "organizationTypeOther": sanitizeForSheet((data.organizationType === "Other" || data.guestOrganizationType === "Other") ? (data.organizationTypeOther || data.guestOrganizationTypeOther || "") : "")
+    };
+
+    // Dynamically map values according to the actual header order of the sheet
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const row = headers.map(function(h) {
+      const headerName = String(h).trim();
+      return fieldMap.hasOwnProperty(headerName) ? fieldMap[headerName] : "";
+    });
 
     sheet.appendRow(row);
 
@@ -380,7 +396,7 @@ function getRegistrationsSheet() {
 }
 
 function ensureSheetHeaders(sheet) {
-  const requiredHeaders = [
+  const standardHeaders = [
     "Registration ID", "Submission Timestamp", "Application Status", "Payment Status", "Refund Status",
     "fullName", "mobile", "email", "gender", "ieeeMember", "ieeeNumber", "bueMember", "nationalId",
     "status", "studentDepartment", "studentDepartmentOther", "university", "universityOther", "studyYear",
@@ -390,33 +406,15 @@ function ensureSheetHeaders(sheet) {
     "attendance", "transport", "pickupLocation", "paymentMethod", "transactionRef",
     "paymentDate", "paymentTime", "recipientName", "refundMethod", "instapayDetails",
     "walletNumber", "totalFee", "paymentProof", "nationalIdFile",
-    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode",
-    "professionalTitle", "professionalTitleOther", "guestOrganization", "organizationType", "organizationTypeOther"
+    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode"
   ];
 
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(requiredHeaders);
-    sheet.getRange(1, 1, 1, requiredHeaders.length)
+    sheet.appendRow(standardHeaders);
+    sheet.getRange(1, 1, 1, standardHeaders.length)
       .setFontWeight("bold")
       .setBackground("#002855")
       .setFontColor("#FFFFFF");
-  } else {
-    // Check if new columns need to be appended at the end without reordering existing data
-    const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const missingHeaders = [];
-    for (var i = 0; i < requiredHeaders.length; i++) {
-      if (existingHeaders.indexOf(requiredHeaders[i]) === -1) {
-        missingHeaders.push(requiredHeaders[i]);
-      }
-    }
-    if (missingHeaders.length > 0) {
-      const startCol = sheet.getLastColumn() + 1;
-      const range = sheet.getRange(1, startCol, 1, missingHeaders.length);
-      range.setValues([missingHeaders]);
-      range.setFontWeight("bold")
-        .setBackground("#002855")
-        .setFontColor("#FFFFFF");
-    }
   }
 }
 
@@ -644,7 +642,6 @@ return { sent: true };
 }
 
 function generateEmailHtml(data) {
-  const logoBaseUrl = CONFIG.LOGO_BASE_URL;
   const fullName = escapeHtml(data.fullName || "Applicant");
   const email = escapeHtml(data.email || "");
   const mobile = escapeHtml(data.mobile || "");
@@ -877,40 +874,58 @@ function testSpreadsheetAccess() {
 
 function getInlineLogoBlobs() {
   const logos = {};
-  const logoIds = CONFIG.LOGO_FILE_IDS;
+  const logoIds = CONFIG.LOGO_FILE_IDS || {};
 
   Object.keys(logoIds).forEach(function (key) {
     try {
-      const file = DriveApp.getFileById(logoIds[key]);
-      const blob = file.getBlob();
+      const fileId = logoIds[key];
+      if (!fileId) return;
 
-      if (!blob.getContentType().startsWith("image/")) {
-        throw new Error("The Drive file is not an image: " + key);
+      const file = DriveApp.getFileById(fileId);
+      const blob = file.getBlob();
+      const contentType = (blob.getContentType() || "").toLowerCase();
+
+      if (!contentType.startsWith("image/")) {
+        throw new Error("The Drive file is not an image (" + contentType + "): " + key);
       }
 
-      logos[key] = blob.setName(key + ".png");
+      // Preserve the correct file extension according to original filename or MIME type
+      let ext = "";
+      const originalName = file.getName() || "";
+      const dotIndex = originalName.lastIndexOf(".");
+      if (dotIndex !== -1) {
+        ext = originalName.substring(dotIndex).toLowerCase();
+      } else {
+        if (contentType === "image/jpeg" || contentType === "image/jpg") ext = ".jpg";
+        else if (contentType === "image/png") ext = ".png";
+        else if (contentType === "image/gif") ext = ".gif";
+        else if (contentType === "image/webp") ext = ".webp";
+        else if (contentType === "image/svg+xml") ext = ".svg";
+        else ext = ".png";
+      }
+
+      logos[key] = blob.setName(key + ext);
     } catch (err) {
-      Logger.log(
-        "Logo loading failed (" + key + "): " + err.toString()
-      );
+      Logger.log("Logo loading failed for " + key + ": " + err.toString());
     }
   });
 
   return logos;
 }
 
-
 function testLogoAccess() {
-  const logoIds = CONFIG.LOGO_FILE_IDS;
+  const logoIds = CONFIG.LOGO_FILE_IDS || {};
   const results = [];
 
   Object.keys(logoIds).forEach(function (key) {
     try {
-      const file = DriveApp.getFileById(logoIds[key]);
+      const fileId = logoIds[key];
+      const file = DriveApp.getFileById(fileId);
       const blob = file.getBlob();
 
       results.push({
         logo: key,
+        fileId: fileId,
         status: "OK",
         fileName: file.getName(),
         contentType: blob.getContentType(),
@@ -919,6 +934,7 @@ function testLogoAccess() {
     } catch (err) {
       results.push({
         logo: key,
+        fileId: logoIds[key],
         status: "FAILED",
         error: err.toString()
       });
@@ -926,6 +942,7 @@ function testLogoAccess() {
   });
 
   Logger.log(JSON.stringify(results, null, 2));
+  return results;
 }
 
 function testRegistrationEmail() {
@@ -937,7 +954,7 @@ function testRegistrationEmail() {
     university: "Test University",
     studentDepartment: "Electronics and Communication",
     attendance: ["November 12", "November 14"],
-    transport: "No",
+    transport: "No transport",
     totalFee: "200",
     referralSources: ["Social Media"],
     registrationId: "SS26-TEST123"

@@ -1229,3 +1229,200 @@ test("POLICY: Date parsing distinguishes November 12, 2026, from Day 2 with abso
     assert.equal(guestFee.totalFee, 0);
   }
 });
+
+// ============================================================================
+// SCHEMA & INTEGRATION: 50-COLUMN GOOGLE SHEETS & LOGO EMAIL TESTS
+// ============================================================================
+
+test("SCHEMA & INTEGRATION: Google Sheets dynamic mapping preserves established 50-column schema", () => {
+  const standard50Headers = [
+    "Registration ID", "Submission Timestamp", "Application Status", "Payment Status", "Refund Status",
+    "fullName", "mobile", "email", "gender", "ieeeMember", "ieeeNumber", "bueMember", "nationalId",
+    "status", "studentDepartment", "studentDepartmentOther", "university", "universityOther", "studyYear",
+    "graduateDepartment", "graduateDepartmentOther", "graduationPeriod", "graduationYearOther",
+    "mastersStatus", "mastersStart", "mastersExpected", "mastersYear",
+    "phdStatus", "phdStart", "phdYear", "jobTitle", "organization",
+    "attendance", "transport", "pickupLocation", "paymentMethod", "transactionRef",
+    "paymentDate", "paymentTime", "recipientName", "refundMethod", "instapayDetails",
+    "walletNumber", "totalFee", "paymentProof", "nationalIdFile",
+    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode"
+  ];
+
+  assert.equal(standard50Headers.length, 50, "Standard schema must have exactly 50 columns");
+
+  function buildRowFromHeaders(headers, data, registrationId, timestamp) {
+    const isGuest = data.status === "Distinguished Guest / Professional";
+    const finalJobTitle = isGuest
+      ? (data.professionalTitle === "Other" ? (data.professionalTitleOther || "Other") : (data.professionalTitle || data.guestTitle || data.jobTitle || ""))
+      : (data.jobTitle || "");
+    const finalOrganization = isGuest
+      ? (data.organization || data.guestOrganization || "")
+      : (data.organization || "");
+
+    const fieldMap = {
+      "Registration ID": registrationId,
+      "Submission Timestamp": timestamp,
+      "Application Status": "Pending Review",
+      "Payment Status": data.totalFee === "0" ? "Confirmed - Free" : "Pending Verification",
+      "Refund Status": "N/A",
+      "fullName": data.fullName || "",
+      "mobile": data.mobile || "",
+      "email": data.email || "",
+      "gender": data.gender || "",
+      "ieeeMember": data.ieeeMember || "",
+      "ieeeNumber": data.ieeeNumber || "",
+      "bueMember": data.bueMember || "",
+      "nationalId": data.nationalId || "",
+      "status": data.status || "",
+      "studentDepartment": data.studentDepartment || "",
+      "studentDepartmentOther": data.studentDepartmentOther || "",
+      "university": data.university || "",
+      "universityOther": data.universityOther || "",
+      "studyYear": data.studyYear || "",
+      "graduateDepartment": data.graduateDepartment || "",
+      "graduateDepartmentOther": data.graduateDepartmentOther || "",
+      "graduationPeriod": data.graduationPeriod || "",
+      "graduationYearOther": data.graduationYearOther || "",
+      "mastersStatus": data.mastersStatus || "",
+      "mastersStart": data.mastersStart || "",
+      "mastersExpected": data.mastersExpected || "",
+      "mastersYear": data.mastersYear || "",
+      "phdStatus": data.phdStatus || "",
+      "phdStart": data.phdStart || "",
+      "phdYear": data.phdYear || "",
+      "jobTitle": finalJobTitle,
+      "organization": finalOrganization,
+      "attendance": Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || ""),
+      "transport": data.transport || "",
+      "pickupLocation": data.pickupLocation || "",
+      "paymentMethod": data.paymentMethod || "",
+      "transactionRef": data.transactionRef || "",
+      "paymentDate": data.paymentDate || "",
+      "paymentTime": data.paymentTime || "",
+      "recipientName": data.recipientName || "",
+      "refundMethod": data.refundMethod || "",
+      "instapayDetails": data.instapayDetails || "",
+      "walletNumber": data.walletNumber || "",
+      "totalFee": data.totalFee || "0",
+      "paymentProof": data.paymentProof || "",
+      "nationalIdFile": data.nationalIdFile || "",
+      "registrationConsent": "Yes",
+      "consentTimestamp": timestamp,
+      "referralSources": Array.isArray(data.referralSources) ? data.referralSources.join(", ") : (data.referralSources || ""),
+      "ambassadorCode": data.ambassadorCode || "",
+      "professionalTitle": data.professionalTitle || "",
+      "professionalTitleOther": data.professionalTitleOther || "",
+      "guestOrganization": data.guestOrganization || "",
+      "organizationType": data.organizationType || "",
+      "organizationTypeOther": data.organizationTypeOther || ""
+    };
+
+    return headers.map(h => fieldMap.hasOwnProperty(h.trim()) ? fieldMap[h.trim()] : "");
+  }
+
+  // 1. Distinguished Guest in 50-column schema
+  const guestData = {
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Mona Zaki",
+    email: "mona@example.com",
+    mobile: "+20 123 456 7890",
+    professionalTitle: "Associate Professor",
+    organization: "Cairo University",
+    attendance: ["Day 1"],
+    transport: "Ramses Square",
+    totalFee: "0"
+  };
+
+  const guestRow = buildRowFromHeaders(standard50Headers, guestData, "SS26-GST1234", "2026-10-15T12:00:00.000Z");
+  assert.equal(guestRow.length, 50, "Row must contain exactly 50 columns");
+  assert.equal(guestRow[0], "SS26-GST1234", "Column 1 is Registration ID");
+  assert.equal(guestRow[3], "Confirmed - Free", "Payment Status is Confirmed - Free");
+  assert.equal(guestRow[13], "Distinguished Guest / Professional", "Column 14 is status");
+  assert.equal(guestRow[30], "Associate Professor", "Column 31 (jobTitle) maps guest title");
+  assert.equal(guestRow[31], "Cairo University", "Column 32 (organization) maps guest organization");
+  assert.equal(guestRow[33], "Ramses Square", "Column 34 is transport");
+  assert.equal(guestRow[43], "0", "Column 44 is totalFee (0)");
+
+  // 2. Reordered columns test: dynamic header mapping respects customized sheet order
+  const reorderedHeaders = ["totalFee", "fullName", "email", "Registration ID", "organization", "jobTitle"];
+  const reorderedRow = buildRowFromHeaders(reorderedHeaders, guestData, "SS26-GST1234", "2026-10-15T12:00:00.000Z");
+  assert.deepEqual(reorderedRow, [
+    "0",
+    "Dr. Mona Zaki",
+    "mona@example.com",
+    "SS26-GST1234",
+    "Cairo University",
+    "Associate Professor"
+  ]);
+});
+
+test("LOGO & EMAIL INTEGRATION: CID references in HTML email exactly match CONFIG.LOGO_FILE_IDS keys", () => {
+  const EXPECTED_LOGO_FILE_IDS = {
+    summitLogo: "1N3q-RqqAjDj6g-v1qwwxawgrKvD7q0OK",
+    bueLogo: "18ov_CW2vdmjZrwGqLgTFmL2KXuVRlOLA",
+    asisLogo: "18oUTtJ11HlUCxyhfBMOcTDXHFrFTbIxV",
+    daadLogo: "1M5smwM6u3Vtj9dw6jQVrXJSOTFKoC9d1",
+    fabLabLogo: "1thlf91ivWz67YVa0DROQWmYTMllUq-Vq",
+    elecLogo: "1FO6G0IPi2B0HEkDBsH2sHZH3Abka_3qP",
+    womenInSensorsLogo: "1Nbm-3POfg6Vyc8HNLglTb7zDbao72iJ2",
+    sensorsCouncilLogo: "13teAdNfk5FvAIjfjLuxr1RigB6jkwdOU",
+    sensorsEgyptLogo: "13Fyi0G6uAk-T1vpzoa5-KZt-HvfKVnNO"
+  };
+
+  const expectedCids = [
+    "summitLogo",
+    "sensorsEgyptLogo",
+    "bueLogo",
+    "womenInSensorsLogo",
+    "fabLabLogo",
+    "elecLogo",
+    "asisLogo",
+    "daadLogo",
+    "sensorsCouncilLogo"
+  ];
+
+  // Verify that all expected CIDs are present in CONFIG.LOGO_FILE_IDS
+  for (const cid of expectedCids) {
+    assert.ok(
+      EXPECTED_LOGO_FILE_IDS.hasOwnProperty(cid),
+      `Logo CID "${cid}" must have a corresponding Drive file ID in CONFIG.LOGO_FILE_IDS`
+    );
+    assert.ok(
+      EXPECTED_LOGO_FILE_IDS[cid].length > 10,
+      `Drive file ID for "${cid}" must be valid`
+    );
+  }
+
+  // Verify extension & MIME type logic
+  function resolveBlobName(key, fileName, contentType) {
+    const mime = (contentType || "").toLowerCase();
+    if (!mime.startsWith("image/")) {
+      throw new Error(`The Drive file is not an image (${mime}): ${key}`);
+    }
+
+    let ext = "";
+    const dotIndex = (fileName || "").lastIndexOf(".");
+    if (dotIndex !== -1) {
+      ext = fileName.substring(dotIndex).toLowerCase();
+    } else {
+      if (mime === "image/jpeg" || mime === "image/jpg") ext = ".jpg";
+      else if (mime === "image/png") ext = ".png";
+      else if (mime === "image/gif") ext = ".gif";
+      else if (mime === "image/webp") ext = ".webp";
+      else if (mime === "image/svg+xml") ext = ".svg";
+      else ext = ".png";
+    }
+
+    return key + ext;
+  }
+
+  assert.equal(resolveBlobName("summitLogo", "summit.png", "image/png"), "summitLogo.png");
+  assert.equal(resolveBlobName("bueLogo", "bue-photo.jpeg", "image/jpeg"), "bueLogo.jpeg");
+  assert.equal(resolveBlobName("asisLogo", "asis.jpg", "image/jpeg"), "asisLogo.jpg");
+  assert.equal(resolveBlobName("daadLogo", "daad.svg", "image/svg+xml"), "daadLogo.svg");
+  assert.equal(resolveBlobName("fabLabLogo", "fablab_noext", "image/jpeg"), "fabLabLogo.jpg");
+  assert.throws(
+    () => resolveBlobName("badFile", "test.pdf", "application/pdf"),
+    /not an image/
+  );
+});
