@@ -12,12 +12,23 @@
  */
 
 const CONFIG = {
-  SPREADSHEET_ID: "", // Paste Google Sheets ID here or leave empty to use SpreadsheetApp.getActiveSpreadsheet()
+  SPREADSHEET_ID: "1H08Yof7XTfIxqEiN80Igx_9zdN9j6FPiH_zfzu2QoYc", // Paste Google Sheets ID here or leave empty to use SpreadsheetApp.getActiveSpreadsheet()
   SHEET_NAME: "Registrations",
   DRIVE_FOLDER_ID: "", // Optional Google Drive folder ID for uploads
   EMAIL_SENDER_NAME: "IEEE Sensors Summit 2026 Organizing Committee",
-  ORGANIZER_EMAIL: "Amr_Nabih@ieee.org",
-  LOGO_BASE_URL: "https://raw.githubusercontent.com/AmrNabihRiyad/sensor-summit-2026-registration/feat/summit-website-updates/src/assets/logos"
+  ORGANIZER_EMAIL: "Amr_Nabih@ieee.org",  
+  LOGO_FILE_IDS: {
+  summitLogo: "1N3q-RqqAjDj6g-v1qwwxawgrKvD7q0OK",
+  bueLogo: "18ov_CW2vdmjZrwGqLgTFmL2KXuVRlOLA",
+  asisLogo: "18oUTtJ11HlUCxyhfBMOcTDXHFrFTbIxV",
+  daadLogo: "1M5smwM6u3Vtj9dw6jQVrXJSOTFKoC9d1",
+  fabLabLogo: "1thlf91ivWz67YVa0DROQWmYTMllUq-Vq",
+  elecLogo: "1FO6G0IPi2B0HEkDBsH2sHZH3Abka_3qP",
+  womenInSensorsLogo: "1Nbm-3POfg6Vyc8HNLglTb7zDbao72iJ2",
+  sensorsCouncilLogo: "13teAdNfk5FvAIjfjLuxr1RigB6jkwdOU",
+  sensorsEgyptLogo: "13Fyi0G6uAk-T1vpzoa5-KZt-HvfKVnNO"
+}
+
 };
 
 function doPost(e) {
@@ -278,6 +289,7 @@ function sendRegistrationReceipt(data, registrationId) {
   }
 
   try {
+    const inlineImages = getInlineLogoBlobs();
     const emailHtml = generateEmailHtml(data);
     const plainTextBody = 
 `Sensors Summit 2026 - Registration Received
@@ -325,19 +337,21 @@ Connect with IEEE Sensors Council Egypt Chapter:
 - Facebook: https://www.facebook.com/share/1DX3SxsE77/
 - Website: https://r8.ieee.org/egypt-sensor-council/`;
 
-    MailApp.sendEmail({
-      to: data.email,
-      subject: `Sensors Summit 2026 - Registration Received [${registrationId}]`,
-      body: plainTextBody,
-      htmlBody: emailHtml,
-      name: CONFIG.EMAIL_SENDER_NAME,
-      replyTo: CONFIG.ORGANIZER_EMAIL
-    });
-    return { sent: true };
-  } catch (err) {
-    Logger.log("Email dispatch failed for " + data.email + ": " + err.toString());
-    return { sent: false, error: err.toString() };
-  }
+    
+MailApp.sendEmail({
+  to: data.email,
+  subject: `Sensors Summit 2026 - Registration Received [${registrationId}]`,
+  body: plainTextBody,
+  htmlBody: emailHtml,
+  inlineImages: inlineImages,
+  name: CONFIG.EMAIL_SENDER_NAME,
+  replyTo: CONFIG.ORGANIZER_EMAIL
+});
+return { sent: true };
+} catch (err) {
+  Logger.log("Email dispatch failed for " + data.email + ": " + err.toString());
+  return { sent: false, error: err.toString() };
+}
 }
 
 function generateEmailHtml(data) {
@@ -384,12 +398,12 @@ function generateEmailHtml(data) {
       <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 620px; background-color: #FFFFFF; border-radius: 10px; overflow: hidden; border: 1px solid #D1DCE5;">
         <!-- Header -->
         <tr>
-          <td align="center" style="background-color: #FFFFFF; padding: 32px 24px 20px; border-bottom: 2px solid #00B5E2;">
-            <img src="${logoBaseUrl}/sensors-summit.png" alt="Sensors Summit 2026 Logo" width="220" style="display: block; width: 220px; max-width: 100%; height: auto; border: 0;" />
-            <p style="margin: 10px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #00629B; font-family: 'Courier New', monospace;">
-              IEEE Sensors Council Egypt Chapter
-            </p>
-          </td>
+           <td align="center" style="background-color: #002855; padding: 32px 24px 20px; border-bottom: 2px solid #00B5E2;">
+           <img src="cid:summitLogo" alt="Sensors Summit 2026 Logo" width="220" style="display: block; width: 220px; max-width: 100%; height: auto; border: 0;" />
+           <p style="margin: 10px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #FFFFFF; font-family: 'Courier New', monospace;">
+            IEEE Sensors Council Egypt Chapter
+           </p>
+           </td>
         </tr>
         <!-- Banner -->
         <tr>
@@ -470,18 +484,18 @@ function generateEmailHtml(data) {
             </p>
             <table border="0" cellpadding="6" cellspacing="0" style="margin-bottom: 12px;">
               <tr>
-                <td align="center" style="padding: 6px 10px;"><img src="${logoBaseUrl}/Egypt%20Chapter%20Logo%20-%20Original.png" alt="IEEE Sensors Council Egypt Chapter" height="38" style="display: block; height: 38px; width: auto;" /></td>
-                <td align="center" style="padding: 6px 10px;"><img src="${logoBaseUrl}/BUE-Logo.png" alt="BUE" height="38" style="display: block; height: 38px; width: auto;" /></td>
-                <td align="center" style="padding: 6px 10px;"><img src="${logoBaseUrl}/IEEE%20Women%20in%20Sensors%20Logo%20RGB.png" alt="IEEE Women in Sensors" height="38" style="display: block; height: 38px; width: auto;" /></td>
+                <td align="center" style="padding: 6px 10px;"><img src="cid:sensorsEgyptLogo" alt="IEEE Sensors Council Egypt Chapter" height="38" style="display: block; height: 38px; width: auto;" /></td>
+                <td align="center" style="padding: 6px 10px;"><img src="cid:bueLogo" alt="BUE" height="38" style="display: block; height: 38px; width: auto;" /></td>
+                <td align="center" style="padding: 6px 10px;"><img src="cid:womenInSensorsLogo" alt="IEEE Women in Sensors" height="38" style="display: block; height: 38px; width: auto;" /></td>
               </tr>
             </table>
             <table border="0" cellpadding="4" cellspacing="0" style="margin-bottom: 16px;">
               <tr>
-                <td align="center" style="padding: 4px 6px;"><img src="${logoBaseUrl}/FABLAB-Logo.png" alt="FabLab" height="26" style="display: block; height: 26px; width: auto;" /></td>
-                <td align="center" style="padding: 4px 6px;"><img src="${logoBaseUrl}/ELEC_Logo.png" alt="ELEC" height="26" style="display: block; height: 26px; width: auto;" /></td>
-                <td align="center" style="padding: 4px 6px;"><img src="${logoBaseUrl}/ASIS-Logo.png" alt="ASIS" height="26" style="display: block; height: 26px; width: auto;" /></td>
-                <td align="center" style="padding: 4px 6px;"><img src="${logoBaseUrl}/DAAD-Logo.png" alt="DAAD" height="26" style="display: block; height: 26px; width: auto;" /></td>
-                <td align="center" style="padding: 4px 6px;"><img src="${logoBaseUrl}/IEEE%20Sensors%20Council%20Logo.png" alt="IEEE Sensors Council" height="26" style="display: block; height: 26px; width: auto;" /></td>
+                <td align="center" style="padding: 4px 6px;"><img src="cid:fabLabLogo" alt="FabLab" height="26" style="display: block; height: 26px; width: auto;" /></td>
+                <td align="center" style="padding: 4px 6px;"><img src="cid:elecLogo" alt="ELEC" height="26" style="display: block; height: 26px; width: auto;" /></td>
+                <td align="center" style="padding: 4px 6px;"><img src="cid:asisLogo" alt="ASIS" height="26" style="display: block; height: 26px; width: auto;" /></td>
+                <td align="center" style="padding: 4px 6px;"><img src="cid:daadLogo" alt="DAAD" height="26" style="display: block; height: 26px; width: auto;" /></td>
+                <td align="center" style="padding: 4px 6px;"><img src="cid:sensorsCouncilLogo" alt="IEEE Sensors Council" height="26" style="display: block; height: 26px; width: auto;" /></td>
               </tr>
             </table>
 
@@ -527,3 +541,97 @@ function generateEmailHtml(data) {
 </body>
 </html>`;
 }
+
+function testSpreadsheetAccess() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+  Logger.log("Spreadsheet name: " + ss.getName());
+  Logger.log("Sheet found: " + (sheet !== null));
+  Logger.log("Sheet name: " + (sheet ? sheet.getName() : "Not found"));
+}
+
+function getInlineLogoBlobs() {
+  const logos = {};
+  const logoIds = CONFIG.LOGO_FILE_IDS;
+
+  Object.keys(logoIds).forEach(function (key) {
+    try {
+      const file = DriveApp.getFileById(logoIds[key]);
+      const blob = file.getBlob();
+
+      if (!blob.getContentType().startsWith("image/")) {
+        throw new Error("The Drive file is not an image: " + key);
+      }
+
+      logos[key] = blob.setName(key + ".png");
+    } catch (err) {
+      Logger.log(
+        "Logo loading failed (" + key + "): " + err.toString()
+      );
+    }
+  });
+
+  return logos;
+}
+
+
+function testLogoAccess() {
+  const logoIds = CONFIG.LOGO_FILE_IDS;
+  const results = [];
+
+  Object.keys(logoIds).forEach(function (key) {
+    try {
+      const file = DriveApp.getFileById(logoIds[key]);
+      const blob = file.getBlob();
+
+      results.push({
+        logo: key,
+        status: "OK",
+        fileName: file.getName(),
+        contentType: blob.getContentType(),
+        sizeBytes: blob.getBytes().length
+      });
+    } catch (err) {
+      results.push({
+        logo: key,
+        status: "FAILED",
+        error: err.toString()
+      });
+    }
+  });
+
+  Logger.log(JSON.stringify(results, null, 2));
+}
+
+function testRegistrationEmail() {
+  const testData = {
+    email: CONFIG.ORGANIZER_EMAIL,
+    fullName: "Test Applicant",
+    mobile: "+20 100 000 0000",
+    status: "Student",
+    university: "Test University",
+    studentDepartment: "Electronics and Communication",
+    attendance: ["November 12", "November 14"],
+    transport: "No",
+    totalFee: "200",
+    referralSources: ["Social Media"],
+    registrationId: "SS26-TEST123"
+  };
+
+  const inlineImages = getInlineLogoBlobs();
+  const emailHtml = generateEmailHtml(testData);
+
+  MailApp.sendEmail({
+    to: CONFIG.ORGANIZER_EMAIL,
+    subject: "TEST - Sensors Summit 2026 Email Logos",
+    body: "This is a test email to verify the Sensors Summit logos.",
+    htmlBody: emailHtml,
+    inlineImages: inlineImages,
+    name: CONFIG.EMAIL_SENDER_NAME,
+    replyTo: CONFIG.ORGANIZER_EMAIL
+  });
+
+  Logger.log("Test email sent to " + CONFIG.ORGANIZER_EMAIL);
+}
+
