@@ -9,6 +9,133 @@ export const VALIDATION_RULES = Object.freeze({
   paymentReferenceDigits: { InstaPay: 12, "Mobile Wallet": 12 }
 });
 
+export const PHD_CUTOFF_DATE = "2024-01-01";
+
+export const GUEST_ACADEMIC_QUALIFICATIONS = Object.freeze({
+  MASTERS_PURSUING: "Currently pursuing a Master's degree.",
+  PHD_PURSUING: "Currently pursuing a PhD.",
+  PHD_ON_OR_AFTER_2024: "I hold a PhD obtained on or after January 1, 2024.",
+  PHD_BEFORE_2024: "I hold a PhD obtained before January 1, 2024.",
+  NONE_OF_ABOVE: "None of the above."
+});
+
+export function normalizeQualification(q) {
+  if (!q) return "";
+  const s = String(q).trim();
+  const lower = s.toLowerCase().replace(/\.$/, "");
+  if (lower.includes("master") && lower.includes("pursuing")) {
+    return GUEST_ACADEMIC_QUALIFICATIONS.MASTERS_PURSUING;
+  }
+  if (lower.includes("phd") && lower.includes("pursuing")) {
+    return GUEST_ACADEMIC_QUALIFICATIONS.PHD_PURSUING;
+  }
+  if (lower.includes("phd") && (lower.includes("on or after") || lower.includes("after"))) {
+    return GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024;
+  }
+  if (lower.includes("phd") && lower.includes("before")) {
+    return GUEST_ACADEMIC_QUALIFICATIONS.PHD_BEFORE_2024;
+  }
+  if (lower.includes("none")) {
+    return GUEST_ACADEMIC_QUALIFICATIONS.NONE_OF_ABOVE;
+  }
+  return s;
+}
+
+export function parsePhdDate(dateInput) {
+  if (!dateInput) return null;
+  const str = String(dateInput).trim();
+  if (!str) return null;
+
+  if (/^\d{4}$/.test(str)) {
+    const y = parseInt(str, 10);
+    return { year: y, isYearOnly: true, isoDate: `${y}-01-01` };
+  }
+
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10);
+    const d = parseInt(isoMatch[3], 10);
+    return { year: y, month: m, day: d, isYearOnly: false, isoDate: `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}` };
+  }
+
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return { year: y, month: parseInt(m, 10), day: parseInt(d, 10), isYearOnly: false, isoDate: `${y}-${m}-${d}` };
+  }
+
+  return null;
+}
+
+export function isPhdAwardDateOnOrAfterCutoff(dateInput) {
+  const parsed = parsePhdDate(dateInput);
+  if (!parsed) return false;
+  if (parsed.isYearOnly) {
+    return parsed.year >= 2024;
+  }
+  return parsed.isoDate >= PHD_CUTOFF_DATE;
+}
+
+export function isDay2EligibleQualification(qualification, awardDateOrYear) {
+  const norm = normalizeQualification(qualification);
+  if (norm === GUEST_ACADEMIC_QUALIFICATIONS.MASTERS_PURSUING) {
+    return true;
+  }
+  if (norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_PURSUING) {
+    return true;
+  }
+  if (norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024) {
+    if (awardDateOrYear === undefined || awardDateOrYear === null || awardDateOrYear === "") {
+      return false;
+    }
+    return isPhdAwardDateOnOrAfterCutoff(awardDateOrYear);
+  }
+  return false;
+}
+
+export function validateGuestAcademicQualification(value) {
+  const norm = normalizeQualification(value);
+  const allowed = Object.values(GUEST_ACADEMIC_QUALIFICATIONS);
+  if (!norm || !allowed.includes(norm)) {
+    return "Please select your academic qualification.";
+  }
+  return "";
+}
+
+export function validatePhdAwardDate(dateInput, qualification) {
+  const norm = normalizeQualification(qualification);
+  const requiresDate = norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024 ||
+                       norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_BEFORE_2024;
+  if (!requiresDate) return "";
+
+  const str = String(dateInput || "").trim();
+  if (!str) {
+    return "Please enter your PhD award date.";
+  }
+
+  const parsed = parsePhdDate(str);
+  if (!parsed) {
+    return "Please enter a valid PhD award date or year.";
+  }
+
+  const isRecent = isPhdAwardDateOnOrAfterCutoff(str);
+
+  if (norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024) {
+    if (!isRecent) {
+      return "PhD award date must be on or after January 1, 2024 for the selected qualification.";
+    }
+  } else if (norm === GUEST_ACADEMIC_QUALIFICATIONS.PHD_BEFORE_2024) {
+    if (isRecent) {
+      return "PhD award date must be earlier than January 1, 2024 for the selected qualification.";
+    }
+  }
+
+  return "";
+}
+
 export const COUNTRIES = getCountries()
   .map((country) => ({
     country,
@@ -168,6 +295,13 @@ function errorForField(field, form, options) {
   if (field.id === "email") return validateEmail(value);
   if (field.id === "mobile" || field.id === "walletNumber") return validatePhone(value, options.countryFor(field));
   if (field.id === "nationalId") return validateEgyptianNationalId(value);
+  if (field.id === "guestAcademicQualification" || field.name === "guestAcademicQualification") {
+    return validateGuestAcademicQualification(value);
+  }
+  if (field.id === "guestPhdDate" || field.name === "guestPhdDate") {
+    const qual = form.querySelector('#guestAcademicQualification, input[name="guestAcademicQualification"]:checked')?.value || "";
+    return validatePhdAwardDate(value, qual);
+  }
   if (["universityOther", "studentDepartmentOther", "graduateDepartmentOther", "jobTitle", "organization", "pickupLocation", "ieeeNumber", "guestOrganization", "guestTitleOther", "guestOrganizationTypeOther"].includes(field.id)) {
     const normalized = value.trim();
     if (normalized.length < 2) return "Enter at least 2 characters.";
@@ -193,9 +327,34 @@ export function validateForm(form, options) {
 
   const selectedCategory = form.querySelector('input[name="status"]:checked')?.value;
   if (selectedCategory === "Distinguished Guest / Professional") {
+    const qualEl = form.querySelector('#guestAcademicQualification, input[name="guestAcademicQualification"]:checked');
+    const qual = qualEl ? qualEl.value : "";
+    const qualFieldContainer = form.querySelector("#guestAcademicQualificationField") || form.querySelector("#guestAcademicQualification");
+    if (qualFieldContainer && isVisible(qualFieldContainer)) {
+      const qualError = validateGuestAcademicQualification(qual);
+      const targetField = form.querySelector("#guestAcademicQualification") || form.querySelector('input[name="guestAcademicQualification"]') || qualEl;
+      if (qualError && targetField && !errors.some(e => e.field === targetField)) {
+        errors.push({ field: targetField, message: qualError });
+      }
+    }
+
+    const normQual = normalizeQualification(qual);
+    if (normQual === GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024 || normQual === GUEST_ACADEMIC_QUALIFICATIONS.PHD_BEFORE_2024) {
+      const phdDateEl = form.querySelector("#guestPhdDate");
+      if (phdDateEl && isVisible(phdDateEl)) {
+        const dateErr = validatePhdAwardDate(phdDateEl.value, qual);
+        if (dateErr && !errors.some(e => e.field === phdDateEl)) {
+          errors.push({ field: phdDateEl, message: dateErr });
+        }
+      }
+    }
+
     const day2 = form.querySelector("#day2");
     if (day2 && day2.checked) {
-      errors.push({ field: day2, message: "Distinguished Guest / Professional registration is restricted to Day 1 only." });
+      const phdDateVal = form.querySelector("#guestPhdDate")?.value || "";
+      if (!isDay2EligibleQualification(qual, phdDateVal)) {
+        errors.push({ field: day2, message: "Day 2 attendance is restricted to eligible academic qualifications." });
+      }
     }
   }
 

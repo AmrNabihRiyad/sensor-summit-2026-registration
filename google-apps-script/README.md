@@ -10,7 +10,18 @@ This directory contains the production-ready Google Apps Script backend referenc
 2. **Backend Validation**:
    - Mandatory Personal Data Processing Consent (`registrationConsent === "Yes"`).
    - Registration categories: `Student`, `Graduate / Alumni`, and `Distinguished Guest / Professional`.
-   - Attendance day restriction: Enforces Day 1 only for `Distinguished Guest / Professional` on the backend.
+   - Attendance day restriction: Enforces academic eligibility rules for `Distinguished Guest / Professional`:
+     - Applicants pursuing a Master's degree, pursuing a PhD, or holding a PhD awarded on or after January 1, 2024, are eligible for Day 1, Day 2, or both days.
+     - Applicants holding a PhD awarded before January 1, 2024, or selecting "None of the above" are ineligible for Day 2 and restricted to Day 1 only.
+     - Tampered or forged requests attempting Day 2 registration without meeting eligibility criteria are strictly rejected on the backend.
+   - Mandatory academic qualification for `Distinguished Guest / Professional`:
+     - Required selection from 5 standardized options:
+       1. Currently pursuing a Master's degree.
+       2. Currently pursuing a PhD.
+       3. I hold a PhD obtained on or after January 1, 2024.
+       4. I hold a PhD obtained before January 1, 2024.
+       5. None of the above.
+     - Conditional `PhD Award Date / Year`: Required for PhD holders and strictly validated against the January 1, 2024 inclusive cutoff.
    - Mandatory professional fields for `Distinguished Guest / Professional`: Title (with conditional Other), Organization, and Organization Type (with conditional Other).
    - Referral sources (`referralSources` array) and conditional Ambassador Code (`ambassadorCode` required only if "Through an Ambassador" is checked).
    - Backend Fee Recalculation:
@@ -34,7 +45,7 @@ This directory contains the production-ready Google Apps Script backend referenc
 
 ## 2. Google Sheets Schema & Mapping
 
-The spreadsheet uses the following exact 55 columns:
+The spreadsheet supports dynamic header-based mapping across 50-column (legacy), 55-column (standard), and 58-column (extended academic eligibility) schemas:
 
 | Col # | Column Name | Source Field / Value |
 | :---: | :--- | :--- |
@@ -65,9 +76,9 @@ The spreadsheet uses the following exact 55 columns:
 | 25 | `mastersStart` | Master's start year |
 | 26 | `mastersExpected` | Master's expected year |
 | 27 | `mastersYear` | Master's completion year |
-| 28 | `phdStatus` | None / Currently Studying / Completed |
+| 28 | `phdStatus` | None / Currently Studying / Completed (also records Guest academic qualification in 50-col sheets) |
 | 29 | `phdStart` | PhD start year |
-| 30 | `phdYear` | PhD completion year |
+| 30 | `phdYear` | PhD completion year (also records Guest PhD award date/year in 50-col sheets) |
 | 31 | `jobTitle` | Current occupation |
 | 32 | `organization` | Current employer / organization / represented institution |
 | 33 | `attendance` | Selected day(s), comma-separated |
@@ -93,6 +104,14 @@ The spreadsheet uses the following exact 55 columns:
 | 53 | `guestOrganization` | Represented organization / institution |
 | 54 | `organizationType` | Organization type selection |
 | 55 | `organizationTypeOther` | Custom organization type text (if Other) |
+| 56 | `academicQualification` | Academic qualification for Distinguished Guest / Professional |
+| 57 | `phdAwardDate` | PhD award date or year (if PhD holder) |
+| 58 | `day2Eligibility` | Calculated Day 2 eligibility status (`"Eligible"` or `"Not eligible"`) |
+
+### Backward Compatibility Notes:
+- **50-Column Sheets**: If your Google Sheet contains only the original 50 columns, the backend maps `data.academicQualification` to `phdStatus` (Col 28) and `phdAwardDate` / `phdAwardYear` to `phdYear` (Col 30), while guest title and organization map to `jobTitle` (Col 31) and `organization` (Col 32). No rows or formulas will break.
+- **55-Column Sheets**: Columns 51-55 capture dedicated professional organization details.
+- **58-Column Sheets**: Adding columns 56 (`academicQualification`), 57 (`phdAwardDate`), and 58 (`day2Eligibility`) enables explicit recording of academic status, award dates, and Day 2 eligibility. The backend dynamically matches column headers by name.
 
 ---
 

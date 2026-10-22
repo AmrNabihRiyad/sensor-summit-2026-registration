@@ -152,7 +152,7 @@ function doPost(e) {
       return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
     });
 
-    if (!isGuest && !hasDay1 && !hasDay2) {
+    if (!hasDay1 && !hasDay2) {
       return createJsonResponse({
         success: false,
         message: "Please select at least one attendance day."
@@ -160,13 +160,67 @@ function doPost(e) {
     }
 
     if (isGuest) {
-      if (hasDay2) {
+      // Validate required academic qualification for Distinguished Guest / Professional
+      const rawQual = data.academicQualification || data.guestAcademicQualification || "";
+      const normQual = normalizeGuestQualification(rawQual);
+      const validQuals = [
+        "Currently pursuing a Master's degree.",
+        "Currently pursuing a PhD.",
+        "I hold a PhD obtained on or after January 1, 2024.",
+        "I hold a PhD obtained before January 1, 2024.",
+        "None of the above."
+      ];
+      if (!rawQual || validQuals.indexOf(normQual) === -1) {
         return createJsonResponse({
           success: false,
-          message: "Distinguished Guest / Professional registration is restricted to Day 1 only."
+          message: "Please select your academic qualification."
         });
       }
-      data.attendance = ["Day 1"];
+      data.academicQualification = normQual;
+
+      const rawPhdDate = data.phdAwardDate || data.phdDate || data.phdAwardYear || "";
+      if (normQual === "I hold a PhD obtained on or after January 1, 2024.") {
+        if (!rawPhdDate || !String(rawPhdDate).trim()) {
+          return createJsonResponse({
+            success: false,
+            message: "PhD award date or year is required."
+          });
+        }
+        if (!isPhdDateOnOrAfterCutoffBackend(rawPhdDate)) {
+          return createJsonResponse({
+            success: false,
+            message: "PhD award date must be on or after January 1, 2024 to match the selected qualification."
+          });
+        }
+      } else if (normQual === "I hold a PhD obtained before January 1, 2024.") {
+        if (!rawPhdDate || !String(rawPhdDate).trim()) {
+          return createJsonResponse({
+            success: false,
+            message: "PhD award date or year is required."
+          });
+        }
+        if (isPhdDateOnOrAfterCutoffBackend(rawPhdDate)) {
+          return createJsonResponse({
+            success: false,
+            message: "PhD award date must be before January 1, 2024 to match the selected qualification."
+          });
+        }
+      }
+
+      const isDay2Eligible = isGuestDay2EligibleBackend(normQual, rawPhdDate);
+      data.day2Eligibility = isDay2Eligible ? "Eligible" : "Not eligible";
+
+      if (hasDay2 && !isDay2Eligible) {
+        return createJsonResponse({
+          success: false,
+          message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."
+        });
+      }
+
+      const guestDays = [];
+      if (hasDay1) guestDays.push("Day 1");
+      if (hasDay2 && isDay2Eligible) guestDays.push("Day 2");
+      data.attendance = guestDays;
 
       // Validate required questions for Distinguished Guest
       const profTitle = String(data.professionalTitle || data.guestTitle || "").trim();
@@ -320,9 +374,9 @@ function doPost(e) {
       "mastersStart": sanitizeForSheet(data.mastersStart),
       "mastersExpected": sanitizeForSheet(data.mastersExpected),
       "mastersYear": sanitizeForSheet(data.mastersYear),
-      "phdStatus": sanitizeForSheet(data.phdStatus),
+      "phdStatus": sanitizeForSheet(data.phdStatus || (isGuest ? data.academicQualification : "")),
       "phdStart": sanitizeForSheet(data.phdStart),
-      "phdYear": sanitizeForSheet(data.phdYear),
+      "phdYear": sanitizeForSheet(data.phdYear || (isGuest ? (data.phdAwardDate || data.phdAwardYear || "") : "")),
       "jobTitle": sanitizeForSheet(finalJobTitle),
       "organization": sanitizeForSheet(finalOrganization),
       "attendance": sanitizeForSheet(Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "")),
@@ -348,7 +402,15 @@ function doPost(e) {
       "professionalTitleOther": sanitizeForSheet((data.professionalTitle === "Other" || data.guestTitle === "Other") ? (data.professionalTitleOther || data.guestTitleOther || "") : ""),
       "guestOrganization": sanitizeForSheet(data.guestOrganization || data.organization),
       "organizationType": sanitizeForSheet(data.organizationType || data.guestOrganizationType),
-      "organizationTypeOther": sanitizeForSheet((data.organizationType === "Other" || data.guestOrganizationType === "Other") ? (data.organizationTypeOther || data.guestOrganizationTypeOther || "") : "")
+      "organizationTypeOther": sanitizeForSheet((data.organizationType === "Other" || data.guestOrganizationType === "Other") ? (data.organizationTypeOther || data.guestOrganizationTypeOther || "") : ""),
+      // Extended columns 56-58
+      "academicQualification": sanitizeForSheet(data.academicQualification),
+      "Academic Qualification": sanitizeForSheet(data.academicQualification),
+      "phdAwardDate": sanitizeForSheet(data.phdAwardDate || data.phdDate || data.phdAwardYear || ""),
+      "PhD Award Date": sanitizeForSheet(data.phdAwardDate || data.phdDate || data.phdAwardYear || ""),
+      "PhD Award Year": sanitizeForSheet(data.phdAwardYear || data.phdAwardDate || data.phdDate || ""),
+      "day2Eligibility": sanitizeForSheet(data.day2Eligibility),
+      "Day 2 Eligibility": sanitizeForSheet(data.day2Eligibility)
     };
 
     // Dynamically map values according to the actual header order of the sheet
@@ -519,6 +581,68 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+const PHD_CUTOFF_DATE = "2024-01-01";
+
+function normalizeGuestQualification(val) {
+  if (!val) return "";
+  const s = String(val).trim().toLowerCase().replace(/\.$/, "");
+  if (s.indexOf("master") !== -1 && s.indexOf("pursuing") !== -1) {
+    return "Currently pursuing a Master's degree.";
+  }
+  if (s.indexOf("phd") !== -1 && s.indexOf("pursuing") !== -1) {
+    return "Currently pursuing a PhD.";
+  }
+  if (s.indexOf("phd") !== -1 && (s.indexOf("on or after") !== -1 || s.indexOf("after") !== -1)) {
+    return "I hold a PhD obtained on or after January 1, 2024.";
+  }
+  if (s.indexOf("phd") !== -1 && s.indexOf("before") !== -1) {
+    return "I hold a PhD obtained before January 1, 2024.";
+  }
+  if (s.indexOf("none") !== -1) {
+    return "None of the above.";
+  }
+  return String(val).trim();
+}
+
+function parsePhdDateBackend(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1;
+    const day = parseInt(isoMatch[3], 10);
+    return new Date(Date.UTC(year, month, day));
+  }
+  const yearMatch = s.match(/^(\d{4})$/);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    return new Date(Date.UTC(year, 0, 1));
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return d;
+  }
+  return null;
+}
+
+function isPhdDateOnOrAfterCutoffBackend(val) {
+  const d = parsePhdDateBackend(val);
+  if (!d) return false;
+  const cutoff = new Date(Date.UTC(2024, 0, 1));
+  return d.getTime() >= cutoff.getTime();
+}
+
+function isGuestDay2EligibleBackend(normQual, phdDateVal) {
+  if (normQual === "Currently pursuing a Master's degree." || normQual === "Currently pursuing a PhD.") {
+    return true;
+  }
+  if (normQual === "I hold a PhD obtained on or after January 1, 2024.") {
+    return isPhdDateOnOrAfterCutoffBackend(phdDateVal);
+  }
+  return false;
+}
+
 function escapeHtml(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -603,7 +727,7 @@ Submitted Application Summary:
 - Email: ${data.email || ""}
 - Mobile: ${data.mobile || ""}
 - Status: ${data.status || ""}
-- University / Organization: ${uniOrOrg}
+- University / Organization: ${uniOrOrg}${data.academicQualification ? "\n- Academic Qualification: " + data.academicQualification : ""}${data.phdAwardDate || data.phdDate ? "\n- PhD Award Date / Year: " + (data.phdAwardDate || data.phdDate) : ""}
 - Attendance Days: ${Array.isArray(data.attendance) ? data.attendance.join(", ") : (data.attendance || "Not selected")}
 - Transportation: ${transportDisplay}
 - Transportation Fee: ${transportFeeDisplay}
@@ -711,6 +835,9 @@ function generateEmailHtml(data) {
     : (String(data.referralSources || "").includes("Through an Ambassador") || data.ambassadorReferral === "Yes");
   const ambassadorCode = hasAmbassador && data.ambassadorCode ? escapeHtml(data.ambassadorCode) : null;
 
+  const academicQualDisplay = data.academicQualification ? escapeHtml(data.academicQualification) : "";
+  const phdAwardDateDisplay = (data.phdAwardDate || data.phdDate) ? escapeHtml(data.phdAwardDate || data.phdDate) : "";
+
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -771,6 +898,8 @@ function generateEmailHtml(data) {
               <tr><td style="color: #5A6E82;"><strong>Email Address:</strong></td><td>${email}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Mobile Number:</strong></td><td>${mobile}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Status &amp; Affiliation:</strong></td><td>${status} &middot; ${universityOrOrg} (${department})</td></tr>
+              ${academicQualDisplay ? `<tr><td style="color: #5A6E82;"><strong>Academic Qualification:</strong></td><td>${academicQualDisplay}</td></tr>` : ""}
+              ${phdAwardDateDisplay ? `<tr><td style="color: #5A6E82;"><strong>PhD Award Date / Year:</strong></td><td>${phdAwardDateDisplay}</td></tr>` : ""}
               <tr><td style="color: #5A6E82;"><strong>Attendance Days:</strong></td><td>${attendanceList}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Transportation:</strong></td><td>${transportDisplay}</td></tr>
               <tr><td style="color: #5A6E82;"><strong>Transportation Fee:</strong></td><td>${transportFeeDisplay}</td></tr>
