@@ -1,4 +1,4 @@
-import { COUNTRIES, normalizePhone, validateForm } from "./validation.js";
+import { COUNTRIES, normalizePhone, validateForm, isDay2EligibleQualification } from "./validation.js";
 import { API_CONFIG } from "./config.js";
 import { initNav } from "./components/nav.js";
 import { initPaymentInstructions } from "./components/paymentInstructions.js";
@@ -387,7 +387,7 @@ function showStatus(message, isError = false) {
 function resetConditionalPanels() {
   for (const id of [
     "ieeeNumberField", "nationalIdFields", "ambassadorCodeField", "studentFields", "graduateFields", "distinguishedGuestFields",
-    "guestTitleOtherField", "guestOrganizationTypeOtherField", "pickupField",
+    "guestTitleOtherField", "guestOrganizationTypeOtherField", "guestAcademicQualificationField", "guestPhdDateField", "pickupField",
     "refundInstaPay", "refundWallet", "mastersCurrent", "mastersCompleted", "phdCurrent", "phdCompleted"
   ]) {
     const el = document.querySelector(`#${id}`);
@@ -448,7 +448,26 @@ async function buildPayload() {
   const isPaymentRequired = isStudent || (isGraduate && hasDay2);
 
   if (isGuest) {
-    data.attendance = ["Day 1"];
+    const qual = (data.guestAcademicQualification || data.academicQualification || "").trim();
+    const phdDate = (data.guestPhdDate || data.phdAwardDate || "").trim();
+    data.academicQualification = qual;
+    delete data.guestAcademicQualification;
+    if (phdDate) {
+      data.phdAwardDate = phdDate;
+      data.phdAwardYear = phdDate.length >= 4 ? phdDate.substring(0, 4) : phdDate;
+      delete data.guestPhdDate;
+    }
+    const day2Eligible = isDay2EligibleQualification(qual, phdDate);
+    data.day2Eligibility = day2Eligible ? "Eligible" : "Not Eligible";
+
+    if (!day2Eligible) {
+      data.attendance = ["Day 1"];
+    } else {
+      if (!data.attendance || (Array.isArray(data.attendance) && data.attendance.length === 0)) {
+        data.attendance = ["Day 1"];
+      }
+    }
+
     data.totalFee = "0";
     data.organization = (data.guestOrganization || "").trim();
     data.guestOrganization = (data.guestOrganization || "").trim();
@@ -734,10 +753,16 @@ function openReviewModal() {
     const title = getVal("#guestTitle") === "Other" ? getVal("#guestTitleOther") : getVal("#guestTitle");
     const org = getVal("#guestOrganization");
     const orgType = getVal("#guestOrganizationType") === "Other" ? getVal("#guestOrganizationTypeOther") : getVal("#guestOrganizationType");
+    const academicQual = getVal("#guestAcademicQualification");
+    const phdDate = getVal("#guestPhdDate");
+    const isEligible = isDay2EligibleQualification(academicQual, phdDate);
     affiliationDetails = `
       <div class="review-row"><span class="review-row-label">Professional / Academic Title</span><span class="review-row-value">${formatValue(title)}</span></div>
       <div class="review-row"><span class="review-row-label">Organization / Institution</span><span class="review-row-value">${formatValue(org)}</span></div>
       <div class="review-row"><span class="review-row-label">Organization Type</span><span class="review-row-value">${formatValue(orgType)}</span></div>
+      <div class="review-row"><span class="review-row-label">Academic Qualification</span><span class="review-row-value">${formatValue(academicQual)}</span></div>
+      ${phdDate ? `<div class="review-row"><span class="review-row-label">PhD Award Date</span><span class="review-row-value">${formatValue(phdDate)}</span></div>` : ""}
+      <div class="review-row"><span class="review-row-label">Day 2 Academic Eligibility</span><span class="review-row-value" style="color: ${isEligible ? "#34D399" : "#F87171"}; font-weight: 600;">${isEligible ? "Eligible" : "Not Eligible"}</span></div>
     `;
   }
 

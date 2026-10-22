@@ -45,6 +45,32 @@
   </div>
 </nav>
 
+<!-- Prominent Free Event & Refund Policy Notice (Visible Immediately on Page Open) -->
+<aside class="free-event-notice-banner" id="freeEventNotice" aria-label="Free Event and Refund Notice">
+  <div class="free-event-notice-container">
+    <div class="free-event-notice-badge">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>Event &amp; Fee Policy</span>
+    </div>
+    <div class="free-event-notice-content">
+      <h2 class="free-event-notice-title">IEEE Sensors Summit 2026 | Free Event</h2>
+      <p class="free-event-notice-text">
+        The IEEE Sensors Summit 2026 is a free event.
+      </p>
+      <p class="free-event-notice-text">
+        Certain registration options or additional services may involve fees. Eligible payments will be refunded in accordance with the <a href="#refundPolicy" class="notice-link">applicable refund policy</a> and its specified terms and conditions.
+      </p>
+      <p class="free-event-notice-subtext">
+        Please review the <a href="#refundPolicy" class="notice-link">applicable payment and refund terms</a> before completing your registration.
+      </p>
+    </div>
+  </div>
+</aside>
+
 <!-- Section A: Hero Section (Strat Dark Aesthetic with Soft Spotlights and Hairline Glass Overview Panel) -->
 <header class="hero" id="home">
   <!-- Soft Diagonal Spotlight Beams -->
@@ -568,6 +594,14 @@
       </p>
     </div>
 
+    <div class="notice free-event-registration-notice reveal-on-scroll" id="registrationFreeEventNotice">
+      <div class="notice-tag">Free Event &amp; Fee Policy</div>
+      <h3 style="margin: 4px 0 8px; font-size: 16px; color: var(--cyan, #00B5E2);">IEEE Sensors Summit 2026 | Free Event</h3>
+      <p style="margin: 0 0 6px;">The IEEE Sensors Summit 2026 is a free event.</p>
+      <p style="margin: 0 0 6px;">Certain registration options or additional services may involve fees. Eligible payments will be refunded in accordance with the <a href="#refundPolicy" class="link-inline">applicable refund policy</a> and its specified terms and conditions.</p>
+      <p style="margin: 0; font-size: 13px; color: var(--text-muted, #8A9CAE);">Please review the <a href="#refundPolicy" class="link-inline">applicable payment and refund terms</a> before completing your registration.</p>
+    </div>
+
     <div class="notice reveal-on-scroll">
       <strong>Limited Seats Available</strong><br>
       Registration applications are subject to review by the organizing committee.
@@ -911,6 +945,25 @@
               <label for="guestOrganizationTypeOther" class="field-label">Please specify organization type <span class="required">*</span></label>
               <input class="other-input" id="guestOrganizationTypeOther" name="guestOrganizationTypeOther" placeholder="Please specify organization type">
             </div>
+          </div>
+
+          <div class="field" id="guestAcademicQualificationField">
+            <label for="guestAcademicQualification">Academic Qualification (Required) <span class="required">*</span></label>
+            <div class="help" style="margin-bottom:8px">Please select the option that best describes your current academic status.</div>
+            <select id="guestAcademicQualification" name="guestAcademicQualification">
+              <option value="">Select academic qualification</option>
+              <option value="Currently pursuing a Master's degree.">Currently pursuing a Master's degree.</option>
+              <option value="Currently pursuing a PhD.">Currently pursuing a PhD.</option>
+              <option value="I hold a PhD obtained on or after January 1, 2024.">I hold a PhD obtained on or after January 1, 2024.</option>
+              <option value="I hold a PhD obtained before January 1, 2024.">I hold a PhD obtained before January 1, 2024.</option>
+              <option value="None of the above.">None of the above.</option>
+            </select>
+          </div>
+
+          <div class="field hidden" id="guestPhdDateField">
+            <label for="guestPhdDate">Year of PhD Award <span class="required">*</span></label>
+            <input id="guestPhdDate" name="guestPhdDate" type="date">
+            <div class="help" id="guestPhdDateHelp">Enter the date your PhD was awarded. Must be on or after January 1, 2024 for recent PhD holders, or earlier than January 1, 2024.</div>
           </div>
         </div>
       </section>
@@ -1554,7 +1607,7 @@ function updateFees() {
       transportDesc.textContent = "Transportation is complimentary (free of charge) upon request for distinguished guests and does not affect the registration total (0 EGP).";
     }
     if (feeHelpText) {
-      feeHelpText.textContent = "Distinguished Guest / Professional registration is completely free (0 EGP), including complimentary transportation upon request. Attendance is Day 1 only (November 12, 2026).";
+      feeHelpText.textContent = "Distinguished Guest / Professional registration is completely free (0 EGP), including complimentary transportation upon request.";
     }
   } else if (isGraduate && !day2Checked) {
     if (transportFeeLabel) transportFeeLabel.textContent = "Transportation (Complimentary for Day 1)";
@@ -1635,6 +1688,94 @@ function updateFees() {
   }
 }
 
+function isDateOnOrAfter2024(str) {
+  if (!str) return false;
+  const s = String(str).trim();
+  if (/^\d{4}$/.test(s)) {
+    return parseInt(s, 10) >= 2024;
+  }
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return s.substring(0, 10) >= "2024-01-01";
+  }
+  const parsed = new Date(s);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}` >= "2024-01-01";
+  }
+  return false;
+}
+
+function checkGuestDay2Eligibility() {
+  const qual = $("guestAcademicQualification")?.value || "";
+  const phdDateVal = $("guestPhdDate")?.value || "";
+  if (qual === "Currently pursuing a Master's degree." || qual === "Currently pursuing a PhD.") {
+    return { eligible: true, qual };
+  }
+  if (qual === "I hold a PhD obtained on or after January 1, 2024.") {
+    if (!phdDateVal) return { eligible: true, qual, pendingDate: true };
+    const isRecent = isDateOnOrAfter2024(phdDateVal);
+    return { eligible: isRecent, qual, isRecent };
+  }
+  return { eligible: false, qual };
+}
+
+function updateGuestPhdDateRequirement() {
+  const isGuest = getSelectedCategory() === "Distinguished Guest / Professional";
+  const qual = $("guestAcademicQualification")?.value || "";
+  const isPhd = qual === "I hold a PhD obtained on or after January 1, 2024." ||
+                qual === "I hold a PhD obtained before January 1, 2024.";
+  const show = isGuest && isPhd;
+  setVisible("guestPhdDateField", show);
+  setRequired("guestPhdDate", show);
+  if (!show) {
+    const phdInp = $("guestPhdDate");
+    if (phdInp) phdInp.value = "";
+  }
+}
+
+function updateGuestAttendanceState() {
+  const isGuest = getSelectedCategory() === "Distinguished Guest / Professional";
+  const day1El = $("day1");
+  const day2El = $("day2");
+  const day2Choice = $("day2Choice");
+  const day2Help = $("day2Help");
+
+  if (!isGuest) {
+    if (day2El) day2El.disabled = false;
+    if (day2Choice) day2Choice.classList.remove("hidden");
+    if (day2Help) {
+      day2Help.classList.remove("hidden");
+      day2Help.textContent = "Day 2 is intended for senior undergraduate students, Master's students, PhD students, and early-career PhD holders (PhD awarded in 2024 or later). Eligibility will be reviewed by the organizing team.";
+    }
+    return;
+  }
+
+  if (day2Choice) day2Choice.classList.remove("hidden");
+  if (day2Help) day2Help.classList.remove("hidden");
+
+  const eligibility = checkGuestDay2Eligibility();
+  if (eligibility.eligible) {
+    if (day2El) day2El.disabled = false;
+    if (day2Help) {
+      day2Help.textContent = "Based on your academic qualification, you are eligible to register for Day 2 (Hands-on Workshop). You may select Day 1, Day 2, or both days. All registrations remain subject to review by the organizing committee.";
+    }
+  } else {
+    if (day2El) {
+      if (day2El.checked) {
+        day2El.checked = false;
+      }
+      day2El.disabled = true;
+    }
+    if (day2Help) {
+      day2Help.textContent = "Day 2 attendance is restricted to applicants meeting the academic eligibility requirements (Master's students, PhD students, and PhD holders awarded on or after January 1, 2024).";
+    }
+  }
+  updateFees();
+}
+
 document.querySelectorAll('input[name="status"]').forEach(el => {
   el.addEventListener("change", () => {
     if (!el.checked) return;
@@ -1691,35 +1832,22 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
     setRequired("guestTitle", isGuest);
     setRequired("guestOrganization", isGuest);
     setRequired("guestOrganizationType", isGuest);
+    setRequired("guestAcademicQualification", isGuest);
     if (!isGuest) {
       setRequired("guestTitleOther", false);
       setRequired("guestOrganizationTypeOther", false);
+      setRequired("guestPhdDate", false);
     } else {
       updateOther("guestTitle", "guestTitleOtherField", "guestTitleOther");
       updateOther("guestOrganizationType", "guestOrganizationTypeOtherField", "guestOrganizationTypeOther");
+      updateGuestPhdDateRequirement();
     }
 
-    // Attendance configuration for Guest vs others
     const day1El = $("day1");
-    const day2El = $("day2");
-    const day2Choice = $("day2Choice");
-    const day2Help = $("day2Help");
-
-    if (isGuest) {
-      if (day1El) day1El.checked = true;
-      if (day2El) {
-        day2El.checked = false;
-        day2El.disabled = true;
-      }
-      if (day2Choice) day2Choice.classList.add("hidden");
-      if (day2Help) day2Help.classList.add("hidden");
-      const err = $("attendanceError");
-      if (err) err.hidden = true;
-    } else {
-      if (day2El) day2El.disabled = false;
-      if (day2Choice) day2Choice.classList.remove("hidden");
-      if (day2Help) day2Help.classList.remove("hidden");
+    if (isGuest && day1El && !day1El.checked && !($("day2")?.checked)) {
+      day1El.checked = true;
     }
+    updateGuestAttendanceState();
 
     // Clear any validation errors or invalid state on hidden fields
     document.querySelectorAll(".hidden .field-error").forEach(err => {
@@ -1733,6 +1861,20 @@ document.querySelectorAll('input[name="status"]').forEach(el => {
     updateFees();
   });
 });
+
+const guestAcademicEl = $("guestAcademicQualification");
+if (guestAcademicEl) {
+  guestAcademicEl.addEventListener("change", () => {
+    updateGuestPhdDateRequirement();
+    updateGuestAttendanceState();
+  });
+}
+
+const guestPhdDateEl = $("guestPhdDate");
+if (guestPhdDateEl) {
+  guestPhdDateEl.addEventListener("input", updateGuestAttendanceState);
+  guestPhdDateEl.addEventListener("change", updateGuestAttendanceState);
+}
 
 const studentDeptEl = $("studentDepartment");
 if (studentDeptEl) studentDeptEl.addEventListener("change", () => updateOther("studentDepartment", "studentDepartmentOther"));
@@ -1812,7 +1954,7 @@ if (day1El) {
 if (day2El) {
   day2El.addEventListener("change", () => {
     const isGuest = getSelectedCategory() === "Distinguished Guest / Professional";
-    if (isGuest && day2El.checked) {
+    if (isGuest && !checkGuestDay2Eligibility().eligible) {
       day2El.checked = false;
     }
     if ((day1El && day1El.checked) || day2El.checked) {

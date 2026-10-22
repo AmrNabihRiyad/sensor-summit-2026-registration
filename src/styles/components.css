@@ -194,6 +194,110 @@
 }
 
 /* --------------------------------------------------------------------------
+   1b. Free Event and Refund Notice Banner (Prominent Header Notice)
+   -------------------------------------------------------------------------- */
+.free-event-notice-banner {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0, 40, 85, 0.95), rgba(5, 11, 20, 0.98));
+  border-bottom: 1px solid rgba(0, 181, 226, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 90;
+}
+
+.free-event-notice-container {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.free-event-notice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(0, 181, 226, 0.15);
+  border: 1px solid rgba(0, 181, 226, 0.4);
+  border-radius: var(--radius-full);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.free-event-notice-content {
+  flex: 1;
+}
+
+.free-event-notice-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.01em;
+}
+
+.free-event-notice-text {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #D1E5F8;
+}
+
+.free-event-notice-subtext {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #94A3B8;
+}
+
+.notice-link {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.notice-link:hover,
+.notice-link:focus-visible {
+  color: #FFFFFF;
+  text-decoration: underline;
+}
+
+.free-event-registration-notice {
+  margin: 20px 0 24px;
+  border-left-color: var(--cyan);
+}
+
+.notice-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .free-event-notice-container {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+}
+
+/* --------------------------------------------------------------------------
    2. Hero Section (Spotlights, Particle Dots, Pill Badge, Confident Title)
    -------------------------------------------------------------------------- */
 .hero {

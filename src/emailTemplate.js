@@ -77,6 +77,8 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
   const totalFeeVal = isGuest ? "0" : (data.totalFee !== undefined && data.totalFee !== null ? String(data.totalFee) : "200");
   const totalFeeDisplay = isGuest || totalFeeVal === "0" ? "0 EGP (Free Registration)" : `${escapeHtml(totalFeeVal)} EGP`;
   const registrationId = data.registrationId ? escapeHtml(data.registrationId) : null;
+  const academicQual = data.academicQualification || data.guestAcademicQualification ? escapeHtml(data.academicQualification || data.guestAcademicQualification) : null;
+  const phdAwardDateVal = data.phdAwardDate || data.guestPhdDate || (isGuest && data.phdYear) ? escapeHtml(data.phdAwardDate || data.guestPhdDate || data.phdYear) : null;
   const referralSources = Array.isArray(data.referralSources)
     ? data.referralSources.map(escapeHtml).join(", ")
     : escapeHtml(data.referralSources || (data.ambassadorReferral === "Yes" ? "Through an Ambassador" : (data.ambassadorReferral || "None selected")));
@@ -172,6 +174,16 @@ export function generateRegistrationEmailHtml(data = {}, options = {}) {
                   <td style="color: #5A6E82; padding: 6px 0;"><strong>Status &amp; Affiliation:</strong></td>
                   <td style="padding: 6px 0;">${status} &middot; ${universityOrOrg} (${department})</td>
                 </tr>
+                ${academicQual ? `
+                <tr style="border-bottom: 1px solid #F4F7FA;">
+                  <td style="color: #5A6E82; padding: 6px 0;"><strong>Academic Qualification:</strong></td>
+                  <td style="padding: 6px 0;">${academicQual}</td>
+                </tr>` : ""}
+                ${phdAwardDateVal ? `
+                <tr style="border-bottom: 1px solid #F4F7FA;">
+                  <td style="color: #5A6E82; padding: 6px 0;"><strong>PhD Award Date / Year:</strong></td>
+                  <td style="padding: 6px 0;">${phdAwardDateVal}</td>
+                </tr>` : ""}
                 <tr style="border-bottom: 1px solid #F4F7FA;">
                   <td style="color: #5A6E82; padding: 6px 0;"><strong>Attendance Days:</strong></td>
                   <td style="padding: 6px 0;">${attendanceList}</td>

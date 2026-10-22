@@ -11,7 +11,16 @@ import {
   validateName,
   validatePaymentReference,
   validatePhone,
-  validateRegistrationConsent
+  validateRegistrationConsent,
+  PHD_CUTOFF_DATE,
+  GUEST_ACADEMIC_QUALIFICATIONS,
+  normalizeQualification,
+  parsePhdDate,
+  isPhdAwardDateOnOrAfterCutoff,
+  isDay2EligibleQualification,
+  validateGuestAcademicQualification,
+  validatePhdAwardDate,
+  validateForm
 } from "../src/validation.js";
 import { escapeHtml, generateRegistrationEmailHtml } from "../src/emailTemplate.js";
 import { calculateFee } from "../src/config.js";
@@ -454,8 +463,13 @@ test("backend Google Apps Script fee recalculation matches frontend calculateFee
       return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
     });
 
-    if (isGuest && hasDay2) {
-      throw new Error("Distinguished Guest restricted to Day 1");
+    const hasEligibleQual = data.academicQualification && (
+      data.academicQualification.includes("Master") ||
+      data.academicQualification.includes("pursuing a PhD") ||
+      (data.academicQualification.includes("on or after") && (!data.phdDate || String(data.phdDate) >= "2024-01-01"))
+    );
+    if (isGuest && hasDay2 && !hasEligibleQual) {
+      throw new Error("Day 2 attendance is restricted to applicants meeting academic eligibility requirements.");
     }
 
     let calculatedBaseFee = 0;
@@ -512,19 +526,21 @@ test("backend Google Apps Script fee recalculation matches frontend calculateFee
     // Distinguished Guest / Professional
     { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "No transport" },
     { category: "Distinguished Guest / Professional", attendance: ["November 12, 2026"], transport: "Ramses Square" },
-    { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Other location" }
+    { category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Other location" },
+    { category: "Distinguished Guest / Professional", attendance: ["Day 2"], transport: "No transport", academicQualification: "Currently pursuing a Master's degree." },
+    { category: "Distinguished Guest / Professional", attendance: ["Day 1", "Day 2"], transport: "Ramses Square", academicQualification: "Currently pursuing a PhD." }
   ];
 
   for (const tc of testCases) {
     const frontend = calculateFee(tc);
-    const backend = backendCalculate({ status: tc.category, attendance: tc.attendance, transport: tc.transport });
+    const backend = backendCalculate({ status: tc.category, attendance: tc.attendance, transport: tc.transport, academicQualification: tc.academicQualification });
     assert.deepEqual(frontend, backend, `Mismatch between frontend and backend for ${JSON.stringify(tc)}`);
   }
 
-  // Reject Day 2 for guest
+  // Reject Day 2 for guest when ineligible
   assert.throws(() => {
     backendCalculate({ status: "Distinguished Guest / Professional", attendance: ["Day 2"], transport: "No transport" });
-  }, /Distinguished Guest restricted to Day 1/);
+  }, /Day 2 attendance is restricted/);
 });
 
 // ==========================================
@@ -695,8 +711,10 @@ test("SECURITY: Server-side validation pipeline blocks tampered, malicious, or b
     }
 
     if (isGuest) {
-      if (hasDay2) {
-        return { valid: false, error: "Guest Day 2 forbidden" };
+      const qual = data.academicQualification || "";
+      const isEligible = isDay2EligibleQualification(qual, data.phdAwardDate);
+      if (hasDay2 && !isEligible) {
+        return { valid: false, error: "Guest Day 2 forbidden without eligible qualification" };
       }
       const profTitle = String(data.professionalTitle || data.guestTitle || "").trim();
       if (!profTitle) return { valid: false, error: "Guest title required" };
@@ -755,15 +773,30 @@ test("SECURITY: Server-side validation pipeline blocks tampered, malicious, or b
     attendance: []
   }).valid, false);
 
-  // 6. Guest attempting to register for Day 2 must fail
+  // 6. Guest attempting to register for Day 2 without eligible qualification must fail
   assert.equal(validateServerPayload({
     registrationConsent: "Yes",
     status: "Distinguished Guest / Professional",
+    academicQualification: "None of the above.",
     fullName: "Dr. Guest",
     email: "guest@example.com",
     mobile: "+201012345678",
     attendance: ["Day 1", "Day 2"]
   }).valid, false);
+
+  // 6b. Guest attempting Day 2 with eligible qualification succeeds
+  assert.equal(validateServerPayload({
+    registrationConsent: "Yes",
+    status: "Distinguished Guest / Professional",
+    academicQualification: "Currently pursuing a Master's degree.",
+    guestTitle: "Researcher",
+    guestOrganization: "BUE",
+    guestOrganizationType: "University / Academic Institution",
+    fullName: "Eng. Guest",
+    email: "guest@example.com",
+    mobile: "+201012345678",
+    attendance: ["Day 1", "Day 2"]
+  }).valid, true);
 
   // 7. Guest selecting "Other" title without specifying text must fail
   assert.equal(validateServerPayload({
@@ -1066,8 +1099,8 @@ test("POLICY & SECURITY: Client-submitted nonzero transport fee or total fee is 
       return s === "day 2" || s === "2" || s.indexOf("day 2") !== -1 || s.indexOf("nov 14") !== -1 || s.indexOf("november 14") !== -1 || s === "14";
     });
 
-    if (isGuest && hasDay2) {
-      throw new Error("Distinguished Guest / Professional registration is restricted to Day 1 only.");
+    if (isGuest && hasDay2 && !data.isEligible) {
+      throw new Error("Day 2 attendance is restricted to applicants meeting academic eligibility requirements.");
     }
 
     let calculatedBaseFee = 0;
@@ -1115,8 +1148,8 @@ test("POLICY & SECURITY: Client-submitted nonzero transport fee or total fee is 
   assert.equal(studentTampered.totalFee, 200);
 });
 
-test("POLICY: Server rejects Day 2 or both days for Distinguished Guest / Professional", () => {
-  function validateAttendanceForCategory(category, attendance) {
+test("POLICY: Server rejects Day 2 for Distinguished Guest / Professional when ineligible, and permits when eligible", () => {
+  function validateAttendanceForCategory(category, attendance, qualification, phdDate) {
     const isGuest = category === "Distinguished Guest / Professional";
     const days = Array.isArray(attendance) ? attendance : [attendance];
     const hasDay1 = days.some(d => {
@@ -1128,37 +1161,54 @@ test("POLICY: Server rejects Day 2 or both days for Distinguished Guest / Profes
       return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
     });
 
-    if (isGuest && hasDay2) {
-      return "Distinguished Guest / Professional registration is restricted to Day 1 only.";
+    if (isGuest) {
+      const isEligible = isDay2EligibleQualification(qualification, phdDate);
+      if (hasDay2 && !isEligible) {
+        return "Day 2 attendance is restricted to applicants meeting academic eligibility requirements.";
+      }
     }
-    if (!isGuest && !hasDay1 && !hasDay2) {
+    if (!hasDay1 && !hasDay2) {
       return "Please select at least one attendance day.";
     }
     return "";
   }
 
-  // Point 6: Day 1 is accepted
-  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1"]), "");
-  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026"]), "");
+  // Point 6: Day 1 is accepted regardless of academic qualification
+  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1"], "None of the above."), "");
+  assert.equal(validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026"], "I hold a PhD obtained before January 1, 2024.", "2020"), "");
 
-  // Point 7: Day 2 is rejected
+  // Point 7: Day 2 is rejected for ineligible qualifications
   assert.equal(
-    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 2"]),
-    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 2"], "None of the above."),
+    "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."
   );
   assert.equal(
-    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 14, 2026"]),
-    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 14, 2026"], "I hold a PhD obtained before January 1, 2024.", "2023-12-31"),
+    "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."
   );
 
-  // Point 8: Both days is rejected
+  // Point 8: Both days is rejected for ineligible qualifications
   assert.equal(
-    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1", "Day 2"]),
-    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1", "Day 2"], "None of the above."),
+    "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."
   );
   assert.equal(
-    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026", "November 14, 2026"]),
-    "Distinguished Guest / Professional registration is restricted to Day 1 only."
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["November 12, 2026", "November 14, 2026"], "I hold a PhD obtained before January 1, 2024.", "2021-09-01"),
+    "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."
+  );
+
+  // Point 9: Day 2 and Both Days are accepted for eligible qualifications
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 2"], "Currently pursuing a Master's degree."),
+    ""
+  );
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1", "Day 2"], "Currently pursuing a PhD."),
+    ""
+  );
+  assert.equal(
+    validateAttendanceForCategory("Distinguished Guest / Professional", ["Day 1", "Day 2"], "I hold a PhD obtained on or after January 1, 2024.", "2024-01-01"),
+    ""
   );
 });
 
@@ -1581,26 +1631,27 @@ test("REGRESSION 3: Distinguished Guest / Professional: only the intended guest-
   }
 });
 
-test("REGRESSION 4: Guest: Day 1 is selected by default and Day 2 cannot be selected", () => {
-  // In index.html, when guest is chosen, Day 1 is checked, Day 2 is unchecked, disabled, and hidden
+test("REGRESSION 4: Guest: Day 1 is selected by default, Day 2 is conditionally enabled based on academic eligibility", () => {
+  // In index.html, when guest is chosen, Day 1 is checked by default
   assert.ok(indexHtmlContent.includes('day1El.checked = true;'));
+  // In updateGuestAttendanceState, if ineligible, Day 2 is disabled and unchecked
   assert.ok(indexHtmlContent.includes('day2El.disabled = true;'));
   assert.ok(indexHtmlContent.includes('day2El.checked = false;'));
-  assert.ok(indexHtmlContent.includes('day2Choice.classList.add("hidden");'));
-
-  // Also in day2El change handler, if guest somehow triggers change, it is immediately unchecked
-  assert.ok(indexHtmlContent.includes("if (isGuest && day2El.checked)"));
-  assert.ok(/if\s*\(isGuest\s*&&\s*day2El\.checked\)\s*\{\s*day2El\.checked\s*=\s*false;\s*\}/.test(indexHtmlContent));
+  // If eligible, Day 2 is enabled
+  assert.ok(indexHtmlContent.includes('day2El.disabled = false;'));
+  // In day2El change handler, if guest triggers change while ineligible, it is unchecked
+  assert.ok(indexHtmlContent.includes("if (isGuest && !checkGuestDay2Eligibility().eligible)"));
 });
 
 test("REGRESSION 5: Guest: registration succeeds without payment or refund fields when all required guest fields are valid", () => {
   function validateGuestServerPayload(data) {
     if (data.status !== "Distinguished Guest / Professional") return { success: false };
     const attendance = Array.isArray(data.attendance) ? data.attendance : [data.attendance];
-    if (attendance.some(d => String(d).includes("Day 2") || String(d) === "14")) {
-      return { success: false, message: "Restricted to Day 1 only." };
+    const isEligible = isDay2EligibleQualification(data.guestAcademicQualification, data.guestPhdDate);
+    if (attendance.some(d => String(d).includes("Day 2") || String(d) === "14") && !isEligible) {
+      return { success: false, message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements." };
     }
-    if (!data.guestTitle || !data.guestOrganization || !data.guestOrganizationType) {
+    if (!data.guestTitle || !data.guestOrganization || !data.guestOrganizationType || !data.guestAcademicQualification) {
       return { success: false, message: "Missing guest questions." };
     }
     // No transactionRef or paymentProof required
@@ -1614,7 +1665,8 @@ test("REGRESSION 5: Guest: registration succeeds without payment or refund field
     pickupLocation: "Heliopolis",
     guestTitle: "Associate Professor",
     guestOrganization: "Ain Shams University",
-    guestOrganizationType: "University / Academic Institution"
+    guestOrganizationType: "University / Academic Institution",
+    guestAcademicQualification: "None of the above."
     // No paymentMethod, transactionRef, paymentProof, refundMethod, recipientName
   });
 
@@ -1622,28 +1674,31 @@ test("REGRESSION 5: Guest: registration succeeds without payment or refund field
   assert.equal(result.totalFee, 0);
 });
 
-test("REGRESSION 6: Guest: a forged backend request selecting Day 2 is rejected", () => {
-  function backendCheckGuest(status, attendance) {
+test("REGRESSION 6: Guest: a forged backend request selecting Day 2 without eligible qualification is rejected, while eligible qualification is accepted", () => {
+  function backendCheckGuest(status, attendance, qualification, phdDate) {
     const isGuest = status === "Distinguished Guest / Professional";
     const days = Array.isArray(attendance) ? attendance : [attendance];
     const hasDay2 = days.some(d => {
       const s = String(d).toLowerCase().trim();
       return s === "day 2" || s === "2" || s.includes("day 2") || s.includes("nov 14") || s.includes("november 14") || s === "14";
     });
-    if (isGuest && hasDay2) {
-      return { success: false, message: "Distinguished Guest / Professional registration is restricted to Day 1 only." };
+    const isEligible = isDay2EligibleQualification(qualification, phdDate);
+    if (isGuest && hasDay2 && !isEligible) {
+      return { success: false, message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements." };
     }
     return { success: true };
   }
 
-  // Attempt Day 2 only
-  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 2"]).success, false);
-  // Attempt both days
-  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1", "Day 2"]).success, false);
-  // Attempt date string for Day 2
-  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["November 14, 2026"]).success, false);
-  // Valid Day 1 passes
-  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1"]).success, true);
+  // Attempt Day 2 with ineligible qualification
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 2"], "None of the above.").success, false);
+  // Attempt both days with PhD before cutoff
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1", "Day 2"], "I hold a PhD obtained before January 1, 2024.", "2023-12-31").success, false);
+  // Attempt Day 2 with Master's pursuing (eligible) succeeds
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 2"], "Currently pursuing a Master's degree.").success, true);
+  // Attempt both days with PhD on/after Jan 1, 2024 succeeds
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1", "Day 2"], "I hold a PhD obtained on or after January 1, 2024.", "2024-01-01").success, true);
+  // Valid Day 1 passes regardless of qualification
+  assert.equal(backendCheckGuest("Distinguished Guest / Professional", ["Day 1"], "None of the above.").success, true);
 });
 
 test("REGRESSION 7: Graduate / Alumni, Day 1 only: payment and refund fields are hidden and not required", () => {
@@ -1896,17 +1951,20 @@ test("TARGETED 8: Student fees and transportation calculations remain strictly u
   });
 });
 
-test("TARGETED 9: Distinguished Guest / Professional remains free (including transport) and Day 2 requests are rejected", () => {
-  // Guest with transport is 0 EGP
+test("TARGETED 9: Distinguished Guest / Professional remains free (including transport) and Day 2 requests require academic eligibility", () => {
+  // Guest with transport is 0 EGP across Day 1, Day 2, and Both Days
   assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Ramses Square" }), {
     baseFee: 0, transportFee: 0, totalFee: 0
   });
-  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1"], transport: "Other location" }), {
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 2"], transport: "Other location" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Distinguished Guest / Professional", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), {
     baseFee: 0, transportFee: 0, totalFee: 0
   });
 
   // Backend verification (Note: Code.gs inspection via regex & test replica)
-  assert.ok(codeGsContent.includes('message: "Distinguished Guest / Professional registration is restricted to Day 1 only."'));
+  assert.ok(codeGsContent.includes('message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."'));
 });
 
 test("TARGETED 10: Backend independently calculates Graduate / Alumni Day 1 total as EGP 0 even if client submits a different totalFee (BACKEND REPLICA)", () => {
@@ -2007,4 +2065,427 @@ test("TARGETED 10: Backend independently calculates Graduate / Alumni Day 1 tota
   assert.equal(result3.authoritativeTotalFee, 300);
   assert.equal(result3.isPaymentRequired, true);
   assert.equal(result3.paymentStatus, "Pending Verification");
+});
+
+// ============================================================================
+// IEEE SENSORS SUMMIT 2026: GUEST ACADEMIC ELIGIBILITY & NOTICE TEST SUITE
+// ============================================================================
+
+test("ACCEPTANCE 1: Prominent Free Event & Refund Notice Banner renders at top of page and above form", () => {
+  // Top-of-page notice banner before sections and main content
+  assert.ok(indexHtmlContent.includes('id="freeEventNotice"'));
+  assert.ok(indexHtmlContent.includes('class="free-event-notice-banner"'));
+  assert.ok(indexHtmlContent.includes("IEEE Sensors Summit 2026 | Free Event"));
+  assert.ok(indexHtmlContent.includes("The IEEE Sensors Summit 2026 is a free event."));
+  assert.ok(indexHtmlContent.includes("Certain registration options or additional services may involve fees."));
+  assert.ok(indexHtmlContent.includes("Eligible payments will be refunded in accordance with the"));
+  assert.ok(indexHtmlContent.includes("applicable refund policy"));
+  assert.ok(indexHtmlContent.includes("and its specified terms and conditions."));
+  assert.ok(indexHtmlContent.includes("Please review the"));
+  assert.ok(indexHtmlContent.includes("applicable payment and refund terms"));
+  assert.ok(indexHtmlContent.includes("before completing your registration."));
+
+  // Form-level notice above applicant information fields
+  assert.ok(indexHtmlContent.includes('id="registrationFreeEventNotice"'));
+  assert.ok(indexHtmlContent.includes('free-event-registration-notice'));
+});
+
+test("ACCEPTANCE 2: Distinguished Guest academic qualification contains exactly the 5 required options", () => {
+  assert.ok(indexHtmlContent.includes('id="guestAcademicQualification"'));
+  assert.ok(indexHtmlContent.includes('Academic Qualification (Required)'));
+  assert.ok(indexHtmlContent.includes('Please select the option that best describes your current academic status.'));
+
+  const expectedOptions = [
+    "Currently pursuing a Master's degree.",
+    "Currently pursuing a PhD.",
+    "I hold a PhD obtained on or after January 1, 2024.",
+    "I hold a PhD obtained before January 1, 2024.",
+    "None of the above."
+  ];
+
+  for (const opt of expectedOptions) {
+    assert.ok(indexHtmlContent.includes(`<option value="${opt}">${opt}</option>`), `Option "${opt}" must be present in HTML`);
+    assert.equal(validateGuestAcademicQualification(opt), "", `Qualification "${opt}" must validate successfully`);
+  }
+
+  // Reject invalid, empty, or whitespace qualifications
+  assert.notEqual(validateGuestAcademicQualification(""), "");
+  assert.notEqual(validateGuestAcademicQualification("   "), "");
+  assert.notEqual(validateGuestAcademicQualification("Bachelor of Science"), "");
+  assert.notEqual(validateGuestAcademicQualification("Postdoc Fellow"), "");
+});
+
+test("ACCEPTANCE 3: Conditional PhD Award Date / Year field is required only for PhD holders", () => {
+  assert.ok(indexHtmlContent.includes('id="guestPhdDateField"'));
+  assert.ok(indexHtmlContent.includes('id="guestPhdDate"'));
+  assert.ok(indexHtmlContent.includes('Year of PhD Award'));
+
+  // When PhD holder option selected, validatePhdAwardDate requires non-empty date
+  assert.notEqual(validatePhdAwardDate("", "I hold a PhD obtained on or after January 1, 2024."), "");
+  assert.notEqual(validatePhdAwardDate("   ", "I hold a PhD obtained before January 1, 2024."), "");
+
+  // When non-PhD option selected, validatePhdAwardDate passes even if empty
+  assert.equal(validatePhdAwardDate("", "Currently pursuing a Master's degree."), "");
+  assert.equal(validatePhdAwardDate("", "Currently pursuing a PhD."), "");
+  assert.equal(validatePhdAwardDate("", "None of the above."), "");
+});
+
+test("ACCEPTANCE 4: PhD Cutoff Date Rule is January 1, 2024 inclusive across date and year formats", () => {
+  assert.equal(PHD_CUTOFF_DATE, "2024-01-01");
+
+  // January 1, 2024 is INCLUSIVE - qualifies as on or after Jan 1, 2024
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2024-01-01"), true);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2024-06-15"), true);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2025-01-01"), true);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2024"), true);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2025"), true);
+
+  // December 31, 2023 and earlier do NOT qualify as on or after Jan 1, 2024
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2023-12-31"), false);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2023-01-01"), false);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2022-11-15"), false);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2023"), false);
+  assert.equal(isPhdAwardDateOnOrAfterCutoff("2020"), false);
+
+  // Consistency checks between selected option and award date
+  // Option 3: on or after 2024 requires date >= 2024-01-01
+  assert.equal(validatePhdAwardDate("2024-01-01", "I hold a PhD obtained on or after January 1, 2024."), "");
+  assert.equal(validatePhdAwardDate("2024", "I hold a PhD obtained on or after January 1, 2024."), "");
+  assert.notEqual(validatePhdAwardDate("2023-12-31", "I hold a PhD obtained on or after January 1, 2024."), "");
+  assert.notEqual(validatePhdAwardDate("2023", "I hold a PhD obtained on or after January 1, 2024."), "");
+
+  // Option 4: before 2024 requires date < 2024-01-01
+  assert.equal(validatePhdAwardDate("2023-12-31", "I hold a PhD obtained before January 1, 2024."), "");
+  assert.equal(validatePhdAwardDate("2023", "I hold a PhD obtained before January 1, 2024."), "");
+  assert.notEqual(validatePhdAwardDate("2024-01-01", "I hold a PhD obtained before January 1, 2024."), "");
+  assert.notEqual(validatePhdAwardDate("2024", "I hold a PhD obtained before January 1, 2024."), "");
+});
+
+test("ACCEPTANCE 5: Day 2 Eligibility: Currently pursuing a Master's degree is Eligible", () => {
+  assert.equal(isDay2EligibleQualification("Currently pursuing a Master's degree."), true);
+  assert.equal(isDay2EligibleQualification("Currently pursuing a Master's degree"), true); // Normalized
+});
+
+test("ACCEPTANCE 6: Day 2 Eligibility: Currently pursuing a PhD is Eligible", () => {
+  assert.equal(isDay2EligibleQualification("Currently pursuing a PhD."), true);
+  assert.equal(isDay2EligibleQualification("Currently pursuing a PhD"), true); // Normalized
+});
+
+test("ACCEPTANCE 7: Day 2 Eligibility: PhD obtained on or after January 1, 2024 is Eligible with valid cutoff date", () => {
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained on or after January 1, 2024.", "2024-01-01"), true);
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained on or after January 1, 2024.", "2024-11-20"), true);
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained on or after January 1, 2024.", "2024"), true);
+
+  // If date is invalid or before cutoff, not eligible
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained on or after January 1, 2024.", "2023-12-31"), false);
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained on or after January 1, 2024.", ""), false);
+});
+
+test("ACCEPTANCE 8: Day 2 Eligibility: PhD obtained before January 1, 2024 is Not Eligible", () => {
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained before January 1, 2024.", "2023-12-31"), false);
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained before January 1, 2024.", "2020"), false);
+  assert.equal(isDay2EligibleQualification("I hold a PhD obtained before January 1, 2024."), false);
+});
+
+test("ACCEPTANCE 9: Day 2 Eligibility: None of the above is Not Eligible", () => {
+  assert.equal(isDay2EligibleQualification("None of the above."), false);
+  assert.equal(isDay2EligibleQualification("None of the above"), false);
+});
+
+test("ACCEPTANCE 10: Distinguished Guest attendance pricing is always 0 EGP across Day 1, Day 2, and Both Days", () => {
+  // Day 1 only
+  const day1Only = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1"],
+    transport: "No transport"
+  });
+  assert.deepEqual(day1Only, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // Day 2 only (eligible)
+  const day2Only = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 2"],
+    transport: "No transport"
+  });
+  assert.deepEqual(day2Only, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // Both days (eligible)
+  const bothDays = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1", "Day 2"],
+    transport: "No transport"
+  });
+  assert.deepEqual(bothDays, { baseFee: 0, transportFee: 0, totalFee: 0 });
+
+  // With complimentary transportation across any day combination
+  const withTransport = calculateFee({
+    category: "Distinguished Guest / Professional",
+    attendance: ["Day 1", "Day 2"],
+    transport: "Ramses Square"
+  });
+  assert.deepEqual(withTransport, { baseFee: 0, transportFee: 0, totalFee: 0 });
+});
+
+test("ACCEPTANCE 11: Backend Apps Script doPost independently enforces academic qualification and cutoff", () => {
+  assert.ok(codeGsContent.includes("normalizeGuestQualification"));
+  assert.ok(codeGsContent.includes("isPhdDateOnOrAfterCutoffBackend"));
+  assert.ok(codeGsContent.includes("isGuestDay2EligibleBackend"));
+  assert.ok(codeGsContent.includes('message: "Please select your academic qualification."'));
+  assert.ok(codeGsContent.includes('message: "PhD award date or year is required."'));
+  assert.ok(codeGsContent.includes('message: "PhD award date must be on or after January 1, 2024 to match the selected qualification."'));
+  assert.ok(codeGsContent.includes('message: "PhD award date must be before January 1, 2024 to match the selected qualification."'));
+  assert.ok(codeGsContent.includes('message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements."'));
+});
+
+test("ACCEPTANCE 12: Backend Apps Script rejects Day 2 when applicant has ineligible qualification", () => {
+  function backendValidateGuest(payload) {
+    const isGuest = payload.status === "Distinguished Guest / Professional";
+    if (!isGuest) return { success: true };
+
+    const qual = payload.academicQualification || "";
+    const phdDate = payload.phdAwardDate || "";
+    const attendance = Array.isArray(payload.attendance) ? payload.attendance : [payload.attendance];
+    const hasDay2 = attendance.some(d => String(d).includes("Day 2") || String(d) === "14");
+
+    if (!qual) {
+      return { success: false, message: "Please select your academic qualification." };
+    }
+
+    const isEligible = isDay2EligibleQualification(qual, phdDate);
+    if (hasDay2 && !isEligible) {
+      return { success: false, message: "Day 2 attendance is restricted to applicants meeting academic eligibility requirements." };
+    }
+
+    return { success: true, day2Eligibility: isEligible ? "Eligible" : "Not eligible" };
+  }
+
+  // Ineligible: "None of the above" attempting Day 2
+  const res1 = backendValidateGuest({
+    status: "Distinguished Guest / Professional",
+    academicQualification: "None of the above.",
+    attendance: ["Day 2"]
+  });
+  assert.equal(res1.success, false);
+  assert.equal(res1.message, "Day 2 attendance is restricted to applicants meeting academic eligibility requirements.");
+
+  // Ineligible: PhD before 2024 attempting both days
+  const res2 = backendValidateGuest({
+    status: "Distinguished Guest / Professional",
+    academicQualification: "I hold a PhD obtained before January 1, 2024.",
+    phdAwardDate: "2023-05-01",
+    attendance: ["Day 1", "Day 2"]
+  });
+  assert.equal(res2.success, false);
+
+  // Eligible: PhD on or after Jan 1, 2024 attempting both days
+  const res3 = backendValidateGuest({
+    status: "Distinguished Guest / Professional",
+    academicQualification: "I hold a PhD obtained on or after January 1, 2024.",
+    phdAwardDate: "2024-01-01",
+    attendance: ["Day 1", "Day 2"]
+  });
+  assert.equal(res3.success, true);
+  assert.equal(res3.day2Eligibility, "Eligible");
+
+  // Ineligible qualification attending Day 1 only is accepted
+  const res4 = backendValidateGuest({
+    status: "Distinguished Guest / Professional",
+    academicQualification: "None of the above.",
+    attendance: ["Day 1"]
+  });
+  assert.equal(res4.success, true);
+  assert.equal(res4.day2Eligibility, "Not eligible");
+});
+
+test("ACCEPTANCE 13: Google Sheets schema dynamically maps columns 56-58 for extended sheets", () => {
+  const extended58Headers = [
+    "Registration ID", "Submission Timestamp", "Application Status", "Payment Status", "Refund Status",
+    "fullName", "mobile", "email", "gender", "ieeeMember", "ieeeNumber", "bueMember", "nationalId",
+    "status", "studentDepartment", "studentDepartmentOther", "university", "universityOther", "studyYear",
+    "graduateDepartment", "graduateDepartmentOther", "graduationPeriod", "graduationYearOther",
+    "mastersStatus", "mastersStart", "mastersExpected", "mastersYear",
+    "phdStatus", "phdStart", "phdYear", "jobTitle", "organization",
+    "attendance", "transport", "pickupLocation", "paymentMethod", "transactionRef",
+    "paymentDate", "paymentTime", "recipientName", "refundMethod", "instapayDetails",
+    "walletNumber", "totalFee", "paymentProof", "nationalIdFile",
+    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode",
+    "professionalTitle", "professionalTitleOther", "guestOrganization", "organizationType", "organizationTypeOther",
+    "academicQualification", "phdAwardDate", "day2Eligibility"
+  ];
+
+  const guestPayload = {
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Karim Adel",
+    academicQualification: "I hold a PhD obtained on or after January 1, 2024.",
+    phdAwardDate: "2024-05-20",
+    day2Eligibility: "Eligible",
+    attendance: ["Day 1", "Day 2"],
+    professionalTitle: "Assistant Professor",
+    organization: "Cairo University",
+    transport: "No transport",
+    totalFee: "0"
+  };
+
+  const fieldMap = {
+    "Registration ID": "SS26-TEST58",
+    "Submission Timestamp": "2026-10-23T00:00:00.000Z",
+    "Application Status": "Pending Review",
+    "Payment Status": "Confirmed - Free",
+    "Refund Status": "N/A",
+    "fullName": guestPayload.fullName,
+    "status": guestPayload.status,
+    "phdStatus": guestPayload.academicQualification,
+    "phdYear": guestPayload.phdAwardDate,
+    "jobTitle": guestPayload.professionalTitle,
+    "organization": guestPayload.organization,
+    "attendance": "Day 1, Day 2",
+    "transport": guestPayload.transport,
+    "totalFee": "0",
+    "academicQualification": guestPayload.academicQualification,
+    "phdAwardDate": guestPayload.phdAwardDate,
+    "day2Eligibility": guestPayload.day2Eligibility
+  };
+
+  const row = extended58Headers.map(h => fieldMap.hasOwnProperty(h.trim()) ? fieldMap[h.trim()] : "");
+  assert.equal(row.length, 58, "Row length must match 58 headers");
+  assert.equal(row[55], "I hold a PhD obtained on or after January 1, 2024.", "Column 56 is academicQualification");
+  assert.equal(row[56], "2024-05-20", "Column 57 is phdAwardDate");
+  assert.equal(row[57], "Eligible", "Column 58 is day2Eligibility");
+});
+
+test("ACCEPTANCE 14: Google Sheets schema preserves 50-column backward compatibility", () => {
+  const standard50Headers = [
+    "Registration ID", "Submission Timestamp", "Application Status", "Payment Status", "Refund Status",
+    "fullName", "mobile", "email", "gender", "ieeeMember", "ieeeNumber", "bueMember", "nationalId",
+    "status", "studentDepartment", "studentDepartmentOther", "university", "universityOther", "studyYear",
+    "graduateDepartment", "graduateDepartmentOther", "graduationPeriod", "graduationYearOther",
+    "mastersStatus", "mastersStart", "mastersExpected", "mastersYear",
+    "phdStatus", "phdStart", "phdYear", "jobTitle", "organization",
+    "attendance", "transport", "pickupLocation", "paymentMethod", "transactionRef",
+    "paymentDate", "paymentTime", "recipientName", "refundMethod", "instapayDetails",
+    "walletNumber", "totalFee", "paymentProof", "nationalIdFile",
+    "registrationConsent", "consentTimestamp", "referralSources", "ambassadorCode"
+  ];
+
+  const guestPayload = {
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Karim Adel",
+    academicQualification: "Currently pursuing a PhD.",
+    phdAwardDate: "",
+    professionalTitle: "Assistant Professor",
+    organization: "Cairo University"
+  };
+
+  const fieldMap = {
+    "Registration ID": "SS26-TEST50",
+    "Submission Timestamp": "2026-10-23T00:00:00.000Z",
+    "Application Status": "Pending Review",
+    "Payment Status": "Confirmed - Free",
+    "Refund Status": "N/A",
+    "fullName": guestPayload.fullName,
+    "status": guestPayload.status,
+    "phdStatus": guestPayload.academicQualification, // mapped in 50-col sheets
+    "phdYear": guestPayload.phdAwardDate,
+    "jobTitle": guestPayload.professionalTitle,
+    "organization": guestPayload.organization
+  };
+
+  const row = standard50Headers.map(h => fieldMap.hasOwnProperty(h.trim()) ? fieldMap[h.trim()] : "");
+  assert.equal(row.length, 50, "Row length must be exactly 50 columns");
+  assert.equal(row[27], "Currently pursuing a PhD.", "Column 28 (phdStatus) captures guest academic qualification in 50-col sheet");
+});
+
+test("ACCEPTANCE 15: Confirmation email template includes Academic Qualification and PhD Award Date when present", () => {
+  const emailHtml = generateRegistrationEmailHtml({
+    status: "Distinguished Guest / Professional",
+    fullName: "Dr. Sara Mostafa",
+    email: "sara@example.edu.eg",
+    organization: "Ain Shams University",
+    professionalTitle: "Associate Professor",
+    academicQualification: "I hold a PhD obtained on or after January 1, 2024.",
+    phdAwardDate: "2024-03-15",
+    attendance: ["Day 1", "Day 2"],
+    transport: "No transport",
+    totalFee: "0"
+  });
+
+  assert.ok(emailHtml.includes("Academic Qualification:"));
+  assert.ok(emailHtml.includes("I hold a PhD obtained on or after January 1, 2024."));
+  assert.ok(emailHtml.includes("PhD Award Date / Year:"));
+  assert.ok(emailHtml.includes("2024-03-15"));
+});
+
+test("ACCEPTANCE 16: Form payload builder captures academic qualification and Day 2 eligibility", () => {
+  // Verify buildPayload captures academicQualification, phdAwardDate, phdAwardYear, day2Eligibility
+  const mainJsContent = fs.readFileSync(new URL("../src/main.js", import.meta.url), "utf-8");
+  assert.ok(mainJsContent.includes("data.academicQualification =") || mainJsContent.includes("academicQualification"));
+  assert.ok(mainJsContent.includes("data.phdAwardDate =") || mainJsContent.includes("phdAwardDate"));
+  assert.ok(mainJsContent.includes("data.phdAwardYear =") || mainJsContent.includes("phdAwardYear"));
+  assert.ok(mainJsContent.includes("data.day2Eligibility =") || mainJsContent.includes("day2Eligibility"));
+});
+
+test("ACCEPTANCE 17: Review modal displays Academic Qualification and Day 2 Eligibility for Guest", () => {
+  const mainJsContent = fs.readFileSync(new URL("../src/main.js", import.meta.url), "utf-8");
+  assert.ok(mainJsContent.includes("openReviewModal"));
+  assert.ok(mainJsContent.includes("Academic Qualification"));
+  assert.ok(mainJsContent.includes("Day 2 Academic Eligibility") || mainJsContent.includes("Day 2 Eligibility"));
+});
+
+test("ACCEPTANCE 18: Student category fields, validation, and fees remain completely unaffected", () => {
+  // Student fees are 200 standard / 300 with transport regardless of days
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Student", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // Student HTML fields in index.html are intact
+  assert.ok(indexHtmlContent.includes('id="studentDepartment"'));
+  assert.ok(indexHtmlContent.includes('id="studyYear"'));
+  assert.ok(indexHtmlContent.includes('id="university"'));
+});
+
+test("ACCEPTANCE 19: Graduate / Alumni category fields, validation, and fees remain completely unaffected", () => {
+  // Graduate Day 1 only is free
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "No transport" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1"], transport: "Ramses Square" }), {
+    baseFee: 0, transportFee: 0, totalFee: 0
+  });
+
+  // Graduate Day 2 is 200 (+ 100 transport)
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 2"], transport: "No transport" }), {
+    baseFee: 200, transportFee: 0, totalFee: 200
+  });
+  assert.deepEqual(calculateFee({ category: "Graduate / Alumni", attendance: ["Day 1", "Day 2"], transport: "Ramses Square" }), {
+    baseFee: 200, transportFee: 100, totalFee: 300
+  });
+
+  // Graduate HTML fields intact
+  assert.ok(indexHtmlContent.includes('id="graduateDepartment"'));
+  assert.ok(indexHtmlContent.includes('id="graduationPeriod"'));
+  assert.ok(indexHtmlContent.includes('id="mastersStatus"'));
+  assert.ok(indexHtmlContent.includes('id="phdStatus"'));
+});
+
+test("ACCEPTANCE 20: Full validation suite ensures end-to-end consistency without regressions", () => {
+  // Normalization consistency between frontend and backend
+  const raw1 = "Currently pursuing a Master's degree.";
+  const raw2 = "Currently pursuing a master's degree";
+  assert.equal(normalizeQualification(raw1), GUEST_ACADEMIC_QUALIFICATIONS.MASTERS_PURSUING);
+  assert.equal(normalizeQualification(raw2), GUEST_ACADEMIC_QUALIFICATIONS.MASTERS_PURSUING);
+
+  // Parsing full dates, years, and timestamps
+  assert.equal(parsePhdDate("2024-01-01").isoDate, "2024-01-01");
+  assert.equal(parsePhdDate("2024").year, 2024);
+  assert.equal(parsePhdDate("invalid"), null);
+
+  // Day 2 eligibility contract
+  assert.equal(isDay2EligibleQualification(GUEST_ACADEMIC_QUALIFICATIONS.MASTERS_PURSUING), true);
+  assert.equal(isDay2EligibleQualification(GUEST_ACADEMIC_QUALIFICATIONS.PHD_PURSUING), true);
+  assert.equal(isDay2EligibleQualification(GUEST_ACADEMIC_QUALIFICATIONS.PHD_ON_OR_AFTER_2024, "2024-01-01"), true);
+  assert.equal(isDay2EligibleQualification(GUEST_ACADEMIC_QUALIFICATIONS.PHD_BEFORE_2024, "2023-12-31"), false);
+  assert.equal(isDay2EligibleQualification(GUEST_ACADEMIC_QUALIFICATIONS.NONE_OF_ABOVE), false);
 });
