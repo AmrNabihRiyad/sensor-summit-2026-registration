@@ -34,6 +34,8 @@ export const EVENT = Object.freeze({
   }
 });
 
+export const REGISTRATION_OPEN = false;
+
 export const FEES = Object.freeze({
   baseAmount: 200,
   transportAmount: 100,

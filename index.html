@@ -35,7 +35,7 @@
       <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="nav-actions">
-      <a class="nav-pill-cta" href="#registration">Register Now <span class="cta-arrow" aria-hidden="true">↗</span></a>
+      <a class="nav-pill-cta" href="#registration"><span data-registration-cta data-open-label="Register Now">Register Now</span> <span class="cta-arrow" aria-hidden="true">↗</span></a>
       <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primaryNavigation">
         <span aria-hidden="true"></span>
         <span aria-hidden="true"></span>
@@ -98,7 +98,7 @@
     <!-- Glass Pill CTAs -->
     <div class="hero-cta-group">
       <a class="cta-pill-primary" href="#registration">
-        <span>Register Now</span>
+        <span data-registration-cta data-open-label="Register Now">Register Now</span>
         <span class="cta-arrow" aria-hidden="true">→</span>
       </a>
       <a class="cta-pill-secondary" href="#about">
@@ -363,7 +363,7 @@
     </div>
 
     <div style="margin-top:28px" class="reveal-on-scroll">
-      <a class="button-primary" href="#registration">Start Your Registration <span class="btn-arrow" aria-hidden="true">↗</span></a>
+      <a class="button-primary" href="#registration"><span data-registration-cta data-open-label="Start Your Registration">Start Your Registration</span> <span class="btn-arrow" aria-hidden="true">↗</span></a>
     </div>
   </section>
 
@@ -441,7 +441,7 @@
       </div>
 
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <a class="button-cta" href="#registration">Register Now <span class="btn-arrow" aria-hidden="true">↗</span></a>
+        <a class="button-cta" href="#registration"><span data-registration-cta data-open-label="Register Now">Register Now</span> <span class="btn-arrow" aria-hidden="true">↗</span></a>
         <span style="font-size:13px;color:var(--muted);font-style:italic">
           Your application will be reviewed by the organizing committee. Your registration is not confirmed until you receive confirmation by email.
         </span>
@@ -585,7 +585,15 @@
   </section>
 
   <!-- Section K: Registration Form -->
-  <section class="page-section" id="registration" aria-labelledby="reg-heading">
+  <section class="page-section registration-closed" id="registration" aria-label="Registration">
+    <div class="notice registration-closed-notice reveal-on-scroll" id="registrationClosedMessage" role="status" aria-labelledby="registrationClosedHeading">
+      <div class="notice-tag">REGISTRATION CLOSED</div>
+      <h2 id="registrationClosedHeading">Registration is Officially Closed</h2>
+      <p>Thank you for your interest in IEEE Sensors Summit 2026.</p>
+      <p>We have reached the maximum participant capacity, and registration is now officially closed.</p>
+      <p>We look forward to welcoming all confirmed participants at the summit.</p>
+    </div>
+
     <div class="section-heading reveal-on-scroll">
       <div class="section-kicker">REGISTRATION FORM</div>
       <h2 id="reg-heading">Apply for Sensors Summit 2026</h2>

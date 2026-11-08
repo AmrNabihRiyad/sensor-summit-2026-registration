@@ -1,5 +1,5 @@
 import { COUNTRIES, normalizePhone, validateForm, isDay2EligibleQualification } from "./validation.js";
-import { API_CONFIG } from "./config.js";
+import { API_CONFIG, REGISTRATION_OPEN } from "./config.js";
 import { initNav } from "./components/nav.js";
 import { initPaymentInstructions } from "./components/paymentInstructions.js";
 import bueLogo from "./assets/logos/BUE-Logo.png";
@@ -13,10 +13,19 @@ import ieeeSensorsCouncilLogo from "./assets/logos/IEEE Sensors Council Logo.png
 
 const API_URL = API_CONFIG.endpointUrl;
 const form = document.querySelector("#registrationForm");
+const registrationSection = document.querySelector("#registration");
+const registrationClosedMessage = document.querySelector("#registrationClosedMessage");
 const submitButton = form.querySelector('button[type="submit"]');
 const status = document.querySelector("#formMessage");
 const touched = new WeakSet();
 let submitting = false;
+
+registrationSection.classList.toggle("registration-closed", !REGISTRATION_OPEN);
+registrationSection.classList.toggle("registration-open", REGISTRATION_OPEN);
+registrationClosedMessage.hidden = REGISTRATION_OPEN;
+document.querySelectorAll("[data-registration-cta]").forEach((label) => {
+  label.textContent = REGISTRATION_OPEN ? label.dataset.openLabel : "Registration Closed";
+});
 
 const FAQS = [
   {
@@ -575,6 +584,7 @@ async function buildPayload() {
 async function submitRegistration(event) {
   event.preventDefault();
   event.stopImmediatePropagation();
+  if (!REGISTRATION_OPEN) return;
   if (submitting) return;
 
   const errors = updateErrors(validateForm(form, validationOptions()));

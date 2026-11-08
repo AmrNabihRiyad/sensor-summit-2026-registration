@@ -278,6 +278,11 @@
   border-left-color: var(--cyan);
 }
 
+#registration.registration-closed > :not(#registrationClosedMessage),
+#registration.registration-open #registrationClosedMessage {
+  display: none;
+}
+
 .notice-tag {
   display: inline-block;
   font-size: 11px;
